@@ -402,7 +402,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
   <button class="btn btn-ghost" id="btn-freeze" onclick="toggleFreeze()"><span aria-hidden="true">❄</span> Bevriezen</button>
   <div class="hsep"></div>
   <button class="btn btn-ghost" id="btn-reset" onclick="resetView()" style="display:none"><span aria-hidden="true">↺</span> Reset</button>
-  <button class="btn btn-ghost" id="btn-test" onclick="runTests()" style="display:none"><span aria-hidden="true">🧪</span> Tests</button>
+  <button class="btn btn-ghost" id="btn-test" onclick="document.getElementById('dtr-overlay').classList.add('dtr-open');renderResults(typeof activeTab!=='undefined'?activeTab:'design')"><span aria-hidden="true">🧪</span> Tests</button>
   <div class="row-count" id="row-count">50 records</div>
 </div>
 
@@ -3399,7 +3399,7 @@ function initTableDelegation(){
 
 // INIT
 document.body.classList.add('density-compact'); // Sprint 2, taak 2.4: initiële density-class
-if(_perfDebug){var _btnTest=document.getElementById('btn-test');if(_btnTest)_btnTest.style.display='';}
+// btn-test altijd zichtbaar — opent Design Test Runner overlay
 renderTabContainers(); // Sprint 3: dynamische tab-containers
 initTableDelegation(); // Sprint 3: event delegation op alle tabs
 render();
@@ -3407,7 +3407,7 @@ initGlobalNameFilter();
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     DESIGN TEST RUNNER — Ctrl+Shift+T om te openen/sluiten
+     DESIGN TEST RUNNER — 🧪 knop in toolbar of Alt+Shift+T
      Gebaseerd op TESTPLAN.md §T, §GATE en §P
      Productie: geen effect, overlay is verborgen tenzij geactiveerd
 ═══════════════════════════════════════════════════════════════ -->
@@ -3495,7 +3495,7 @@ initGlobalNameFilter();
     <div id="dtr-header">
       <div>
         <h2>Design Test Runner</h2>
-        <small>TESTPLAN.md — Ctrl+Shift+T om te sluiten</small>
+        <small>TESTPLAN.md — Alt+Shift+T of Escape om te sluiten</small>
       </div>
       <div id="dtr-controls">
         <button id="dtr-run">&#9654; Alle tests uitvoeren</button>
@@ -4123,9 +4123,10 @@ document.querySelectorAll('.dtr-tab').forEach(function(btn) {
   });
 });
 
-// ── Keyboard shortcut Ctrl+Shift+T ─────────────────────────────
+// ── Keyboard shortcut Alt+Shift+T ──────────────────────────────
+// Ctrl+Shift+T is gereserveerd door Chrome (tabblad heropenen)
 document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+  if (e.altKey && e.shiftKey && e.key === 'T') {
     e.preventDefault();
     var overlay = document.getElementById('dtr-overlay');
     overlay.classList.toggle('dtr-open');
