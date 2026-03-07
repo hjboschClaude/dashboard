@@ -1,0 +1,3409 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* === RODS Rotterdam Design System — White Theme === */
+  /* Achtergrondlagen (BG-0, BG-1, BG-2) */
+  --bg:#FFFFFF;        /* White — BG-0 buitenste */
+  --surface:#EFF4F6;   /* Gray 50 — BG-1 middelste */
+  --surface2:#FFFFFF;  /* White — BG-2 binnenste */
+  --surface3:#E5E5E5;  /* Dark Gray 200 */
+  /* Borders: Gray 300 voor lijnen, Gray 400 voor hover */
+  --border:#CAD6DA;--border-hover:#B6C4C8;
+  /* Input borders: Gray 700 — 3.52:1 contrast (AA18) */
+  --input-border:#7C8B90;
+  /* Primaire kleur: Green 500 */
+  --accent:#00811F;
+  /* Semantisch: Red 500, Blue 500, Orange 400 */
+  --accent2:#D70D0D;--accent3:#00689E;--accent4:#EB7900;
+  /* Tekst: leestekst zwart, UI-typografie Gray (blauw-getint) conform RODS */
+  --text-body:#000000;--text:#404B4F;--text-muted:#65757B;--text-dim:#536165;
+  /* CTA: Magenta 500 */
+  --cta:#C93675;--cta-hover:#B52B65;--cta-bg:#FCF2F9;
+  /* Rij-interactie: cyaan/blauw hover conform huisstijl */
+  --row-hover:#EDF8FA;--selected:#DAF2E8;--header-bg:#EFF4F6;--toolbar-bg:#EFF4F6;
+  /* === Volledig RODS kleurenpalet === */
+  /* Green */
+  --green-50:#EDFAF5;--green-100:#DAF2E8;--green-200:#A8E0C5;--green-300:#7ACCA0;
+  --green-400:#32A85C;--green-500:#00811F;--green-600:#007519;--green-700:#006113;
+  --green-800:#004F0E;--green-900:#003B0A;--green-950:#002D08;
+  /* Red */
+  --red-50:#FCF6F0;--red-100:#FAEEE3;--red-200:#F5D2BC;--red-300:#F0B095;
+  --red-400:#E3644D;--red-500:#D70D0D;--red-600:#C20A0A;--red-700:#A10606;
+  --red-800:#800505;--red-900:#610303;
+  /* Blue */
+  --blue-50:#EDF8FA;--blue-100:#DCF0F5;--blue-200:#AEDBE8;--blue-300:#82C3D9;
+  --blue-400:#3893BA;--blue-500:#00689E;--blue-600:#00588F;--blue-700:#004275;
+  --blue-800:#00315E;--blue-900:#002147;
+  /* Orange */
+  --orange-50:#FFF3E5;--orange-100:#FFE6CC;--orange-200:#FFCB94;--orange-300:#FFA647;
+  --orange-400:#EB7900;--orange-500:#A65600;--orange-600:#994F00;
+  /* Yellow */
+  --yellow-50:#FFFDF2;--yellow-100:#FFFBE8;--yellow-300:#FAE69D;--yellow-400:#F7CC57;
+  --yellow-500:#F6AE12;--yellow-600:#D8930D;
+  /* Magenta */
+  --magenta-400:#D96AA3;--magenta-500:#C93675;--magenta-600:#B52B65;
+  /* Gray */
+  --gray-50:#EFF4F6;--gray-100:#E4EEF1;--gray-200:#DBE7EA;--gray-300:#CAD6DA;
+  --gray-400:#B6C4C8;--gray-500:#9DAFB6;--gray-600:#8D9DA4;--gray-700:#7C8B90;
+  --gray-800:#65757B;--gray-900:#536165;--gray-950:#404B4F;
+  /* Elevatie (schaduw) */
+  --shadow-1:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-2:0 4px 16px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
+  /* Sprint 3, taak 3.5: Semantische kleurrollen — alias naar RODS-kleuren */
+  --color-ui-active:var(--accent);
+  --color-success:var(--green-500);
+  --color-warning:var(--orange-400);
+  --color-danger:var(--red-500);
+  --color-info:var(--blue-500);
+  --color-muted:var(--gray-600);
+}
+/* #26: Screen-reader only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+/* #57: Spacing-tokens op 4px-raster */
+/* sp-1:4px sp-2:8px sp-3:12px sp-4:16px sp-5:20px sp-6:24px sp-8:32px */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Bolder','DM Sans',sans-serif;background:var(--bg);color:var(--text-body);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px;line-height:24px;}
+.topbar{display:flex;align-items:center;padding:0 16px;height:48px;background:var(--toolbar-bg);border-bottom:1px solid var(--border);gap:12px;flex-shrink:0;} /* #55: samenvoegen, 48px */
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.3px;color:var(--accent);}
+.logo span{color:var(--text);}
+.vsep{width:1px;height:18px;background:var(--border);}
+.base-name{font-size:14px;line-height:24px;font-weight:700;}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center;} /* #28: gap 8px */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;font-size:14px;font-weight:700;line-height:24px;font-family:'Bolder','DM Sans',sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap;position:relative;min-height:36px;} /* #62: 14px, #21: min-h 36px */
+.btn:hover{border-color:var(--border-hover);color:var(--text);background:#DCF0F5;}
+.btn.active{box-shadow:inset 0 0 0 1px var(--accent);color:var(--green-800);background:var(--green-50);} /* #24: box-shadow ipv border, geen layout-shift */
+.btn:disabled,.btn[disabled]{opacity:0.4;cursor:not-allowed;pointer-events:none;} /* #25: disabled-state */
+.btn-primary{background:var(--cta);border-color:var(--cta);color:#fff;}
+.btn-primary:hover{background:var(--cta-hover);border-color:var(--cta-hover);color:#fff;}
+.btn-danger{color:var(--accent2);border-color:var(--red-100);}
+.btn-danger:hover{background:var(--red-50);border-color:var(--accent2);}
+.btn-export{color:var(--accent3);border-color:var(--blue-100);}
+.btn-export:hover{background:var(--blue-50);border-color:var(--accent3);}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-muted);min-height:32px;font-size:13px;} /* #27: tertiaire stijl */
+.btn-ghost:hover{background:var(--surface3);color:var(--text-dim);border-color:transparent;}
+.btn-ghost.active{background:var(--surface3);color:var(--text);border-color:var(--border-hover);box-shadow:none;} /* BUG-012: subtielere actieve staat, override box-shadow van .btn.active */
+/* 1.5: Reset voor semantische buttons die als div gestyled waren */
+button.col-toggle,button.logic-btn,button.col-bulk-btn,button.export-item,button.ctx-item,button.tab{font:inherit;cursor:pointer;border:none;background:none;padding:0;margin:0;text-align:inherit;color:inherit;-webkit-appearance:none;appearance:none;}
+/* 1.4: Systeemactie — visueel terughoudend, voor reset/data-acties */
+.btn-system{border-color:transparent;background:transparent;color:var(--text-muted);font-size:12px;}
+.btn-system:hover{background:var(--surface3);color:var(--text-dim);}
+/* Sprint 2, taak 2.4: Density via CSS-classes */
+.density-compact .toolbar{padding:6px 16px;}
+.density-medium .toolbar{padding:7px 16px;}
+.density-tall .toolbar{padding:8px 16px;}
+.tabbar{display:none;} /* #55: verborgen — tabs verplaatst naar topbar */
+.topbar-tabs{display:flex;align-items:center;gap:4px;margin-left:8px;}
+.tab{display:flex;align-items:center;gap:6px;padding:4px 12px;height:32px;border-radius:4px;font-size:12px;font-weight:700;line-height:20px;color:var(--text-muted);cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s;user-select:none;} /* #55: inline tab */
+.tab:hover{color:var(--text-dim);background:var(--surface3);}
+.tab.active{color:var(--green-800);background:var(--green-50);border-color:var(--accent);}
+.tab-add{width:26px;height:26px;border-radius:4px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);cursor:pointer;margin-left:4px;margin-bottom:4px;transition:all .15s;}
+.tab-add:hover{border-color:var(--accent);color:var(--accent);}
+.toolbar{display:flex;align-items:center;padding:6px 16px;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:nowrap;overflow-x:auto;} /* BUG-013: nowrap + scroll i.p.v. wrap */
+.toolbar::-webkit-scrollbar{height:0;} /* verberg horizontale scrollbar */
+.hsep{width:1px;height:calc(100% - 16px);background:var(--border);margin:0 4px;flex-shrink:0;} /* #63: hoogte calc, #61: 1px divider */
+.search-wrap{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);font-size:12px;min-width:170px;transition:border-color .15s;}
+.search-wrap:focus-within{border-color:var(--accent);}
+.search-wrap input{background:none;border:none;outline:none;font-size:12px;font-family:'Bolder','DM Sans',sans-serif;color:var(--text);width:100%;}
+.search-wrap input::placeholder{color:var(--text-muted);}
+.row-count{margin-left:auto;font-size:12px;line-height:20px;font-family:'Bolder','DM Sans',sans-serif;color:var(--text-muted);background:var(--surface2);padding:3px 8px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;}
+.active-filters{display:none;align-items:center;padding:5px 14px;gap:6px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+/* 1.3: State classes — vervangen inline display-mutaties */
+.is-open{display:block;}
+.is-visible{display:flex;}
+.active-filters.is-visible{display:flex;}
+.af-label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;}
+.af-chip{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);font-size:12px;color:var(--green-800);}
+.af-chip-remove{cursor:pointer;opacity:.6;font-size:12px;}
+.af-chip-remove:hover{opacity:1;}
+.af-clear{font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:underline;margin-left:4px;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.tab-content{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.tab-content.active{display:flex;}
+.table-container{flex:1;overflow:auto;}
+.table-container::-webkit-scrollbar{width:8px;height:8px;} /* #64: 8px = 4px-raster */
+.table-container::-webkit-scrollbar-track{background:var(--bg);}
+.table-container::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:4px;}
+.table-container::-webkit-scrollbar-corner{background:var(--bg);}
+table{border-collapse:separate;border-spacing:0;min-width:100%;font-size:12px;line-height:20px;} /* BUG-014/015: separate zodat sticky cellen naburige cellen correct afdekken */
+thead{position:sticky;top:0;z-index:10;}
+thead tr{background:var(--header-bg);}
+th{padding:0;border-right:1px solid var(--border);border-bottom:2px solid var(--border);font-weight:700;font-size:14px;line-height:24px;white-space:nowrap;user-select:none;position:relative;} /* #61: 2px indicator border-bottom */
+th .th-inner{display:flex;align-items:center;gap:6px;padding:7px 11px;min-width:120px;height:34px;cursor:pointer;}
+th:hover .th-inner{background:#EDF8FA;}
+th.th-dragging{opacity:.4;}
+th.th-drag-left{box-shadow:inset 3px 0 0 0 var(--accent);}
+th.th-drag-right{box-shadow:inset -3px 0 0 0 var(--accent);}
+th.sorted .th-inner{background:var(--green-50);color:var(--green-800);}
+th .sort-icon{margin-left:auto;font-size:14px;opacity:.6;} /* #33: 14px, opacity .6 */
+th.sorted .sort-icon{opacity:1;color:var(--accent);}
+th .col-filter-btn{font-size:9px;opacity:0;margin-left:2px;cursor:pointer;padding:2px 3px;border-radius:3px;color:var(--text-muted);transition:opacity .15s,background .15s;}
+th:hover .col-filter-btn{opacity:.5;}
+th .col-filter-btn:hover{opacity:1;background:var(--surface3);color:var(--accent);}
+th .col-filter-btn.col-filter-active{opacity:1;color:var(--accent);}
+.col-type-icon{font-size:12px;opacity:.6;}
+th:first-child{min-width:44px;width:44px;}
+th:first-child .th-inner{min-width:44px;justify-content:center;cursor:pointer;} /* #71: cursor:pointer */
+thead tr th:first-child{position:sticky;left:0;z-index:12;background:var(--header-bg);}
+.resize-handle{position:absolute;right:0;top:0;bottom:0;width:4px;cursor:col-resize;z-index:1;}
+.resize-handle:hover,.resize-handle.dragging{background:var(--accent);}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .08s;}
+tbody tr:nth-child(even) td{background:var(--surface);}
+tbody tr:nth-child(even) td:first-child{background:var(--surface);} /* #60: match even-row achtergrond */
+tbody tr:hover td{background:var(--row-hover)!important;}
+tbody tr.selected td{background:var(--selected)!important;}
+tbody tr.selected td:first-child{border-left:2px solid var(--green-400);}
+td{padding:0 12px;height:34px;border-right:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;vertical-align:middle;font-family:'Bolder','DM Sans',sans-serif;font-size:12px;line-height:20px;color:var(--text-dim);font-variant-numeric:tabular-nums;}
+td:first-child{text-align:center;color:var(--text-muted);font-size:12px;width:44px;min-width:44px;max-width:44px;font-family:'Bolder','DM Sans',sans-serif;padding:0;position:sticky;left:0;z-index:5;background:#FFFFFF;}
+tbody tr:hover td:first-child{background:var(--row-hover)!important;}
+tbody tr.selected td:first-child{background:var(--selected)!important;}
+td.cell-primary{font-family:'Bolder','DM Sans',sans-serif;font-weight:700;font-size:14px;line-height:24px;color:var(--text-body);}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;line-height:20px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;letter-spacing:.2px;}
+.tag-blue{background:var(--blue-50);color:var(--blue-700);}
+.tag-green{background:var(--green-50);color:var(--green-700);}
+.tag-orange{background:var(--orange-50);color:var(--orange-500);}
+.tag-red{background:var(--red-50);color:var(--red-700);}
+.tag-purple{background:#FCF2F9;color:var(--magenta-600);}
+.tag-yellow{background:var(--yellow-50);color:var(--yellow-700);}
+/* Sprint 3, taak 3.5: Semantische tag-varianten */
+.tag-success{background:var(--green-50);color:var(--green-700);}
+.tag-warning{background:var(--orange-50);color:var(--orange-500);}
+.tag-danger{background:var(--red-50);color:var(--red-700);}
+.tag-info{background:var(--blue-50);color:var(--blue-700);}
+.tag-neutral{background:var(--gray-50);color:var(--gray-700);}
+.progress-cell{display:flex;align-items:center;gap:8px;}
+.progress-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;min-width:60px;}
+.progress-fill{height:100%;border-radius:2px;}
+.progress-label{font-size:12px;color:var(--text-muted);min-width:28px;}
+.checkbox-cell{display:flex;align-items:center;justify-content:center;}
+.check-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border-hover);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--accent);position:relative;} /* #35: 18px + hit-area */
+.check-box::before{content:'';position:absolute;inset:-6px;border-radius:8px;} /* #35: 30px hit-area */
+.check-box.checked{background:var(--green-50);border-color:var(--accent);}
+.avatar-cell{display:flex;align-items:center;gap:7px;}
+.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;flex-shrink:0;}
+.agg-row{display:flex;background:var(--header-bg);border-top:1px solid var(--border);flex-shrink:0;font-size:12px;font-family:'Bolder','DM Sans',sans-serif;color:var(--text-muted);overflow:hidden;flex-wrap:nowrap;}
+.agg-cell{padding:5px 11px;border-right:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.agg-cell span{color:var(--green-700);font-weight:700;}
+.add-row{height:34px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 0 0 44px;color:var(--text-muted);font-size:12px;cursor:pointer;gap:6px;transition:background .1s;}
+.add-row:hover{background:var(--row-hover);color:var(--text-dim);}
+/* PANELS */
+.panel-overlay{position:fixed;inset:0;z-index:50;display:none;}
+.panel-overlay.is-open{display:block;}
+.panel{position:fixed;background:var(--surface2);border:1px solid var(--border-hover);border-radius:8px;padding:0;z-index:51;box-shadow:var(--shadow-2);min-width:320px;max-width:440px;animation:popIn .15s ease;overflow:hidden;display:none;} /* #58: 8px, 1.3: default hidden, BUG-011: breder panel */
+.panel.is-open{display:block;}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;border-bottom:1px solid var(--border);}
+.panel-title{font-size:14px;line-height:24px;font-weight:700;color:var(--text);}
+.panel-close{width:32px;height:32px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;} /* #22: 32px */
+.panel-close:hover{color:var(--text);}
+.panel-body{padding:10px 14px;max-height:420px;overflow-y:auto;overflow-x:hidden;} /* BUG-011: verberg horizontale overflow */
+.panel-body::-webkit-scrollbar{width:5px;height:0;} /* verberg horizontale scrollbar */
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:3px;}
+.panel-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;}
+/* Filter */
+.filter-rule{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);flex-wrap:wrap;} /* BUG-011: flex-wrap voor smalle panelen */
+.filter-rule select,.filter-rule input{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;padding:4px 7px;outline:none;cursor:pointer;min-width:0;flex:1 1 auto;} /* BUG-011: flex sizing */
+.filter-rule select:focus,.filter-rule input:focus{border-color:var(--accent);}
+.filter-rule input{min-width:60px;max-width:120px;} /* BUG-011: begrensde breedte */
+.filter-remove{width:20px;height:20px;border-radius:3px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.filter-remove:hover{color:var(--accent2);}
+.filter-logic{display:flex;gap:6px;margin-bottom:10px;}
+.logic-btn{flex:1;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;text-align:center;}
+.logic-btn.active{border-color:var(--accent);color:var(--green-800);background:var(--green-50);}
+.add-filter-btn{width:100%;padding:7px;border-radius:4px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.add-filter-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* Columns */
+.col-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.col-item:last-child{border-bottom:none;}
+.col-toggle{width:30px;height:16px;border-radius:8px;background:var(--border-hover);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.col-toggle.on{background:var(--accent);}
+.col-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s;}
+.col-toggle.on::after{left:16px;}
+.col-name{font-size:12px;color:var(--text-dim);flex:1;}
+.col-drag{color:var(--text-muted);cursor:grab;font-size:12px;padding:2px 4px;border-radius:3px;transition:color .15s,background .15s;}
+.col-drag:hover{color:var(--accent);background:var(--surface3);}
+.col-drag:active{cursor:grabbing;}
+.col-item.dragging{opacity:.4;background:var(--surface3);border-radius:6px;}
+.col-item.drag-over-top{border-top:2px solid var(--green-400);padding-top:4px;}
+.col-item.drag-over-bottom{border-bottom:2px solid var(--green-400);padding-bottom:4px;}
+.col-search{width:100%;padding:6px 9px;border-radius:4px;border:1px solid var(--input-border);background:var(--surface3);color:var(--text);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;outline:none;margin-bottom:8px;}
+.col-search:focus{border-color:var(--accent);}
+.col-bulk{display:flex;gap:6px;margin-bottom:8px;}
+.col-bulk-btn{flex:1;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;text-align:center;}
+.col-bulk-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* Sort */
+.sort-rule{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);}
+.sort-rule select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;padding:4px 7px;outline:none;cursor:pointer;flex:1;}
+.sort-dir-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;}
+.sort-dir-btn.asc{border-color:var(--accent);color:var(--green-700);}
+.sort-dir-btn.desc{border-color:var(--accent4);color:var(--orange-500);}
+/* Group */
+.group-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);margin-bottom:8px;}
+.group-item select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;padding:4px 7px;outline:none;flex:1;}
+/* Export */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0;}
+.export-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);cursor:pointer;transition:all .2s;} /* #66: 12px sym, #58: 8px radius */
+.export-item:hover{border-color:var(--accent);background:var(--green-50);}
+.export-icon{font-size:22px;}
+.export-label{font-size:12px;font-weight:700;color:var(--text-dim);}
+.export-desc{font-size:12px;color:var(--text-muted);text-align:center;}
+.export-item:hover .export-label{color:var(--green-800);}
+/* Context */
+.ctx-menu{position:fixed;background:var(--surface2);border:1px solid var(--border-hover);border-radius:8px;padding:4px;min-width:165px;z-index:200;box-shadow:var(--shadow-2);display:none;animation:popIn .1s ease;} /* #58: 8px */
+.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:4px;font-size:12px;color:var(--text-dim);cursor:pointer;transition:background .1s;}
+.ctx-item:hover{background:var(--surface);color:var(--text);}
+.ctx-item.danger{color:var(--accent2);}
+.ctx-item.danger:hover{background:var(--red-50);}
+.ctx-sep{height:1px;background:var(--border);margin:3px 4px;}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:100;display:none;} /* #65: blur verwijderd, #18: side-panel */
+.modal-overlay.is-open{display:block;}
+.modal{background:var(--surface2);border-left:1px solid var(--border-hover);border-radius:0;width:420px;max-width:90vw;height:100vh;overflow-y:auto;padding:24px;position:fixed;top:0;right:0;animation:slideIn .2s ease;box-shadow:var(--shadow-2);} /* #18: side-panel */
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:20px;line-height:28px;font-weight:700;}
+.modal-close{width:26px;height:26px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.modal-close:hover{color:var(--text);}
+.modal-field{margin-bottom:12px;}
+.modal-label{font-size:12px;line-height:20px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.modal-value{font-size:14px;line-height:24px;font-family:'Bolder','DM Sans',sans-serif;color:var(--text-dim);padding:7px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);}
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:#FFFFFF;border:1px solid var(--accent);border-radius:8px;box-shadow:var(--shadow-2);padding:10px 16px;font-size:12px;color:var(--green-700);z-index:999;display:none;gap:8px;align-items:center;} /* #38: verbeterd */
+.toast.is-visible{display:flex;position:relative;overflow:hidden;}
+.toast-close{cursor:pointer;color:var(--text-muted);font-size:14px;margin-left:8px;line-height:1;padding:2px;}
+.toast-close:hover{color:var(--text);}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;background:var(--accent);border-radius:0 0 8px 8px;animation:toastProgress 2.5s linear forwards;}
+@keyframes toastProgress{from{width:100%}to{width:0}}
+/* #39: Modal sluit-animatie */
+@keyframes popOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.95) translateY(-4px)}}
+.modal.closing{animation:popOut .15s ease forwards;}
+/* Conditional */
+tbody tr.cond-red td{background:var(--red-50)!important;}
+tbody tr.cond-green td{background:var(--green-50)!important;}
+tbody tr.cond-yellow td{background:var(--yellow-50)!important;}
+tbody tr.cond-red td:first-child{border-left:3px solid var(--accent2)!important;}
+tbody tr.cond-green td:first-child{border-left:3px solid var(--accent3)!important;}
+tbody tr.cond-yellow td:first-child{border-left:3px solid var(--accent4)!important;}
+/* #67/#69/#76: Selectie-checkboxen (header + rij) */
+.row-select-cb{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-hover);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);cursor:pointer;flex-shrink:0;transition:all .12s;}
+.row-select-cb:hover{border-color:var(--accent);}
+.row-select-cb.checked{background:var(--green-50);border-color:var(--accent);}
+.row-select-cb.indeterminate{background:var(--green-50);border-color:var(--accent);}
+td:first-child .row-select-cb{margin:0 auto;} /* #76: centreer in 44px kolom */
+/* G1: Virtualisatie spacer-rijen */
+.v-spacer{border:none!important;}
+.v-spacer td{border:none!important;padding:0!important;background:transparent!important;}
+/* #17: Lege staat */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;color:var(--text-muted);gap:12px;}
+.empty-state-icon{font-size:36px;opacity:.5;}
+.empty-state-text{font-size:14px;line-height:24px;text-align:center;}
+.empty-state-btn{padding:6px 16px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);color:var(--green-800);font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.empty-state-btn:hover{background:var(--green-100);}
+/* #14: Actieve filters prominenter */
+#active-filters-bar.is-visible{background:var(--green-50);border-left:3px solid var(--accent);}
+/* #32: Tags klikbaar in tabel */
+.tag-clickable{cursor:pointer;transition:opacity .15s,box-shadow .15s;}
+.tag-clickable:hover{opacity:.8;box-shadow:0 0 0 2px var(--green-200);}
+/* #29: Zoekbalk clear-knop */
+.search-clear{display:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:0 2px;line-height:1;transition:color .15s;}
+.search-clear:hover{color:var(--accent2);}
+.search-wrap.has-value .search-clear{display:block;}
+/* #31: Actie-knop per rij */
+.row-action-btn{display:none;width:24px;height:24px;border-radius:4px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;align-items:center;justify-content:center;position:absolute;right:4px;top:50%;transform:translateY(-50%);}
+.row-action-btn:hover{background:var(--surface3);color:var(--text);}
+tr:hover .row-action-btn{display:flex;}
+/* #6: Inline stijlen → CSS-klassen */
+.toolbar-select{padding:4px 10px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);color:var(--text-dim);font-size:12px;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;outline:none;min-height:32px;}
+.toolbar-select:focus{border-color:var(--accent);}
+/* #36: Segmented control */
+.btn-seg{padding:4px 10px;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;font-family:'Bolder','DM Sans',sans-serif;cursor:pointer;transition:all .15s;min-height:32px;}
+.btn-seg:last-child{border-right:none;}
+.btn-seg:hover{background:var(--surface3);color:var(--text-dim);}
+.btn-seg.active{background:var(--green-50);color:var(--green-800);}
+/* #9: Focus-visible voor toetsenbordnavigatie */
+.btn:focus-visible,.tab:focus-visible,.col-toggle:focus-visible,.logic-btn:focus-visible,.panel-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+/* Group header */
+.group-hdr td{background:var(--surface3)!important;font-family:'Bolder','DM Sans',sans-serif!important;font-weight:700!important;font-size:14px!important;line-height:24px!important;color:var(--text-dim)!important;}
+.group-hdr:hover td{background:#DCF0F5!important;}
+.group-hdr td{transition:background .1s;}
+/* Sticky group header labels — blijven zichtbaar bij horizontaal scrollen */
+.group-hdr-inner{
+  position:sticky;
+  left:14px;
+  display:inline-flex;
+  align-items:center;
+  min-height:100%;
+  background:inherit;
+  padding-right:12px;
+  z-index:4;
+  white-space:nowrap;
+}
+.table-container.freeze-active .group-hdr-inner{
+  left:58px; /* 44px (selectie-kolom) + 14px padding */
+}
+/* Freeze column via CSS classes — BUG-009/012 fix */
+.table-container.freeze-active table thead th:nth-child(2){
+  position:sticky;left:44px;z-index:11;background:var(--header-bg);
+}
+.table-container.freeze-active table tbody td:nth-child(2){
+  position:sticky;left:44px;z-index:4;background:#FFFFFF;
+}
+.table-container.freeze-active table tbody tr:nth-child(even) td:nth-child(2){background:var(--surface);}
+.table-container.freeze-active table tbody tr:hover td:nth-child(2){background:var(--row-hover)!important;}
+.table-container.freeze-active table tbody tr.selected td:nth-child(2){background:var(--selected)!important;}
+/* Schaduwrand rechts van bevroren kolom voor visuele scheiding */
+.table-container.freeze-active table thead th:nth-child(2){box-shadow:4px 0 6px -2px rgba(0,0,0,.08);}
+.table-container.freeze-active table tbody td:nth-child(2){box-shadow:4px 0 6px -2px rgba(0,0,0,.06);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <!-- #55: tabs verplaatst naar topbar -->
+  <div class="topbar-tabs" role="tablist" id="tab-bar"></div>
+  <div class="topbar-right">
+    <button class="btn btn-system" onclick="resetViewState()"><span aria-hidden="true">🔄</span><span class="sr-only">Reset weergave</span> Reset weergave</button>
+    <button class="btn btn-export" onclick="_exportMode='all';togglePanel('export')"><span aria-hidden="true">⬇</span><span class="sr-only">Exporteren</span> Exporteren</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <select id="global-name-filter" onchange="setGlobalNameFilter(this.value)" class="toolbar-select">
+    <option value="">👤 Filter op naam</option>
+  </select>
+  <div class="search-wrap" id="search-wrap">
+    <span>🔍</span>
+    <input type="text" placeholder="Zoeken in alle velden..." id="search-input" oninput="onSearchInput()">
+    <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+  </div>
+  <div class="hsep"></div>
+  <!-- #26/#27: aria-hidden op emoji, ghost-style voor toolbar -->
+  <button class="btn btn-ghost" id="btn-filter" onclick="togglePanel('filter')"><span aria-hidden="true">⚡</span> Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px"></span></button>
+  <button class="btn btn-ghost" id="btn-cols" onclick="togglePanel('cols')"><span aria-hidden="true">☰</span> Kolommen</button>
+  <button class="btn btn-ghost" id="btn-sort" onclick="togglePanel('sort')"><span aria-hidden="true">↕</span> Sorteren</button>
+  <button class="btn btn-ghost" id="btn-group" onclick="togglePanel('group')"><span aria-hidden="true">⊞</span> Groeperen</button>
+  <button class="btn btn-ghost" id="btn-cond" onclick="toggleCond()"><span aria-hidden="true">🎨</span> Opmaak</button>
+  <div class="hsep"></div>
+  <!-- 6. Rijhoogte aanpassen -->
+  <!-- #36: Segmented control voor rijhoogte -->
+  <div id="height-segmented" style="display:inline-flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+    <button class="btn-seg active" onclick="setRowHeight('compact')" id="seg-compact" title="Compact">S</button>
+    <button class="btn-seg" onclick="setRowHeight('medium')" id="seg-medium" title="Normaal">M</button>
+    <button class="btn-seg" onclick="setRowHeight('tall')" id="seg-tall" title="Ruim">L</button>
+  </div>
+  <!-- 7. Kolom bevriezen -->
+  <button class="btn btn-ghost" id="btn-freeze" onclick="toggleFreeze()"><span aria-hidden="true">❄</span> Bevriezen</button>
+  <div class="hsep"></div>
+  <button class="btn btn-ghost" id="btn-reset" onclick="resetView()" style="display:none"><span aria-hidden="true">↺</span> Reset</button>
+  <button class="btn btn-ghost" id="btn-test" onclick="runTests()" style="display:none"><span aria-hidden="true">🧪</span> Tests</button>
+  <div class="row-count" id="row-count">50 records</div>
+</div>
+
+<!-- #73: Bulk-actie toolbar bij multi-selectie -->
+<div class="active-filters" id="selection-bar" style="background:var(--green-50);border-bottom-color:var(--green-200)">
+  <span class="af-label" id="selection-count" style="color:var(--green-800)">0 geselecteerd</span>
+  <button class="btn btn-export" onclick="openSelectionExport()" style="font-size:12px;padding:3px 10px">Exporteer selectie</button>
+  <span class="af-clear" onclick="clearSelection()" style="color:var(--green-700)">Deselecteer</span>
+</div>
+
+<!-- 8. Actieve filters balk -->
+<div class="active-filters" id="active-filters-bar">
+  <span class="af-label">Actieve filters:</span>
+  <div id="af-chips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+  <span class="af-clear" onclick="clearAllFilters()">Alles wissen</span>
+</div>
+
+<div class="main">
+  <!-- Template-refactoring sprint 3: dynamische tab-containers -->
+  <div id="tab-host"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Sprint 4, taak 4.2: ARIA live region voor schermlezer-aankondigingen -->
+<div aria-live="polite" aria-atomic="true" class="sr-only" id="live-region"></div>
+
+<div class="ctx-menu" id="ctx-menu">
+  <button class="ctx-item" type="button" onclick="expandRow()">↗ Rij openen</button>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Record</div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- FILTER PANEL -->
+<div class="panel-overlay" id="overlay-filter" onclick="closePanel('filter')"></div>
+<div class="panel" id="panel-filter">
+  <div class="panel-header"><div class="panel-title">⚡ Filters</div><div class="panel-close" onclick="closePanel('filter')">✕</div></div>
+  <div class="panel-body">
+    <div class="filter-logic">
+      <button class="logic-btn active" type="button" id="logic-and" onclick="setLogic('AND',this)">EN (AND)</button>
+      <button class="logic-btn" type="button" id="logic-or" onclick="setLogic('OR',this)">OF (OR)</button>
+    </div>
+    <div id="filter-rules"></div>
+    <button class="add-filter-btn" onclick="addFilterRule()">+ Filter toevoegen</button>
+  </div>
+  <div class="panel-footer">
+    <button class="btn" style="flex:1" onclick="clearAllFilters()">Wissen</button>
+    <button class="btn btn-primary" style="flex:1" onclick="applyFiltersAction()">Toepassen</button>
+  </div>
+</div>
+
+<!-- COLUMNS PANEL -->
+<div class="panel-overlay" id="overlay-cols" onclick="closePanel('cols')"></div>
+<div class="panel" id="panel-cols">
+  <div class="panel-header"><div class="panel-title">☰ Kolommen beheren</div><div class="panel-close" onclick="closePanel('cols')">✕</div></div>
+  <div class="panel-body">
+    <!-- 9. Kolom zoeken -->
+    <input class="col-search" placeholder="🔍 Kolom zoeken..." oninput="renderColPanel(this.value)">
+    <!-- 10. Alles tonen/verbergen -->
+    <div class="col-bulk">
+      <button class="col-bulk-btn" type="button" onclick="toggleAllCols(true)">✓ Alles tonen</button>
+      <button class="col-bulk-btn" type="button" onclick="toggleAllCols(false)">✕ Alles verbergen</button>
+    </div>
+    <div id="col-list"></div>
+  </div>
+</div>
+
+<!-- SORT PANEL (multi-level) -->
+<div class="panel-overlay" id="overlay-sort" onclick="closePanel('sort')"></div>
+<div class="panel" id="panel-sort">
+  <div class="panel-header"><div class="panel-title">↕ Meerdere sorteerniveaus</div><div class="panel-close" onclick="closePanel('sort')">✕</div></div>
+  <div class="panel-body">
+    <div id="sort-rules"></div>
+    <button class="add-filter-btn" onclick="addSortRule()">+ Sorteerniveau toevoegen</button>
+  </div>
+  <div class="panel-footer">
+    <button class="btn" style="flex:1" onclick="clearSort()">Wissen</button>
+    <button class="btn btn-primary" style="flex:1" onclick="applySortAction()">Toepassen</button>
+  </div>
+</div>
+
+<!-- GROUP PANEL -->
+<div class="panel-overlay" id="overlay-group" onclick="closePanel('group')"></div>
+<div class="panel" id="panel-group" style="min-width:320px">
+  <div class="panel-header"><div class="panel-title">⊞ Groeperen op meerdere niveaus</div><div class="panel-close" onclick="closePanel('group')">✕</div></div>
+  <div class="panel-body">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Voeg meerdere groepeerniveaus toe. Rijen worden genest van boven naar onder.</div>
+    <div id="group-rules"></div>
+    <button class="add-filter-btn" onclick="addGroupField()">+ Groepeerniveau toevoegen</button>
+  </div>
+  <div class="panel-footer">
+    <button class="btn" style="flex:1" onclick="clearGroup()">Wissen</button>
+    <button class="btn btn-primary" style="flex:1" onclick="applyGroupAction()">Toepassen</button>
+  </div>
+</div>
+
+<!-- EXPORT PANEL -->
+<div class="panel-overlay" id="overlay-export" onclick="closePanel('export')"></div>
+<div class="panel" id="panel-export" style="max-width:340px">
+  <div class="panel-header"><div class="panel-title">⬇ Exporteren</div><div class="panel-close" onclick="closePanel('export')">✕</div></div>
+  <div class="panel-body">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Exporteert huidige weergave incl. actieve filters en zichtbare kolommen.</div>
+    <!-- #37: Primaire exports eerst, visueel prominent -->
+    <div class="export-grid" style="grid-template-columns:1fr 1fr;">
+      <button class="export-item" type="button" onclick="exportCSV()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-icon">📄</div><div class="export-label" style="color:var(--green-800)">CSV</div><div class="export-desc">Kommagescheiden</div></button>
+      <button class="export-item" type="button" onclick="exportXLSX()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-icon">📊</div><div class="export-label" style="color:var(--green-800)">Excel (.xlsx)</div><div class="export-desc">Microsoft Excel</div></button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Overige formaten</div>
+    <div class="export-grid">
+      <button class="export-item" type="button" onclick="exportJSON()"><div class="export-icon">{ }</div><div class="export-label">JSON</div><div class="export-desc">Gestructureerde data</div></button>
+      <button class="export-item" type="button" onclick="exportPNG()"><div class="export-icon">🖼</div><div class="export-label">PNG</div><div class="export-desc">Visuele screenshot</div></button>
+      <button class="export-item" type="button" onclick="exportMarkdown()"><div class="export-icon">📝</div><div class="export-label">Markdown</div><div class="export-desc">Tabel in .md</div></button>
+      <button class="export-item" type="button" onclick="exportHTML()"><div class="export-icon">🌐</div><div class="export-label">HTML</div><div class="export-desc">Statische webpagina</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- #51: XLSX wordt lazy geladen bij eerste export, niet meer synchroon bij paginalaad -->
+<script>
+// ============================================================
+// VERSIE
+// ============================================================
+const DASHBOARD_VERSION = '0.14.0';
+
+// ============================================================
+// VEILIGHEID — XSS-preventie
+// ============================================================
+// Centrale HTML-escaping — voorkomt XSS bij innerHTML
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+// Attribuut-escaping — voor waarden in onclick, data-*, etc.
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/\\/g, '&#092;');
+}
+
+// ============================================================
+// DATA
+// ============================================================
+const statuses=['Actief','In Review','Voltooid','On Hold','Gepland'];
+const priorities=['Hoog','Middel','Laag'];
+const clusters=['Stedelijke Ontwikkeling','Infrastructuur','Financiën','HRM','Digitalisering','Beleid','Communicatie'];
+const directeuren=['Richard van der Helm','Marianne Schippers','Paul Janssen','Annemiek de Groot','Willem Bakker','Sandra Vos'];
+const aogs=['Erik Brouwer','Fatima El Amrani','Gerard Smit','Hilde Vermeer','Johan de Wit','Karin Bos','Leon Admiraal','Monique Peeters','Nadia Tahiri','Oscar van Dijk','Petra Linden','Robert Aalbers'];
+const projectmanagers=['Emma de Vries','Luca Martins','Sara Bakker','Tom Janssen','Kara Smit','Niels Berg','Fien Hoek','Bas Verhoeven','Ines Kuiper','Daan Peters','Mila Bosman','Sven Albers','Lisa Willems','Rick Hendrix','Nora Linden'];
+// Mapping: directeur → vaste set AOG's → vaste set PM's
+const dirAogMap={
+  'Richard van der Helm':['Erik Brouwer','Fatima El Amrani'],
+  'Marianne Schippers':['Gerard Smit','Hilde Vermeer'],
+  'Paul Janssen':['Johan de Wit','Karin Bos','Leon Admiraal'],
+  'Annemiek de Groot':['Monique Peeters','Nadia Tahiri'],
+  'Willem Bakker':['Oscar van Dijk','Petra Linden'],
+  'Sandra Vos':['Robert Aalbers','Erik Brouwer']
+};
+const aogPmMap={
+  'Erik Brouwer':['Emma de Vries','Luca Martins','Sara Bakker'],
+  'Fatima El Amrani':['Tom Janssen','Kara Smit'],
+  'Gerard Smit':['Niels Berg','Fien Hoek','Bas Verhoeven'],
+  'Hilde Vermeer':['Ines Kuiper','Daan Peters'],
+  'Johan de Wit':['Mila Bosman','Sven Albers'],
+  'Karin Bos':['Lisa Willems','Rick Hendrix'],
+  'Leon Admiraal':['Nora Linden','Emma de Vries'],
+  'Monique Peeters':['Luca Martins','Tom Janssen','Kara Smit'],
+  'Nadia Tahiri':['Niels Berg','Sara Bakker'],
+  'Oscar van Dijk':['Fien Hoek','Bas Verhoeven','Ines Kuiper'],
+  'Petra Linden':['Daan Peters','Mila Bosman'],
+  'Robert Aalbers':['Sven Albers','Lisa Willems','Rick Hendrix']
+};
+function assignSturingslijn(){
+  var dir=rnd(directeuren);
+  var aogList=dirAogMap[dir]||[aogs[0]];
+  var aog=rnd(aogList);
+  var pmList=aogPmMap[aog]||[projectmanagers[0]];
+  var pm=rnd(pmList);
+  return {directeur:dir,aog:aog,pm:pm};
+}
+const notes=['Loopt op schema','Risico: budget','Wacht op akkoord','Mijlpaal bereikt','Vertraging','Zie rapport','Afstemming nodig',''];
+const fases=['Initiatief','Definitie','Ontwerp','Realisatie','Afsluiting'];
+const risicoNiveaus=['Laag','Middel','Hoog','Kritiek'];
+const projectTypes=['Investering','Beleid','Digitaal','Fysiek','Sociaal'];
+const docStatuses=['Compleet','Incompleet','Ontbreekt'];
+const programmalijnen=['Wonen & Bouwen','Mobiliteit','Duurzaamheid','Digitalisering','Sociaal Domein','Economie','Veiligheid','Stadsontwikkeling'];
+const milieuImpacts=['Positief','Neutraal','Negatief'];
+const regios=['Centrum','Noord','Zuid','West','Oost','Charlois','Feijenoord','Delfshaven','Kralingen','IJsselmonde','Prins Alexander','Overschie','Hillegersberg'];
+const contractTypes=['Vast','Tijdelijk','Inhuur','Detachering'];
+const opleidingen=['WO','HBO','MBO'];
+const teams=['Team Alpha','Team Beta','Team Gamma','Team Delta','Team Epsilon','Team Zeta','Team Eta','Team Theta'];
+const skillSets=['Projectmanagement','Data-analyse','Communicatie','Juridisch','Financieel','ICT','Beleid','Onderzoek','HR','Procesoptimalisatie'];
+const salSchalen=['Schaal 8','Schaal 9','Schaal 10','Schaal 11','Schaal 12','Schaal 13','Schaal 14'];
+const projectNames=['Omgevingsvisie 2030','Digitale Dienstverlening','Woningbouw Noord','Energietransitie','Mobiliteitshub West','Smart City Pilot','Waterfront','Duurzaam Groen','Klantportaal v3','Dataplatform SO','Participatie Oost','Begroting 2027','Capaciteitsplan','Wijkvernieuwing Zuid','Havengebied','Circulaire Economie','Gebiedsvisie','Stadslogistiek','Sociale Cohesie','Cultuurcluster','Klimaatadaptatie','Sportvelden','Armoede Aanpak','Onderwijshuisvesting','Veiligheid & BOA','Innovatiefonds','Subsidieregeling','Groenplan 2025','Huurwoningen Plus','Erfgoed Beheer','Fietsnetwerk','OV Knooppunt','Co-creatie Lab','Schuldenaanpak','Bewonersplatform','Zorgwoningen','Vastgoedbeheer','Toerisme','Stadshaven','Participatiebudget','Recreatieplan','Kenniscentrum','Bewonersservices','Juridisch CRM','Gebiedsprogramma','Publieke Ruimte','Straatverbetering','Inclusief Wonen','Stadslab','Klimaatfonds'];
+const functies=['Projectleider','Beleidsadviseur','Financieel Specialist','Communicatieadviseur','Data Analist','Strategie Adviseur','Procesmanager','Teamcoördinator','Jurist','HR Adviseur'];
+const locs=['Rotterdam Centrum','Rotterdam Noord','Rotterdam Zuid','Rotterdam West','Thuiswerken','Hybride'];
+const teamStatuses=['Actief','Verlof','Deeltijd','Detachering'];
+const namen=['Emma de Vries','Luca Martins','Sara Bakker','Tom Janssen','Kara Smit','Niels Berg','Fien Hoek','Bas Verhoeven','Ines Kuiper','Daan Peters','Mila Bosman','Sven Albers','Lisa Willems','Rick Hendrix','Nora Linden','Joren Claes','Tine Brouwer','Floris van Dam','Anouk Pieters','Hugo Stam','Leyla Yilmaz','Pim de Graaf','Iris Smeets','Koen Baas','Vera Teunissen','Lars Mooren','Amber Scholten','Felix Dijk','Naomi Vos','Sander Groot','Celine Post','Max Wolters','Roos Meijer','Thijs Bakker','Elena Berg','Casper Jansen','Maud Heijden','Tijs Kok','Sofie Muller','Arjan Bos','Dana Prins','Wout Schot','Kim Veld','Joris Laan','Hanna Roos','Bram Zijl','Lotte Burg','Tijmen Arts','Yara Lam','Job Sterk'];
+const avatarColors=['#00811F','#D70D0D','#00689E','#EB7900','#C93675','#F6AE12','#3893BA'];
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+function rndInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function rndDate(y1,y2){return new Date(rndInt(y1,y2),rndInt(0,11),rndInt(1,28)).toISOString().split('T')[0];}
+
+// Sprint 3, taak 3.1: factory-functies — single source of truth voor data-generatie
+function generateProjectData(count){return Array.from({length:count},function(_,i){var sl=assignSturingslijn();return {id:i+1,name:projectNames[i%projectNames.length]||'Project '+(i+1),status:rnd(statuses),priority:rnd(priorities),directeur:sl.directeur,aog:sl.aog,pm:sl.pm,deadline:rndDate(2025,2027),progress:rndInt(0,100),budget:rndInt(50,500)*1000,cluster:rnd(clusters),approved:Math.random()>.4,note:rnd(notes),fase:rnd(fases),risico:rnd(risicoNiveaus),startDatum:rndDate(2022,2026),regio:rnd(regios),type:rnd(projectTypes),fte:rndInt(1,20),kostenRealisatie:rndInt(10,400)*1000,oplevering:rndDate(2026,2029),stakeholders:rndInt(2,30),laatsteUpdate:rndDate(2025,2026),documentatie:rnd(docStatuses),programma:rnd(programmalijnen),milieu:rnd(milieuImpacts)};});}
+function generateTeamData(count){return Array.from({length:count},function(_,i){var nm=namen[i%namen.length]||(i<namen.length?namen[i]:'Lid '+(i+1));return {id:i+1,name:nm,functie:rnd(functies),afdeling:rnd(clusters),email:nm.toLowerCase().replace(/\s/g,'.').replace(/[àáâ]/g,'a')+(i>=namen.length?i:'')+'@rotterdam.nl',inDienst:rndDate(2010,2024),status:rnd(teamStatuses),beoordeling:rndInt(1,5),locatie:rnd(locs),capaciteit:rndInt(20,100),actief:Math.random()>.2,telefoon:'06-'+rndInt(10000000,99999999),contract:rnd(contractTypes),uren:rnd([24,28,32,36,40]),team:rnd(teams),leidinggevende:rnd(namen),opleiding:rnd(opleidingen),startProject:rndDate(2024,2026),projecten:rndInt(1,8),salSchaal:rnd(salSchalen),skills:rnd(skillSets),beschikbaarheid:rndInt(40,100),reisafstand:rndInt(2,60),kantoorDagen:rndInt(1,5),certificeringen:rndInt(0,6),laatsteGesprek:rndDate(2025,2026)};});}
+// G3: Pre-built zoekindex — één lowercase string per rij
+function buildSearchIndex(data){
+  data.forEach(function(r){
+    var parts=[];
+    for(var k in r){if(k==='_searchStr') continue;if(r.hasOwnProperty(k)){var v=r[k];parts.push(String(v===undefined||v===null?'':v));}}
+    r._searchStr=parts.join(' ').toLowerCase();
+  });
+}
+
+// Template-refactoring sprint 3: data/kolommen-registry (sourceRows per tab)
+var _tabData=[];
+var _tabCols=[];
+
+// Sprint 3, taak 3.3: initialisatie vanuit dashboardConfig (na data-generatie hieronder)
+// Wordt gevuld na cols0/cols1 definitie — zie initTabDataFromConfig()
+
+const cols0=[
+  {key:'name',label:'Projectnaam',icon:'Aa',visible:true, renderer:'text',type:'text'},
+  {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
+  {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'priority',type:'enum'},
+  {key:'directeur',label:'Verantwoordelijke Directeur',icon:'👔',visible:true, renderer:'avatar',type:'text'},
+  {key:'aog',label:'Ambtelijk Opdrachtgever',icon:'📋',visible:true, renderer:'avatar',type:'text'},
+  {key:'pm',label:'Projectmanager',icon:'👤',visible:true, renderer:'avatar',type:'text'},
+  {key:'deadline',label:'Deadline',icon:'📅',visible:true, renderer:'date',type:'date'},
+  {key:'progress',label:'Voortgang',icon:'▦',visible:true, renderer:'progress',type:'number'},
+  {key:'budget',label:'Budget',icon:'€',visible:true, renderer:'budget',type:'number'},
+  {key:'cluster',label:'Cluster',icon:'🏷',visible:true, renderer:'tag',type:'enum'},
+  {key:'approved',label:'Goedgekeurd',icon:'✓',visible:true, renderer:'check',type:'boolean'},
+  {key:'note',label:'Notitie',icon:'📝',visible:true, renderer:'note',type:'text'},
+  {key:'fase',label:'Fase',icon:'📊',visible:true, renderer:'tag',type:'enum',tagColors:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'}},
+  {key:'risico',label:'Risiconiveau',icon:'⚠',visible:true, renderer:'tag',type:'enum',tagColors:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'}},
+  {key:'startDatum',label:'Startdatum',icon:'📅',visible:true, renderer:'date',type:'date'},
+  {key:'regio',label:'Regio',icon:'🗺',visible:true, renderer:'tag',type:'enum'},
+  {key:'type',label:'Projecttype',icon:'🏗',visible:true, renderer:'tag',type:'enum'},
+  {key:'fte',label:'FTE',icon:'👥',visible:true, renderer:'number',type:'number'},
+  {key:'kostenRealisatie',label:'Kosten Realisatie',icon:'💰',visible:true, renderer:'budget',type:'number'},
+  {key:'oplevering',label:'Oplevering',icon:'🎯',visible:true, renderer:'date',type:'date'},
+  {key:'stakeholders',label:'Stakeholders',icon:'🤝',visible:true, renderer:'number',type:'number'},
+  {key:'laatsteUpdate',label:'Laatste Update',icon:'🔄',visible:true, renderer:'date',type:'date'},
+  {key:'documentatie',label:'Documentatie',icon:'📁',visible:true, renderer:'tag',type:'enum',tagColors:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'}},
+  {key:'programma',label:'Programmalijn',icon:'📐',visible:true, renderer:'tag',type:'enum'},
+  {key:'milieu',label:'Milieu-impact',icon:'🌿',visible:true, renderer:'tag',type:'enum',tagColors:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'}},
+];
+const cols1=[
+  {key:'name',label:'Naam',icon:'Aa',visible:true, renderer:'avatar',type:'text'},
+  {key:'functie',label:'Functie',icon:'💼',visible:true, renderer:'text',type:'text'},
+  {key:'afdeling',label:'Afdeling',icon:'🏢',visible:true, renderer:'tag',type:'enum'},
+  {key:'email',label:'Email',icon:'📧',visible:true, renderer:'email',type:'text'},
+  {key:'inDienst',label:'In Dienst',icon:'📅',visible:true, renderer:'date',type:'date'},
+  {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
+  {key:'beoordeling',label:'Beoordeling',icon:'⭐',visible:true, renderer:'star',type:'number'},
+  {key:'locatie',label:'Locatie',icon:'🗺',visible:true, renderer:'text',type:'text'},
+  {key:'capaciteit',label:'Capaciteit',icon:'▦',visible:true, renderer:'progress',type:'number'},
+  {key:'actief',label:'Actief',icon:'✓',visible:true, renderer:'check',type:'boolean'},
+  {key:'telefoon',label:'Telefoon',icon:'📞',visible:true, renderer:'mono',type:'text'},
+  {key:'contract',label:'Contract',icon:'📄',visible:true, renderer:'tag',type:'enum',tagColors:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'}},
+  {key:'uren',label:'Uren/week',icon:'⏱',visible:true, renderer:'number',type:'number',suffix:'u'},
+  {key:'team',label:'Team',icon:'👥',visible:true, renderer:'tag',type:'enum'},
+  {key:'leidinggevende',label:'Leidinggevende',icon:'👔',visible:true, renderer:'avatar',type:'text'},
+  {key:'opleiding',label:'Opleiding',icon:'🎓',visible:true, renderer:'tag',type:'enum',tagColors:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}},
+  {key:'startProject',label:'Start Project',icon:'📅',visible:true, renderer:'date',type:'date'},
+  {key:'projecten',label:'Projecten',icon:'📊',visible:true, renderer:'number',type:'number'},
+  {key:'salSchaal',label:'Salarisschaal',icon:'💶',visible:true, renderer:'text',type:'text'},
+  {key:'skills',label:'Skills',icon:'🛠',visible:true, renderer:'tag',type:'enum'},
+  {key:'beschikbaarheid',label:'Beschikbaarheid',icon:'▦',visible:true, renderer:'progress',type:'number'},
+  {key:'reisafstand',label:'Reisafstand (km)',icon:'🚗',visible:true, renderer:'mono',type:'number',suffix:' km'},
+  {key:'kantoorDagen',label:'Kantoordagen',icon:'🏢',visible:true, renderer:'number',type:'number',suffix:'d'},
+  {key:'certificeringen',label:'Certificeringen',icon:'🏅',visible:true, renderer:'number',type:'number'},
+  {key:'laatsteGesprek',label:'Laatste Gesprek',icon:'💬',visible:true, renderer:'date',type:'date'},
+];
+
+// ============================================================
+// DASHBOARD CONFIG — declaratieve structuur (template-refactoring sprint 2)
+// ============================================================
+const dashboardConfig = {
+  app: {
+    title: "Dashboard Gemeente Rotterdam",
+    version: DASHBOARD_VERSION,
+    defaultTabId: "projects"
+  },
+  tabs: [
+    {
+      id: "projects",
+      label: "Projecten",
+      icon: "📋",
+      dataSource: { type: "embedded" },
+      columns: cols0,
+      generateData: generateProjectData,
+      defaultRowCount: 4500,
+      features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
+      exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
+      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] }
+    },
+    {
+      id: "team",
+      label: "Teamleden",
+      icon: "👥",
+      dataSource: { type: "embedded" },
+      columns: cols1,
+      generateData: generateTeamData,
+      defaultRowCount: 4500,
+      features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
+      exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
+      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] }
+    }
+  ]
+};
+
+// Config-lookup helpers
+function getTabConfig(tabId){
+  return dashboardConfig.tabs.find(function(t){ return t.id===tabId; });
+}
+function getTabConfigByIndex(idx){
+  return dashboardConfig.tabs[idx]||null;
+}
+function getTabIndex(tabId){
+  return dashboardConfig.tabs.findIndex(function(t){ return t.id===tabId; });
+}
+function getTabLabel(tabIdOrIndex){
+  var tc;
+  if(typeof tabIdOrIndex==='number') tc=dashboardConfig.tabs[tabIdOrIndex];
+  else tc=getTabConfig(tabIdOrIndex);
+  return tc?tc.label:'';
+}
+
+// Sprint 3, taak 3.3: initialiseer _tabData/_tabCols vanuit dashboardConfig
+function initTabDataFromConfig(){
+  dashboardConfig.tabs.forEach(function(tab, idx){
+    _tabCols[idx] = tab.columns;
+    if(tab.dataSource.type === 'embedded' && typeof tab.generateData === 'function'){
+      _tabData[idx] = tab.generateData(tab.defaultRowCount);
+      buildSearchIndex(_tabData[idx]);
+    }
+  });
+}
+initTabDataFromConfig();
+
+// Sprint 3, taak 3.4: legacy accessors — data0/data1 verwijzen naar _tabData[0]/[1]
+Object.defineProperty(window, 'data0', {
+  get: function(){ return _tabData[0]; },
+  set: function(v){ _tabData[0] = v; },
+  configurable: true
+});
+Object.defineProperty(window, 'data1', {
+  get: function(){ return _tabData[1]; },
+  set: function(v){ _tabData[1] = v; },
+  configurable: true
+});
+
+// ============================================================
+// APPSTATE — centraal state-object (sprint 2, taak 2.1)
+// ============================================================
+var AppState = {
+  // Sprint 5, taak 5.1: id-gebaseerde navigatie
+  activeTabId: dashboardConfig.app.defaultTabId,
+  // Selectie (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+  selectedRows: new Set(),
+  _lastClickedIdx: null,
+  contextRow: null,
+  // Filtering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+  filterRules: [],
+  filterLogic: 'AND',
+  colFilters: {},
+  globalNameFilter: null,
+  _colFilterPanelKey: null,
+  _colFilterSearch: '',
+  // Sortering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+  sortRules: [],
+  _draftSortRules: null,
+  // Groepering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+  groupFields: [],
+  collapsedGroups: new Set(),
+  // Weergave (globaal)
+  condEnabled: false,
+  rowHeight: 'compact',
+  freezeCol: false,
+  // Panels (globaal)
+  activePanel: null,
+  _panelPrevFocus: null,
+  _panelTrapHandler: null,
+  // Export (globaal)
+  _exportMode: 'all',
+  // Zoek (globaal)
+  _searchTimer: null,
+  // [UI] View-state — gescheiden van data-state
+  ui: {
+    density: 'compact',
+    openPanel: null,
+    freezeFirstDataColumn: false,
+    condFormattingEnabled: false
+  },
+  // Sprint 5, taak 5.2: per-tab viewState
+  tabs: (function(){
+    var t={};
+    dashboardConfig.tabs.forEach(function(tab){
+      t[tab.id]={
+        viewState: {
+          selection: new Set(),
+          filterRules: [],
+          colFilters: {},
+          sortRules: [],
+          groupFields: [],
+          collapsedGroups: new Set(),
+          globalNameFilter: null,
+          _lastClickedIdx: null,
+          _draftSortRules: null
+        }
+      };
+    });
+    return t;
+  })(),
+  // Methoden
+  reset: function() {
+    this.filterRules = [];
+    this.sortRules = [];
+    this.groupFields = [];
+    this.colFilters = {};
+    this.collapsedGroups.clear();
+    this.globalNameFilter = null;
+    this.condEnabled = false;
+    this.rowHeight = 'compact';
+    this.ui.density = 'compact';
+    this.freezeCol = false;
+    this.ui.freezeFirstDataColumn = false;
+    this.selectedRows.clear();
+    this._lastClickedIdx = null;
+    this._draftSortRules = null;
+    this._exportMode = 'all';
+  },
+  clearCaches: function() {
+    if (this._cache) {
+      this._cache.avatar.clear();
+      this._cache.renderData = null;
+      this._cache.renderCols = null;
+      this._cache.renderTab = null;
+      this._cache.renderHpx = null;
+      this._cache.uniqueValues = {};
+      this._cache.uniqueValuesKey = null;
+    }
+  }
+};
+
+// Sprint 5, taak 5.1: currentTab als computed property (legacy accessor op AppState)
+Object.defineProperty(AppState, 'currentTab', {
+  get: function(){ return getTabIndex(this.activeTabId); },
+  set: function(idx){ var tab=dashboardConfig.tabs[idx]; if(tab) this.activeTabId=tab.id; },
+  configurable: true,
+  enumerable: true
+});
+
+// Sprint 5, taak 5.1: _tabSelections legacy accessor — leest uit per-tab viewState
+Object.defineProperty(AppState, '_tabSelections', {
+  get: function(){
+    var self=this;
+    var proxy={};
+    dashboardConfig.tabs.forEach(function(tab,i){
+      Object.defineProperty(proxy, i, {
+        get: function(){ return self.tabs[tab.id].viewState.selection; },
+        set: function(v){ self.tabs[tab.id].viewState.selection=v; },
+        configurable: true, enumerable: true
+      });
+    });
+    return proxy;
+  },
+  configurable: true
+});
+
+// Sprint 5, taak 5.2: save/restore viewState bij tabswitch
+function saveTabViewState(){
+  var vs=AppState.tabs[AppState.activeTabId].viewState;
+  vs.selection=new Set(AppState.selectedRows);
+  vs.filterRules=AppState.filterRules.slice();
+  vs.colFilters=Object.assign({},AppState.colFilters);
+  vs.sortRules=AppState.sortRules.slice();
+  vs.groupFields=AppState.groupFields.slice();
+  vs.collapsedGroups=new Set(AppState.collapsedGroups);
+  vs.globalNameFilter=AppState.globalNameFilter;
+  vs._lastClickedIdx=AppState._lastClickedIdx;
+  vs._draftSortRules=AppState._draftSortRules;
+}
+function restoreTabViewState(tabId){
+  var vs=AppState.tabs[tabId].viewState;
+  AppState.selectedRows=new Set(vs.selection);
+  AppState.filterRules=vs.filterRules.slice();
+  AppState.colFilters=Object.assign({},vs.colFilters);
+  AppState.sortRules=vs.sortRules.slice();
+  AppState.groupFields=vs.groupFields.slice();
+  AppState.collapsedGroups=new Set(vs.collapsedGroups);
+  AppState.globalNameFilter=vs.globalNameFilter;
+  AppState._lastClickedIdx=vs._lastClickedIdx;
+  AppState._draftSortRules=vs._draftSortRules;
+}
+
+// Legacy-accessors — bestaande code die globals leest/schrijft
+// blijft werken via deze getter/setters. @deprecated
+['currentTab','selectedRows','contextRow',
+ 'filterRules','filterLogic','sortRules','_draftSortRules',
+ 'groupFields','condEnabled','rowHeight','freezeCol',
+ 'activePanel','colFilters','globalNameFilter',
+ 'collapsedGroups','_exportMode','_lastClickedIdx',
+ '_panelPrevFocus','_panelTrapHandler','_searchTimer',
+ '_colFilterPanelKey','_colFilterSearch'].forEach(function(key) {
+  Object.defineProperty(window, key, {
+    get: function() { return AppState[key]; },
+    set: function(v) { AppState[key] = v; },
+    configurable: true
+  });
+});
+
+// State (legacy declarations removed — now in AppState)
+// SORT-002: Draft model voor sorteerpaneel — wijzigingen pas toepassen bij "Klaar"
+// _draftSortRules verplaatst naar AppState
+function _cloneSortRules(rules){return rules.map(function(r){return {field:r.field,dir:r.dir};});}
+function _openSortDraft(){_draftSortRules=_cloneSortRules(sortRules);}
+function _applySortDraft(){
+  // SORT-005: Verwijder lege regels bij toepassen
+  if(_draftSortRules) _draftSortRules=_draftSortRules.filter(function(r){return r.field!=='';});
+  renderSortPanel();
+}
+function _commitSortDraft(){
+  if(_draftSortRules){
+    sortRules=_draftSortRules.filter(function(r){return r.field!=='';});
+    _draftSortRules=null;
+  }
+  _invalidate(['sort','group','body','meta']);
+  render();
+}
+function _discardSortDraft(){_draftSortRules=null;}
+// Helper: actieve regels voor paneel (draft als actief, anders applied)
+function _getSortRulesForPanel(){return _draftSortRules!==null?_draftSortRules:sortRules;}
+
+// groupFields, condEnabled, rowHeight, freezeCol, activePanel,
+// colFilters, globalNameFilter verplaatst naar AppState
+const categoricalKeys=['status','priority','directeur','aog','pm','cluster','afdeling','functie','locatie','fase','risico','regio','type','documentatie','programma','milieu','contract','team','leidinggevende','opleiding','salSchaal','skills'];
+
+// ============================================================
+// STATE MANAGEMENT & DIRTY FLAGS
+// ============================================================
+var _perfDebug = true; // A3: toggle performance logging
+
+// A3: Performance measurement helper
+function _measure(name, fn) {
+  if (!_perfDebug) return fn();
+  var t0 = performance.now();
+  var result = fn();
+  var t1 = performance.now();
+  console.log('[perf] ' + name + ': ' + (t1 - t0).toFixed(1) + 'ms');
+  return result;
+}
+
+// A2: Dirty flags — verplaatst naar AppState._dirty (sprint 2, taak 2.2)
+AppState._dirty = {
+  data: true,      // filteredData needs recompute
+  sort: true,      // sortedData needs recompute
+  group: true,     // groupModel needs recompute
+  agg: true,       // aggModel needs recompute
+  header: true,    // header needs rerender
+  body: true,      // body needs rerender
+  meta: true,      // row count, badges, filter bar need update
+  widths: true     // agg widths need sync
+};
+var _dirty = AppState._dirty; // legacy alias
+
+// A2: Mark specific flags as dirty
+function _invalidate(flags) {
+  flags.forEach(function(f) { _dirty[f] = true; });
+  // Reset virtual range tracking bij data/body invalidatie
+  // so renderVirtualBody doesn't skip the rerender
+  if (_dirty.data || _dirty.sort || _dirty.body) {
+    _lastVStart = -1; _lastVEnd = -1; _lastVDataLen = -1;
+  }
+  // Invalidate unique value cache bij data-wijziging
+  if (_dirty.data) {
+    _invalidateUniqueCache();
+  }
+}
+
+// A2: Mark ALL flags as dirty
+function _invalidateAll() {
+  for (var k in _dirty) _dirty[k] = true;
+}
+
+// A2: Derived state cache — verplaatst naar AppState._derived (sprint 2, taak 2.2)
+AppState._derived = {
+  filteredData: null,
+  sortedData: null,
+  groupModel: null,
+  visibleCols: null,
+  dataSignature: null,
+  sortSignature: null,
+  groupSignature: null
+};
+var _derived = AppState._derived; // legacy alias
+
+// Sprint 3, taak 3.3: config-driven getCols/getData via _tabCols/_tabData
+function getCols(tabIdx){return _tabCols[tabIdx!==undefined?tabIdx:currentTab];}
+function getData(tabIdx){return _tabData[tabIdx!==undefined?tabIdx:currentTab];}
+
+// ============================================================
+// CELL RENDERERS
+// ============================================================
+function statusTag(s){var m={Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'};return '<span class="tag tag-clickable '+(m[s]||'tag-info')+'" data-tag-field="status" data-tag-value="'+escapeAttr(s)+'">'+escapeHtml(s)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
+function priorityTag(p){var m={Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'};return '<span class="tag tag-clickable '+(m[p]||'tag-info')+'" data-tag-field="priority" data-tag-value="'+escapeAttr(p)+'">'+escapeHtml(p)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
+function progressCell(v){const pct=Math.min(100,Math.max(0,+v));const c=pct>=70?'var(--green-400)':pct>=40?'var(--orange-400)':'var(--red-400)';return '<div class="progress-cell"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+c+'"></div></div><span class="progress-label">'+pct+'%</span></div>';}
+function checkCell(v){return '<div class="checkbox-cell"><div class="check-box'+(v?' checked':'')+'">'+( v?'✓':'')+'</div></div>';}
+// #48: avatarCell memoization — cache naar AppState._cache (sprint 2, taak 2.3)
+AppState._cache = {
+  avatar: new Map(),
+  starCells: null, // wordt hieronder gezet
+  renderData: null,
+  renderCols: null,
+  renderTab: null,
+  renderHpx: null,
+  uniqueValues: {},
+  uniqueValuesKey: null
+};
+var _avatarCache = AppState._cache.avatar; // legacy alias
+function avatarCell(name){
+  if(_avatarCache.has(name)) return _avatarCache.get(name);
+  var c=avatarColors[Math.abs((name||'').charCodeAt(0))%avatarColors.length];
+  var ini=escapeHtml((name||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2));
+  var safeName=escapeHtml(name);
+  var html='<div class="avatar-cell"><div class="avatar" style="background:'+c+'22;color:'+c+'">'+ini+'</div>'+safeName+'</div>';
+  _avatarCache.set(name,html);
+  return html;
+}
+// #49: starCell pre-compute — slechts 5 mogelijke waarden
+var _STAR_CELLS=[1,2,3,4,5].map(function(n){return '<span style="color:#F6AE12;letter-spacing:1px">'+'★'.repeat(n)+'☆'.repeat(5-n)+'</span>';});
+AppState._cache.starCells = _STAR_CELLS;
+function starCell(n){return _STAR_CELLS[(n||1)-1]||_STAR_CELLS[0];}
+function dateFmt(v){if(!v) return '';return String(v).substring(0,7);}
+function budgetFmt(v){return '€\u00A0'+Number(v).toLocaleString('nl-NL');}
+
+// #47: dispatch table — O(1) lookup i.p.v. 12 if-statements per cel
+// Sprint 4, taak 4.2: generieke cellRenderers registry — dispatcht op col.renderer, niet col.key
+var cellRenderers={
+  text:     function(v)      { return '<span>'+escapeHtml(v===undefined||v===null?'':v)+'</span>'; },
+  date:     function(v)      { return '<span>'+escapeHtml(dateFmt(v))+'</span>'; },
+  budget:   function(v)      { return '<span style="font-family:\'Courier New\',monospace;font-size:12px;letter-spacing:-.2px">'+escapeHtml(budgetFmt(v))+'</span>'; },
+  avatar:   function(v)      { return avatarCell(v); },
+  status:   function(v)      { return statusTag(v); },
+  priority: function(v)      { return priorityTag(v); },
+  progress: function(v)      { return progressCell(v); },
+  check:    function(v)      { return checkCell(v); },
+  star:     function(v)      { return starCell(v); },
+  tag:      function(v,col)  { var cls=(col.tagColors&&col.tagColors[v])||'tag-info'; return '<span class="tag '+cls+'">'+escapeHtml(v||'')+'</span>'; },
+  email:    function(v)      { return '<span style="color:var(--accent);text-decoration:underline;cursor:pointer">'+escapeHtml(v||'')+'</span>'; },
+  note:     function(v)      { return '<span style="color:var(--text-muted);font-style:italic">'+escapeHtml(v||'')+'</span>'; },
+  mono:     function(v,col)  { var s=col.suffix||''; return '<span style="font-family:\'Courier New\',monospace;font-size:12px">'+escapeHtml(v===undefined||v===null?'':v)+s+'</span>'; },
+  number:   function(v,col)  { var s=col.suffix||''; return '<span style="font-weight:600">'+escapeHtml(v===undefined||v===null?0:v)+s+'</span>'; }
+};
+
+// Sprint 4, taak 4.2: renderCell dispatcht op col.renderer — nul col.key checks
+function renderCell(col,r){
+  var v=r[col.key];
+  var fn=cellRenderers[col.renderer||'text'];
+  return fn ? fn(v,col) : cellRenderers.text(v,col);
+}
+
+// ============================================================
+// FILTER
+// ============================================================
+const filterOps={'bevat':'contains','bevat niet':'not_contains','is gelijk aan':'equals','is niet':'not_equals','groter dan':'gt','kleiner dan':'lt','is leeg':'empty','is niet leeg':'not_empty'};
+
+// Sprint 3, taak 3.4: defensive coding — NaN-checks op gt/lt
+function matchRule(r,rule){
+  var raw=r[rule.field];
+  var val=String(raw===undefined||raw===null?'':raw).toLowerCase();
+  var rv=(rule.value||'').toLowerCase();
+  switch(rule.op){
+    case 'contains':     return val.includes(rv);
+    case 'not_contains': return !val.includes(rv);
+    case 'equals':       return val===rv;
+    case 'not_equals':   return val!==rv;
+    case 'gt':
+      var numA=parseFloat(raw),numB=parseFloat(rv);
+      return !isNaN(numA)&&!isNaN(numB)&&numA>numB;
+    case 'lt':
+      var numA2=parseFloat(raw),numB2=parseFloat(rv);
+      return !isNaN(numA2)&&!isNaN(numB2)&&numA2<numB2;
+    case 'empty':        return !raw&&raw!==0;
+    case 'not_empty':    return !!raw||raw===0;
+    default:             return true;
+  }
+}
+function applyFiltersToData(data){
+  // Apply global name filter first
+  if(globalNameFilter){
+    if(currentTab===0){
+      data=data.filter(function(r){return r.directeur===globalNameFilter||r.aog===globalNameFilter||r.pm===globalNameFilter;});
+    } else {
+      data=data.filter(function(r){return r.name===globalNameFilter;});
+    }
+  }
+
+  // Apply column filters (AND) — if colFilters[key] exists, only show matching values
+  Object.keys(colFilters).forEach(function(key){
+    var selectedVals=colFilters[key];
+    if(selectedVals){
+      data=data.filter(function(r){return selectedVals.has(String(r[key]===undefined||r[key]===null?'':r[key]));});
+    }
+  });
+
+  // Apply filter rules
+  const active=filterRules.filter(function(r){return r.field&&r.op;});
+  if(!active.length) return data;
+  return data.filter(function(r){
+    if(filterLogic==='AND') return active.every(function(rule){return matchRule(r,rule);});
+    return active.some(function(rule){return matchRule(r,rule);});
+  });
+}
+
+// ============================================================
+// COLUMN FILTER HELPERS
+// ============================================================
+// Logische sorteervolgorde voor ordinale kolommen
+var _ordinalOrders={
+  priority:['Hoog','Middel','Laag'],
+  risico:['Kritiek','Hoog','Middel','Laag'],
+  fase:['Initiatief','Definitie','Ontwerp','Realisatie','Afsluiting'],
+  documentatie:['Compleet','Incompleet','Ontbreekt'],
+  milieu:['Positief','Neutraal','Negatief'],
+  contract:['Vast','Tijdelijk','Inhuur','Detachering'],
+  opleiding:['WO','HBO','MBO'],
+  status:['Actief','In Review','Gepland','On Hold','Voltooid','Verlof','Deeltijd','Detachering'],
+  beoordeling:['5','4','3','2','1']
+};
+// Kleurcodering per kolom → waarde → CSS class
+// Sprint 3, taak 3.5: semantische kleur-classes
+var _valTagColors={
+  status:{Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'},
+  priority:{Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'},
+  fase:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'},
+  risico:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'},
+  documentatie:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'},
+  milieu:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'},
+  contract:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'},
+  opleiding:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}
+};
+
+function getUniqueValuesWithCounts(colKey){
+  // Check cache
+  var cacheKey = _getUniqueCacheKey();
+  if (cacheKey === _uniqueValueCacheKey && _uniqueValueCache[colKey]) {
+    return _uniqueValueCache[colKey];
+  }
+  // Cache key changed — clear old cache
+  if (cacheKey !== _uniqueValueCacheKey) {
+    _uniqueValueCache = {};
+    _uniqueValueCacheKey = cacheKey;
+  }
+
+  var data=getData();
+  var counts={};
+  data.forEach(function(r){
+    var v=String(r[colKey]===undefined||r[colKey]===null?'':r[colKey]);
+    counts[v]=(counts[v]||0)+1;
+  });
+  var vals=Object.keys(counts);
+  // Logische sortering als ordinale kolom, anders alfabetisch
+  if(_ordinalOrders[colKey]){
+    var order=_ordinalOrders[colKey];
+    vals.sort(function(a,b){
+      var ia=order.indexOf(a),ib=order.indexOf(b);
+      if(ia===-1) ia=999;if(ib===-1) ib=999;
+      return ia-ib;
+    });
+  } else {
+    vals.sort();
+  }
+  var result = {vals:vals,counts:counts};
+  _uniqueValueCache[colKey] = result;
+  return result;
+}
+
+// _colFilterPanelKey, _colFilterSearch verplaatst naar AppState
+function closeColFilterPanel(){
+  var p=document.getElementById('col-filter-panel');
+  var o=document.getElementById('col-filter-overlay');
+  if(p) p.remove();
+  if(o) o.remove();
+  _colFilterPanelKey=null;
+  _colFilterSearch='';
+}
+function isColValChecked(colKey,val){
+  if(!colFilters[colKey]) return true;
+  return colFilters[colKey].has(val);
+}
+function showColFilterPanel(colKey,th){
+  var info=getUniqueValuesWithCounts(colKey);
+  closeColFilterPanel();
+  _colFilterPanelKey=colKey;
+  _colFilterSearch='';
+  var panel=document.createElement('div');
+  panel.id='col-filter-panel';
+  panel.style.cssText='position:fixed;background:var(--surface2);border:1px solid var(--border-hover);border-radius:8px;padding:0;z-index:51;box-shadow:var(--shadow-2);min-width:260px;max-width:340px;animation:popIn .15s ease;overflow:hidden;';
+  var rect=th.getBoundingClientRect();
+  panel.style.top=(rect.bottom+4)+'px';
+  panel.style.left=Math.min(rect.left,window.innerWidth-350)+'px';
+  rebuildColFilterPanelContent(panel,colKey,info);
+  document.body.appendChild(panel);
+  var overlay=document.createElement('div');
+  overlay.id='col-filter-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:50;';
+  overlay.onclick=function(){closeColFilterPanel();};
+  document.body.appendChild(overlay);
+  // Focus zoekbalk als > 8 waarden
+  if(info.vals.length>8){var si=panel.querySelector('.cf-search');if(si)si.focus();}
+  return true;
+}
+function rebuildColFilterPanelContent(panel,colKey,info){
+  var vals=info.vals;var counts=info.counts;
+  var colLabel=(getCols().find(function(c){return c.key===colKey;})||{}).label||colKey;
+  var allChecked=!colFilters[colKey];
+  var noneChecked=colFilters[colKey]&&colFilters[colKey].size===0;
+  var checkedCount=allChecked?vals.length:(colFilters[colKey]?colFilters[colKey].size:vals.length);
+  var tagColors=_valTagColors[colKey]||null;
+  var totalData=vals.reduce(function(s,v){return s+counts[v];},0);
+
+  // Header met samenvatting
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid var(--border);">'+
+    '<div style="display:flex;flex-direction:column;gap:1px;">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);">'+escapeHtml(colLabel)+'</div>'+
+    '<div style="font-size:11px;color:var(--text-muted);">'+(allChecked?'Alle waarden':'<span style="color:var(--accent);font-weight:600;">'+checkedCount+' van '+vals.length+'</span> geselecteerd')+'</div>'+
+    '</div>'+
+    '<div style="width:22px;height:22px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;" onclick="closeColFilterPanel()">✕</div>'+
+    '</div>';
+
+  // Zoekbalk bij > 8 waarden
+  if(vals.length>8){
+    html+='<div style="padding:8px 12px 4px;"><input class="cf-search" type="text" placeholder="Zoek waarde\u2026" value="'+escapeAttr(_colFilterSearch||'')+'" oninput="_colFilterSearch=this.value;_cfRefresh();" style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;outline:none;background:var(--surface3);color:var(--text);"/></div>';
+  }
+
+  html+='<div style="padding:6px 12px 4px;">';
+  // Alles / Geen / Inverteer buttons
+  html+='<div style="display:flex;gap:4px;margin-bottom:6px;">'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid '+(allChecked?'var(--accent)':'var(--border)')+';background:'+(allChecked?'var(--green-50)':'var(--surface3)')+';color:'+(allChecked?'var(--green-800)':'var(--text-muted)')+';font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',true)">✓ Alles</div>'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid '+(noneChecked?'var(--accent2)':'var(--border)')+';background:'+(noneChecked?'var(--red-50)':'var(--surface3)')+';color:'+(noneChecked?'var(--red-700)':'var(--text-muted)')+';font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',false)">✕ Geen</div>'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterInvert(\''+escapeAttr(colKey)+'\')">⇄ Inverteer</div>'+
+    '</div>';
+  html+='</div>';
+
+  // Scrollbare lijst
+  html+='<div style="padding:0 12px 8px;max-height:280px;overflow-y:auto;">';
+  var search=(_colFilterSearch||'').toLowerCase();
+  var visibleVals=search?vals.filter(function(v){return v.toLowerCase().includes(search);}):vals;
+  if(visibleVals.length===0&&search){
+    html+='<div style="padding:12px 4px;font-size:12px;color:var(--text-muted);text-align:center;">Geen waarden gevonden</div>';
+  }
+  visibleVals.forEach(function(v){
+    var checked=isColValChecked(colKey,v);
+    var safeV=escapeAttr(v);
+    var count=counts[v]||0;
+    var boxStyle='width:16px;height:16px;border-radius:3px;border:1.5px solid '+(checked?'var(--accent)':'var(--border-hover)')+';background:'+(checked?'var(--green-50)':'#fff')+';display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);cursor:pointer;flex-shrink:0;transition:all .12s;';
+    // Kleurcodering: tag-kleur als beschikbaar
+    var labelHtml;
+    if(tagColors&&tagColors[v]){
+      labelHtml='<span class="tag '+tagColors[v]+'" style="font-size:11px;padding:1px 6px;">'+escapeHtml(v)+'</span>';
+    } else {
+      labelHtml='<span style="font-size:12px;color:var(--text-dim);user-select:none;">'+escapeHtml(v)+'</span>';
+    }
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:4px 4px;border-radius:4px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background=\'var(--row-hover)\'" onmouseout="this.style.background=\'transparent\'" onclick="colFilterToggleVal(\''+escapeAttr(colKey)+'\',\''+safeV+'\')">'+
+      '<div style="'+boxStyle+'">'+(checked?'✓':'')+'</div>'+
+      labelHtml+
+      '<span style="margin-left:auto;font-size:10px;color:var(--text-muted);font-variant-numeric:tabular-nums;background:var(--surface3);padding:0 5px;border-radius:8px;min-width:20px;text-align:center;">'+count+'</span>'+
+      '</div>';
+  });
+  html+='</div>';
+  panel.innerHTML=html;
+}
+
+// Helper: ververs paneel met behoud van zoekbalk-focus
+function _cfRefresh(){
+  var panel=document.getElementById('col-filter-panel');
+  if(!panel||!_colFilterPanelKey) return;
+  var info=getUniqueValuesWithCounts(_colFilterPanelKey);
+  rebuildColFilterPanelContent(panel,_colFilterPanelKey,info);
+  var si=panel.querySelector('.cf-search');
+  if(si){si.focus();si.setSelectionRange(si.value.length,si.value.length);}
+}
+
+function colFilterToggleVal(colKey,val){
+  var info=getUniqueValuesWithCounts(colKey);
+  if(!colFilters[colKey]){
+    colFilters[colKey]=new Set(info.vals);
+    colFilters[colKey].delete(val);
+  } else {
+    if(colFilters[colKey].has(val)) colFilters[colKey].delete(val);
+    else colFilters[colKey].add(val);
+  }
+  if(colFilters[colKey].size===info.vals.length) delete colFilters[colKey];
+  var panel=document.getElementById('col-filter-panel');
+  if(panel) rebuildColFilterPanelContent(panel,colKey,info);
+  // Behoud zoekbalk-focus
+  if(_colFilterSearch){var si=panel.querySelector('.cf-search');if(si){si.focus();si.setSelectionRange(si.value.length,si.value.length);}}
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for column filter
+  render();
+}
+
+function colFilterSelectAll(colKey,selectAll){
+  if(selectAll){
+    delete colFilters[colKey];
+  } else {
+    colFilters[colKey]=new Set();
+  }
+  var panel=document.getElementById('col-filter-panel');
+  var info=getUniqueValuesWithCounts(colKey);
+  if(panel) rebuildColFilterPanelContent(panel,colKey,info);
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for column filter
+  render();
+}
+
+function colFilterInvert(colKey){
+  var info=getUniqueValuesWithCounts(colKey);
+  if(!colFilters[colKey]){
+    // Alles was geselecteerd → nu niets
+    colFilters[colKey]=new Set();
+  } else {
+    var newSet=new Set();
+    info.vals.forEach(function(v){
+      if(!colFilters[colKey].has(v)) newSet.add(v);
+    });
+    if(newSet.size===info.vals.length) delete colFilters[colKey];
+    else colFilters[colKey]=newSet;
+  }
+  var panel=document.getElementById('col-filter-panel');
+  if(panel) rebuildColFilterPanelContent(panel,colKey,info);
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for column filter
+  render();
+}
+
+// ============================================================
+// GLOBAL NAME FILTER
+// ============================================================
+function getAllUniqueNames(){
+  var names=new Set();
+  getData(0).forEach(function(r){
+    if(r.directeur) names.add(r.directeur);
+    if(r.aog) names.add(r.aog);
+    if(r.pm) names.add(r.pm);
+  });
+  getData(1).forEach(function(r){
+    if(r.name) names.add(r.name);
+  });
+  return Array.from(names).sort();
+}
+
+function initGlobalNameFilter(){
+  var select=document.getElementById('global-name-filter');
+  var names=getAllUniqueNames();
+  var optionsHtml='<option value="">👤 Filter op naam — Alles tonen</option>';
+  optionsHtml+=names.map(function(n){return '<option value="'+escapeAttr(n)+'">'+escapeHtml(n)+'</option>';}).join('');
+  select.innerHTML=optionsHtml;
+  if(globalNameFilter){
+    select.value=globalNameFilter;
+  }
+}
+
+function setGlobalNameFilter(val){
+  globalNameFilter=val||null;
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for global name filter
+  render();
+}
+
+// ============================================================
+// SORT
+// ============================================================
+function sortData(data){
+  if(!sortRules.length) return data;
+  return data.slice().sort(function(a,b){
+    for(var i=0;i<sortRules.length;i++){
+      var rule=sortRules[i];
+      if(!rule.field) continue;
+      var av=a[rule.field],bv=b[rule.field];
+      if(typeof av==='string') av=av.toLowerCase();
+      if(typeof bv==='string') bv=bv.toLowerCase();
+      if(av<bv) return rule.dir==='asc'?-1:1;
+      if(av>bv) return rule.dir==='asc'?1:-1;
+    }
+    return 0;
+  });
+}
+
+// ============================================================
+// GROUP
+// ============================================================
+// collapsedGroups verplaatst naar AppState
+
+function groupData(data){
+  if(!groupFields.length) return null;
+  // Build nested tree: {_rows:[], _children:{key: node}}
+  function insert(node, r, depth){
+    if(depth>=groupFields.length){ node._rows.push(r); return; }
+    var field=groupFields[depth];
+    var k=String(r[field]===undefined||r[field]===null?'(leeg)':r[field]);
+    if(!node._children[k]) node._children[k]={_rows:[],_children:{}};
+    insert(node._children[k], r, depth+1);
+  }
+  var root={_rows:[],_children:{}};
+  data.forEach(function(r){ insert(root,r,0); });
+  return root;
+}
+
+// ============================================================
+// CONDITIONAL FORMATTING
+// ============================================================
+function condClass(r){
+  if(!condEnabled) return '';
+  if(r.priority==='Hoog'||r.status==='On Hold') return 'cond-red';
+  if(r.status==='Voltooid'||(r.actief===true&&r.status==='Actief')) return 'cond-green';
+  if(r.status==='In Review'||(r.progress!==undefined&&r.progress<30)) return 'cond-yellow';
+  return '';
+}
+
+// ============================================================
+// ROW HEIGHT
+// ============================================================
+function getRowH(){return rowHeight==='tall'?52:rowHeight==='medium'?42:34;}
+
+// #42: Debounce voor zoekfunctie — voorkomt render bij elke toetsaanslag
+// _searchTimer verplaatst naar AppState
+function debouncedRender(){clearTimeout(_searchTimer);_searchTimer=setTimeout(render,160);}
+// #29: Zoekbalk clear-knop + has-value toggle
+function onSearchInput(){
+  var wrap=document.getElementById('search-wrap');
+  var val=document.getElementById('search-input').value;
+  wrap.classList.toggle('has-value',val.length>0);
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for search
+  debouncedRender();
+}
+function clearSearch(){
+  document.getElementById('search-input').value='';
+  document.getElementById('search-wrap').classList.remove('has-value');
+  _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for search clear
+  render();
+}
+
+// ============================================================
+// COMPUTE FUNCTIONS (afgeleide data)
+// ============================================================
+
+// A1: Compute filtered data (only when data dirty)
+function computeFilteredData() {
+  var tab = currentTab;
+  var data = getData(tab);
+  var search = document.getElementById('search-input').value.toLowerCase();
+  if (search) data = data.filter(function(r) { return r._searchStr.includes(search); });
+  data = applyFiltersToData(data);
+  _derived.filteredData = data;
+  return data;
+}
+
+// A1: Compute sorted data (only when sort dirty)
+function computeSortedData() {
+  _derived.sortedData = sortData(_derived.filteredData);
+  return _derived.sortedData;
+}
+
+// A1: Compute group model (only when group dirty)
+function computeGroupModel() {
+  _derived.groupModel = groupData(_derived.sortedData);
+  return _derived.groupModel;
+}
+
+// A1: Compute visible columns
+function computeVisibleCols() {
+  _derived.visibleCols = getCols().filter(function(c) { return c.visible; });
+  return _derived.visibleCols;
+}
+
+// ============================================================
+// AGGREGATION MODEL (one-pass)
+// ============================================================
+
+// B1: Compute aggregation model in ONE pass over the data
+function computeAggModel() {
+  var data = _derived.sortedData || _derived.filteredData || [];
+  var cols = _derived.visibleCols || computeVisibleCols();
+  var model = {};
+
+  // Initialize accumulators per column
+  cols.forEach(function(c) {
+    if (categoricalKeys.includes(c.key)) {
+      model[c.key] = { type: 'categorical', unique: {}, count: 0 };
+    } else if (['progress','capaciteit','budget','kostenRealisatie'].includes(c.key)) {
+      model[c.key] = { type: 'average', sum: 0, count: 0 };
+    } else if (['approved','actief'].includes(c.key)) {
+      model[c.key] = { type: 'boolean', trueCount: 0, total: 0 };
+    } else if (['beoordeling','fte','stakeholders','uren','projecten','beschikbaarheid','reisafstand','kantoorDagen','certificeringen'].includes(c.key)) {
+      model[c.key] = { type: 'average', sum: 0, count: 0 };
+    } else {
+      model[c.key] = { type: 'none' };
+    }
+  });
+
+  // Single pass over all rows
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    for (var j = 0; j < cols.length; j++) {
+      var c = cols[j];
+      var acc = model[c.key];
+      if (!acc || acc.type === 'none') continue;
+      var v = row[c.key];
+      if (acc.type === 'categorical') {
+        if (v !== undefined && v !== null && v !== '') {
+          var sv = String(v);
+          acc.unique[sv] = (acc.unique[sv] || 0) + 1;
+          acc.count++;
+        }
+      } else if (acc.type === 'average') {
+        var n = Number(v);
+        if (!isNaN(n) && v !== undefined && v !== null && v !== '') {
+          acc.sum += n;
+          acc.count++;
+        }
+      } else if (acc.type === 'boolean') {
+        if (v !== undefined && v !== null) {
+          acc.total++;
+          if (v) acc.trueCount++;
+        }
+      }
+    }
+  }
+
+  // Finalize
+  cols.forEach(function(c) {
+    var acc = model[c.key];
+    if (!acc) return;
+    if (acc.type === 'average' && acc.count > 0) {
+      acc.avg = Math.round(acc.sum / acc.count);
+    }
+    if (acc.type === 'categorical') {
+      acc.uniqueCount = Object.keys(acc.unique).length;
+    }
+  });
+
+  _derived.aggModel = model;
+  return model;
+}
+
+// B2: Render aggregation row from precomputed model
+function renderAggFromModel() {
+  var tab = currentTab;
+  var cols = _derived.visibleCols || computeVisibleCols();
+  var model = _derived.aggModel;
+  var agg = document.getElementById('agg-' + tab);
+  if (!agg || !model) return;
+
+  var html = '<div class="agg-cell" style="width:44px;min-width:44px">Σ</div>';
+  cols.forEach(function(c) {
+    var acc = model[c.key];
+    var val = '&nbsp;';
+    if (acc) {
+      if (acc.type === 'categorical') {
+        val = '<span>' + acc.uniqueCount + '</span> uniek';
+      } else if (acc.type === 'average' && acc.count > 0) {
+        if (c.key === 'budget' || c.key === 'kostenRealisatie') {
+          val = 'Gem: <span style="font-family:\'Courier New\',monospace">' + budgetFmt(acc.avg) + '</span>';
+        } else if (c.key === 'progress' || c.key === 'capaciteit' || c.key === 'beschikbaarheid') {
+          val = 'Gem: <span>' + acc.avg + '%</span>';
+        } else {
+          val = 'Gem: <span>' + acc.avg + '</span>';
+        }
+      } else if (acc.type === 'boolean') {
+        val = '<span>' + acc.trueCount + '</span>/' + acc.total + ' ✓';
+      }
+    }
+    html += '<div class="agg-cell" style="min-width:120px">' + (val || '&nbsp;') + '</div>';
+  });
+  agg.innerHTML = html;
+}
+
+// ============================================================
+// UNIQUE VALUES CACHE
+// ============================================================
+// Unique value cache — referentie via AppState._cache, primitieven blijven als var
+var _uniqueValueCache = {};
+var _uniqueValueCacheKey = null;
+
+function _getUniqueCacheKey() {
+  return currentTab + '::' + (_derived.filteredData ? _derived.filteredData.length : '?') + '::' + JSON.stringify(colFilters) + '::' + (globalNameFilter || '');
+}
+
+function _invalidateUniqueCache() {
+  _uniqueValueCache = {};
+  _uniqueValueCacheKey = null;
+}
+
+// ============================================================
+// RENDER — G5: cached pipeline, geen data-kopieën
+// ============================================================
+var _cachedData=null;   // laatst gefilterd+gesorteerd resultaat
+var _cachedCols=null;   // laatst zichtbare kolommen
+var _cachedTab=null;    // laatst actieve tab
+var _cachedHpx=null;    // laatst gebruikte rijhoogte
+
+function render() {
+  try { _renderInternal(); }
+  catch(err) {
+    console.error('[render] Fatale fout in render-pipeline:', err);
+    toast('Weergavefout — probeer "Reset" of herlaad de pagina');
+    var btn = document.getElementById('btn-reset');
+    if (btn) btn.style.display = '';
+  }
+}
+// Sprint 3, taak 3.3: render-logica in aparte functie voor error handling
+function _renderInternal() {
+  var t0 = _perfDebug ? performance.now() : 0;
+
+  // Backward compatibility: if no flags are dirty, assume full invalidation
+  var anyDirty = false;
+  for (var k in _dirty) { if (_dirty[k]) { anyDirty = true; break; } }
+  if (!anyDirty) _invalidateAll();
+
+  var cols = computeVisibleCols();
+  var tab = currentTab;
+  var hpx = getRowH();
+
+  // A1: Compute derived data only when dirty
+  if (_dirty.data) {
+    _measure('computeFilteredData', computeFilteredData);
+    _dirty.sort = true;  // filter change cascades to sort
+    _dirty.group = true;
+    _dirty.agg = true;
+  }
+
+  if (_dirty.sort) {
+    _measure('computeSortedData', computeSortedData);
+    _dirty.group = true;  // sort change cascades to group
+  }
+
+  // Update legacy cache for compatibility (export, selection, virtual scroll)
+  _cachedData = _derived.sortedData;
+  _cachedCols = cols;
+  _cachedTab = tab;
+  _cachedHpx = hpx;
+
+  if (_dirty.header) {
+    _measure('renderHeader', function() { renderHeader(tab, cols, hpx); });
+  }
+
+  if (_dirty.group || _dirty.body) {
+    var tree = null;
+    if (groupFields.length) {
+      tree = _measure('computeGroupModel', computeGroupModel);
+    }
+    if (tree) {
+      _measure('renderGroupedBody', function() { renderGroupedBody(tab, cols, tree, hpx); });
+    } else {
+      _measure('renderVirtualBody', renderVirtualBody);
+    }
+  }
+
+  if (_dirty.agg) {
+    _measure('computeAggModel', computeAggModel);
+    _measure('renderAgg', renderAggFromModel);
+  }
+
+  // Centrale breedte-sync — alleen wanneer widths dirty
+  if (_dirty.widths) {
+    // Use requestAnimationFrame to ensure DOM is laid out before measuring
+    requestAnimationFrame(syncAggWidths);
+  }
+
+  if (_dirty.meta) {
+    updateFilterBadge();
+    updateActiveFiltersBar();
+    document.getElementById('row-count').textContent = (_derived.sortedData ? _derived.sortedData.length : 0) + ' records';
+    updateTabBadges(tab, _derived.sortedData ? _derived.sortedData.length : 0);
+    if (typeof updateResetBtn === 'function') updateResetBtn();
+  }
+
+  // Reset all dirty flags
+  for (var k in _dirty) _dirty[k] = false;
+
+  if (_perfDebug) {
+    var t1 = performance.now();
+    console.log('[perf] render() total: ' + (t1 - t0).toFixed(1) + 'ms | tab=' + tab + ' | rows=' + (_derived.sortedData ? _derived.sortedData.length : 0) + ' | cols=' + cols.length + ' | grouped=' + (groupFields.length > 0));
+  }
+}
+
+function renderHeader(tab,cols,hpx){
+  var row=document.getElementById('thead-'+tab+'-row');
+  // #67/#70/#72: Echte header-checkbox met drie states
+  var hdrCbState=getHeaderCheckboxState();
+  var hdrCbClass='row-select-cb'+(hdrCbState==='all'?' checked':hdrCbState==='partial'?' indeterminate':'');
+  var hdrCbIcon=hdrCbState==='all'?'✓':hdrCbState==='partial'?'−':'';
+  var selTotal=_cachedData?_cachedData.length:0;
+  var selTitle=hdrCbState==='all'?'Deselecteer alle '+selTotal+' gefilterde records':'Selecteer alle '+selTotal+' gefilterde records';
+  row.innerHTML='<th style="height:'+hpx+'px"><div class="th-inner" style="height:'+hpx+'px" onclick="toggleSelectAll()" role="checkbox" aria-label="'+escapeAttr(selTitle)+'" title="'+escapeAttr(selTitle)+'" tabindex="0"><div class="'+hdrCbClass+'" id="header-select-cb">'+hdrCbIcon+'</div></div></th>'+
+    cols.map(function(c,ci){
+      var si=getSortIcon(c.key);
+      var isSorted=sortRules.some(function(r){return r.field===c.key;});
+      var hasColFilter=colFilters.hasOwnProperty(c.key);
+      var safeKey=escapeAttr(c.key);
+      return '<th class="'+(isSorted?'sorted':'')+'"'+(c._width?' style="width:'+c._width+'px"':'')+' draggable="true"'+
+        ' data-col-key="'+safeKey+'"'+
+        ' ondragstart="thDragStart(event,\''+safeKey+'\')"'+
+        ' ondragover="thDragOver(event)"'+
+        ' ondragenter="thDragEnter(event,this,\''+safeKey+'\')"'+
+        ' ondragleave="thDragLeave(event,this)"'+
+        ' ondrop="thDrop(event,\''+safeKey+'\')"'+
+        ' ondragend="thDragEnd(event)"'+
+        ' onclick="clickSort(\''+safeKey+'\')" role="columnheader" aria-sort="'+(isSorted?(sortRules.find(function(r){return r.field===c.key;}).dir==='asc'?'ascending':'descending'):'none')+'" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickSort(\''+safeKey+'\');}">'+
+        '<div class="th-inner" style="height:'+hpx+'px;min-width:'+(c._width?c._width:(c.key==='note'||c.key==='email'?180:120))+'px;position:relative;">'+
+        '<span class="col-type-icon">'+escapeHtml(c.icon)+'</span>'+escapeHtml(c.label)+
+        '<span class="col-filter-btn'+(hasColFilter?' col-filter-active':'')+'" onclick="clickColFilter(event,\''+safeKey+'\')" title="Filter '+escapeAttr(c.label)+'">▼</span>'+
+        '<span class="sort-icon">'+si+'</span></div>'+
+        '<div class="resize-handle" onmousedown="startResize(event,this)"></div></th>';
+    }).join('');
+}
+
+function getSortIcon(key){
+  for(var i=0;i<sortRules.length;i++){
+    if(sortRules[i].field===key) return sortRules[i].dir==='asc'?'↑':'↓';
+  }
+  return '↑↓'; // #33: duidelijker sorteerpijlen
+}
+
+function rowHtml(r,rn,cols,tab,hpx){
+  var key=tab+'-'+r.id;
+  var sel=selectedRows.has(key)?'selected':'';
+  var cc=condClass(r);
+  // #69: rij-selectie checkbox
+  var cbClass='row-select-cb'+(selectedRows.has(key)?' checked':'');
+  var cbIcon=selectedRows.has(key)?'✓':'';
+  // 1.2: data-attributen i.p.v. inline event handlers — delegation via initTableDelegation()
+  return '<tr class="'+sel+' '+cc+'" style="height:'+hpx+'px"'+
+    ' data-row-key="'+escapeAttr(key)+'" data-tab="'+tab+'">'
+    +'<td><div class="'+cbClass+'">'+cbIcon+'</div></td>'
+    +cols.map(function(c){
+      var cls=c.key==='name'?'cell-primary':'';
+      var cell=renderCell(c,r);
+      // #31: actie-knop in de name-kolom — delegation via data-action
+      if(c.key==='name') cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
+      return '<td class="'+cls+'"'+(c.key==='name'?' style="position:relative"':'')+'>'+cell+'</td>';
+    }).join('')
+    +'</tr>';
+}
+
+// G1: DOM-virtualisatie — render alleen zichtbare rijen + buffer
+var _vBuf=10; // buffer rijen boven en onder viewport
+var _vScrollBound={}; // track welke containers al een scroll-listener hebben
+var _vRaf=null; // requestAnimationFrame id
+// Track last rendered virtual range to skip unnecessary rerenders
+var _lastVStart=-1;
+var _lastVEnd=-1;
+var _lastVDataLen=-1;
+
+function renderVirtualBody(){
+  var tab=_cachedTab,cols=_cachedCols,data=_cachedData,hpx=_cachedHpx;
+  if(!data||!cols) return;
+  var tbody=document.getElementById('tbody-'+tab);
+  var container=document.getElementById('tc-'+tab);
+  if(!tbody||!container) return;
+  var totalRows=data.length;
+  if(totalRows===0){
+    // #17: Lege staat
+    var hasFilters=document.getElementById('search-input').value||filterRules.length||Object.keys(colFilters).length||globalNameFilter;
+    tbody.innerHTML='<tr><td colspan="'+cols.length+1+'" style="border:none;padding:0"><div class="empty-state">'+
+      '<div class="empty-state-icon">📭</div>'+
+      '<div class="empty-state-text">'+(hasFilters?'Geen resultaten gevonden voor de actieve filters.':'Geen records beschikbaar.')+'</div>'+
+      (hasFilters?'<button class="empty-state-btn" onclick="resetView()">Filters wissen</button>':'')+
+      '</div></td></tr>';
+    return;
+  }
+  var scrollTop=container.scrollTop;
+  var viewportH=container.clientHeight;
+  // Bereken zichtbaar bereik
+  var startIdx=Math.max(0,Math.floor(scrollTop/hpx)-_vBuf);
+  var endIdx=Math.min(totalRows,Math.ceil((scrollTop+viewportH)/hpx)+_vBuf);
+  // Skip rerender als virtueel bereik en data ongewijzigd
+  if(startIdx===_lastVStart && endIdx===_lastVEnd && totalRows===_lastVDataLen){
+    if(_perfDebug) console.log('[perf] renderVirtualBody: skip (range unchanged)');
+    return;
+  }
+  _lastVStart=startIdx; _lastVEnd=endIdx; _lastVDataLen=totalRows;
+  // Bouw HTML met spacer-rijen
+  var colSpan=cols.length+1;
+  var html='';
+  if(startIdx>0) html+='<tr class="v-spacer" style="height:'+(startIdx*hpx)+'px"><td colspan="'+colSpan+'"></td></tr>';
+  for(var i=startIdx;i<endIdx;i++) html+=rowHtml(data[i],i+1,cols,tab,hpx);
+  var remaining=totalRows-endIdx;
+  if(remaining>0) html+='<tr class="v-spacer" style="height:'+(remaining*hpx)+'px"><td colspan="'+colSpan+'"></td></tr>';
+  tbody.innerHTML=html;
+  // Bind scroll-listener (eenmalig per container)
+  if(!_vScrollBound[tab]){
+    _vScrollBound[tab]=true;
+    container.addEventListener('scroll',function(){
+      if(_vRaf) cancelAnimationFrame(_vRaf);
+      _vRaf=requestAnimationFrame(function(){
+        // Alleen virtuele body herrenderen als we niet gegroepeerd zijn
+        if(!groupFields.length&&_cachedData) renderVirtualBody();
+      });
+    });
+  }
+}
+
+// Legacy alias voor eventuele directe aanroepen
+function renderFlatBody(tab,cols,data,hpx){
+  _cachedData=data;_cachedCols=cols;_cachedTab=tab;_cachedHpx=hpx;
+  renderVirtualBody();
+}
+
+function countLeafRows(node){
+  // Gebruik gecachte count indien beschikbaar
+  if (node._leafCount !== undefined) return node._leafCount;
+  var n=node._rows.length;
+  Object.keys(node._children).forEach(function(k){n+=countLeafRows(node._children[k]);});
+  node._leafCount = n;
+  return n;
+}
+
+// ============================================================
+// SPRINT 2: GROUPED RENDERING SCHAALBAAR MAKEN
+// ============================================================
+
+// Enrich group model met path, depth, leafCount
+function enrichGroupModel(node, depth, pathParts) {
+  node._depth = depth;
+  node._path = pathParts.join('||');
+  node._leafCount = undefined; // force recount
+  countLeafRows(node); // sets _leafCount
+
+  Object.keys(node._children).sort().forEach(function(grpKey) {
+    var child = node._children[grpKey];
+    child._key = grpKey;
+    child._depth = depth;
+    child._parentPath = node._path;
+    enrichGroupModel(child, depth + 1, pathParts.concat([grpKey]));
+  });
+}
+
+// Flatten zichtbare groepsboom naar lineaire lijst
+// Returns array of {type:'groupHeader'|'row', ...} items
+function flattenVisibleGroupTree(node, depth, pathParts, cols) {
+  var items = [];
+  var fieldLabel = '';
+
+  Object.keys(node._children).sort().forEach(function(grpKey) {
+    var child = node._children[grpKey];
+    var path = pathParts.concat([grpKey]).join('||');
+    var collapsed = collapsedGroups.has(path);
+    var total = child._leafCount !== undefined ? child._leafCount : countLeafRows(child);
+
+    if (groupFields[depth]) {
+      var colDef = getCols().find(function(c) { return c.key === groupFields[depth]; });
+      fieldLabel = colDef ? colDef.label + ': ' : '';
+    }
+
+    items.push({
+      type: 'groupHeader',
+      path: path,
+      depth: depth,
+      key: grpKey,
+      fieldLabel: fieldLabel,
+      count: total,
+      collapsed: collapsed
+    });
+
+    if (!collapsed) {
+      // Recurse into children
+      var childItems = flattenVisibleGroupTree(child, depth + 1, pathParts.concat([grpKey]), cols);
+      for (var i = 0; i < childItems.length; i++) items.push(childItems[i]);
+    }
+  });
+
+  // Leaf rows at this level
+  for (var r = 0; r < node._rows.length; r++) {
+    items.push({
+      type: 'row',
+      row: node._rows[r],
+      depth: depth
+    });
+  }
+
+  return items;
+}
+
+// Gegroepeerde rendering met virtueel scrollen
+// Combineert de flattened list met dezelfde viewport-slicing als renderVirtualBody
+var _gvLastStart = -1;  // Track last rendered range for grouped virtual scroll
+var _gvLastEnd = -1;
+var _gvLastLen = -1;
+var _gvScrollBound = {}; // track welke containers al een grouped-scroll-listener hebben
+var _gvRaf = null;
+
+// Bouwt HTML voor één item uit de flatList
+function _groupItemHtml(item, cols, tab, hpx) {
+  var accentColors = ['var(--accent)', 'var(--accent3)', 'var(--accent4)', 'var(--accent2)'];
+  if (item.type === 'groupHeader') {
+    var indent = item.depth * 18;
+    var arrow = item.collapsed ? '▸' : '▾';
+    var ac = accentColors[item.depth % accentColors.length];
+    return '<tr class="group-hdr" data-group-path="' + escapeAttr(item.path) + '" style="cursor:pointer">'
+      + '<td colspan="' + (cols.length + 1) + '" style="height:' + (hpx + 2) + 'px;padding:0;border-left:3px solid ' + ac + '">'
+      + '<div class="group-hdr-inner" style="padding-left:' + (14 + indent) + 'px;height:' + (hpx + 2) + 'px">'
+      + '<span style="color:' + ac + ';font-size:14px;margin-right:6px">' + arrow + '</span>'
+      + '<span style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-right:4px">' + escapeHtml(item.fieldLabel) + '</span>'
+      + '<span style="color:var(--text-body);font-weight:700;font-size:14px;line-height:24px">' + escapeHtml(item.key) + '</span>'
+      + ' <span style="color:var(--text-muted);font-weight:400;margin-left:8px;font-size:12px">' + escapeHtml(item.count) + ' records</span>'
+      + '</div>'
+      + '</td></tr>';
+  } else {
+    return rowHtml(item.row, item._rn || 0, cols, tab, hpx);
+  }
+}
+
+// Virtueel scrollen voor gegroepeerde weergave
+function _renderGroupedVirtual() {
+  var flatList = _derived.flatGroupedItems;
+  var tab = _cachedTab, cols = _cachedCols, hpx = _cachedHpx;
+  if (!flatList || !cols) return;
+
+  var tbody = document.getElementById('tbody-' + tab);
+  var container = document.getElementById('tc-' + tab);
+  if (!tbody || !container) return;
+
+  var totalItems = flatList.length;
+  if (totalItems === 0) return;
+
+  var scrollTop = container.scrollTop;
+  var viewportH = container.clientHeight;
+  var startIdx = Math.max(0, Math.floor(scrollTop / hpx) - _vBuf);
+  var endIdx = Math.min(totalItems, Math.ceil((scrollTop + viewportH) / hpx) + _vBuf);
+
+  // Skip rerender als bereik ongewijzigd
+  if (startIdx === _gvLastStart && endIdx === _gvLastEnd && totalItems === _gvLastLen) {
+    if (_perfDebug) console.log('[perf] groupedVirtual: skip (range unchanged)');
+    return;
+  }
+  _gvLastStart = startIdx; _gvLastEnd = endIdx; _gvLastLen = totalItems;
+
+  var colSpan = cols.length + 1;
+  var html = '';
+  // Spacer boven
+  if (startIdx > 0) html += '<tr class="v-spacer" style="height:' + (startIdx * hpx) + 'px"><td colspan="' + colSpan + '"></td></tr>';
+  // Zichtbare items renderen
+  for (var i = startIdx; i < endIdx; i++) {
+    html += _groupItemHtml(flatList[i], cols, tab, hpx);
+  }
+  // Spacer onder
+  var remaining = totalItems - endIdx;
+  if (remaining > 0) html += '<tr class="v-spacer" style="height:' + (remaining * hpx) + 'px"><td colspan="' + colSpan + '"></td></tr>';
+
+  tbody.innerHTML = html;
+}
+
+function renderGroupedBody(tab, cols, tree, hpx) {
+  // Enrich the model (depth, path, leafCount)
+  enrichGroupModel(tree, 0, []);
+
+  // Flatten to visible list (collapsed groups verbergen hun children)
+  var flatList = _measure ? _measure('flattenGroupTree', function() {
+    return flattenVisibleGroupTree(tree, 0, [], cols);
+  }) : flattenVisibleGroupTree(tree, 0, [], cols);
+
+  // Rijnummering toekennen aan data-items
+  var rn = 1;
+  for (var i = 0; i < flatList.length; i++) {
+    if (flatList[i].type === 'row') flatList[i]._rn = rn++;
+  }
+
+  // Store for incremental toggle en virtueel scrollen
+  _derived.flatGroupedItems = flatList;
+
+  // Reset range tracking zodat virtueel scrollen zeker opnieuw rendert
+  _gvLastStart = -1; _gvLastEnd = -1; _gvLastLen = -1;
+
+  // Virtueel scrollen — render alleen zichtbaar bereik
+  _renderGroupedVirtual();
+
+  // Bind scroll-listener (eenmalig per container)
+  var container = document.getElementById('tc-' + tab);
+  if (container && !_gvScrollBound[tab]) {
+    _gvScrollBound[tab] = true;
+    container.addEventListener('scroll', function() {
+      if (_gvRaf) cancelAnimationFrame(_gvRaf);
+      _gvRaf = requestAnimationFrame(function() {
+        if (groupFields.length && _derived.flatGroupedItems) _renderGroupedVirtual();
+      });
+    });
+  }
+
+  if (_perfDebug) {
+    var groupHeaders = flatList.filter(function(it) { return it.type === 'groupHeader'; }).length;
+    var dataRows = flatList.filter(function(it) { return it.type === 'row'; }).length;
+    console.log('[perf] groupedBody: ' + groupHeaders + ' headers, ' + dataRows + ' data rows, virtual window: ' + _gvLastStart + '-' + _gvLastEnd + ' of ' + flatList.length);
+  }
+}
+
+// Incremental group toggle — only re-flatten + re-render body
+// Does NOT trigger data/sort/filter/agg recomputation
+function toggleGroupCollapse(path){
+  if(collapsedGroups.has(path)) collapsedGroups.delete(path);
+  else collapsedGroups.add(path);
+
+  // Gecached group model → re-flatten en re-render body (skip full pipeline)
+  if (_derived.groupModel && groupFields.length) {
+    var tab = currentTab;
+    var cols = _derived.visibleCols || computeVisibleCols();
+    var hpx = getRowH();
+    _measure('toggleGroupRerender', function() {
+      renderGroupedBody(tab, cols, _derived.groupModel, hpx);
+    });
+    // Update meta (row count display) — toon zichtbare / totaal bij groepering
+    var totalRows = _derived.sortedData ? _derived.sortedData.length : 0;
+    var visibleRows = _derived.flatGroupedItems ? _derived.flatGroupedItems.filter(function(it) { return it.type === 'row'; }).length : totalRows;
+    document.getElementById('row-count').textContent = (visibleRows < totalRows ? visibleRows + ' / ' : '') + totalRows + ' records';
+    return;
+  }
+
+  // Fallback: full render
+  _invalidate(['body']);
+  render();
+}
+
+// Legacy renderAgg — delegeert naar model-based approach
+function renderAgg(tab,cols,data){
+  if (!_derived.aggModel) computeAggModel();
+  renderAggFromModel();
+  // Breedte-sync wordt centraal afgehandeld in render() via _dirty.widths
+}
+
+// ============================================================
+// SORT (header click)
+// ============================================================
+var thDidDrag=false;
+function clickSort(key){
+  if(thDidDrag){thDidDrag=false;return;}
+  var ex=sortRules.findIndex(function(r){return r.field===key;});
+  if(ex>=0){
+    // SORT-004: Toggle richting, bewaar overige multi-sort regels
+    sortRules[ex].dir=sortRules[ex].dir==='asc'?'desc':'asc';
+  } else {
+    // SORT-004: Voeg als primaire sort toe (bovenaan), bewaar bestaande regels
+    sortRules.unshift({field:key,dir:'asc'});
+  }
+  // SORT-003: Verwijder lege regels
+  sortRules=sortRules.filter(function(r){return r.field!=='';});
+  _invalidate(['sort','group','body','meta']); // A2: targeted invalidation for sort (NOT data, NOT agg)
+  render();
+  if(activePanel==='sort') renderSortPanel();
+}
+function clickColFilter(e,key){
+  e.stopPropagation();
+  var th=document.querySelector('th[data-col-key="'+key+'"]');
+  if(th) showColFilterPanel(key,th);
+}
+
+// ============================================================
+// SELECT — #41/#53: lichtgewicht highlight zonder volledige render
+// #67–#78: volledig selectie-systeem
+// ============================================================
+// #68: toggleSelectAll + header checkbox state
+function getHeaderCheckboxState(){
+  if(!_cachedData||!_cachedData.length) return 'none';
+  var tab=currentTab;
+  var total=_cachedData.length;
+  var count=0;
+  for(var i=0;i<total;i++){
+    if(selectedRows.has(tab+'-'+_cachedData[i].id)) count++;
+  }
+  if(count===0) return 'none';
+  if(count===total) return 'all';
+  return 'partial';
+}
+
+function toggleSelectAll(){
+  if(!_cachedData) return;
+  var tab=currentTab;
+  var state=getHeaderCheckboxState();
+  if(state==='all'){
+    // Deselecteer alle zichtbare rijen
+    _cachedData.forEach(function(r){selectedRows.delete(tab+'-'+r.id);});
+  } else {
+    // Selecteer alle zichtbare rijen
+    _cachedData.forEach(function(r){selectedRows.add(tab+'-'+r.id);});
+  }
+  updateSelectionUI();
+}
+
+// #72/#70: Update header-checkbox + rij-highlights + selectie-teller zonder volledige render
+function updateSelectionUI(){
+  updateRowHighlights();
+  updateHeaderCheckbox();
+  updateSelectionBar();
+}
+
+// #73: Selectie-bar tonen/verbergen
+function updateSelectionBar(){
+  var bar=document.getElementById('selection-bar');
+  var count=selectedRows.size;
+  bar.classList.toggle('is-visible',count>0); // 1.3: state class
+  if(count>0){
+    var total=_cachedData?_cachedData.length:0;
+    document.getElementById('selection-count').textContent=count+' van '+total+' geselecteerd';
+  }
+}
+
+function clearSelection(){
+  selectedRows.clear();
+  _lastClickedIdx=null;
+  updateSelectionUI();
+}
+
+// _exportMode verplaatst naar AppState
+
+function openSelectionExport(){
+  if(!_cachedData||!_cachedCols) return;
+  var tab=currentTab;
+  var selCount=_cachedData.filter(function(r){return selectedRows.has(tab+'-'+r.id);}).length;
+  if(!selCount){toast('Geen rijen geselecteerd');return;}
+  _exportMode='selection';
+  // Update panel-titel om selectie aan te geven
+  var titleEl=document.querySelector('#panel-export .panel-title');
+  if(titleEl) titleEl.textContent='⬇ Exporteer selectie ('+selCount+' rijen)';
+  togglePanel('export');
+}
+
+function getSelectedExportData(){
+  if(!_cachedData||!_cachedCols) return null;
+  var tab=currentTab;
+  var selData=_cachedData.filter(function(r){return selectedRows.has(tab+'-'+r.id);});
+  return {cols:_cachedCols,data:selData};
+}
+
+function updateHeaderCheckbox(){
+  var cb=document.getElementById('header-select-cb');
+  if(!cb) return;
+  var state=getHeaderCheckboxState();
+  cb.className='row-select-cb'+(state==='all'?' checked':state==='partial'?' indeterminate':'');
+  cb.textContent=state==='all'?'✓':state==='partial'?'−':'';
+}
+
+function updateRowHighlights(){
+  var tab=currentTab;
+  var tbody=document.getElementById('tbody-'+tab);
+  if(!tbody) return;
+  var rows=tbody.querySelectorAll('tr:not(.v-spacer):not(.group-hdr)');
+  for(var i=0;i<rows.length;i++){
+    var tr=rows[i];
+    var onclick=tr.getAttribute('onclick')||'';
+    var m=onclick.match(/'([^']+)'/);
+    if(m){
+      var key=m[1];
+      var isSel=selectedRows.has(key);
+      tr.classList.toggle('selected',isSel);
+      // #69: update rij-checkbox
+      var cb=tr.querySelector('.row-select-cb');
+      if(cb){
+        cb.className='row-select-cb'+(isSel?' checked':'');
+        cb.textContent=isSel?'✓':'';
+      }
+    }
+  }
+}
+
+// _lastClickedIdx verplaatst naar AppState
+
+function toggleRow(e,key){
+  if(e.target.closest('.data-checkbox')||e.target.closest('.progress-bar')) return; // #77: gescheiden class-naam
+  var tab=currentTab;
+  // Klik op rij-checkbox = altijd individuele toggle (multi-selectie zonder Ctrl)
+  var isCheckboxClick=!!e.target.closest('.row-select-cb');
+  if(e.shiftKey&&_lastClickedIdx!==null&&_cachedData){
+    // #74: Shift+klik range-select
+    var currentIdx=_cachedData.findIndex(function(r){return tab+'-'+r.id===key;});
+    if(currentIdx>=0){
+      var from=Math.min(_lastClickedIdx,currentIdx);
+      var to=Math.max(_lastClickedIdx,currentIdx);
+      for(var i=from;i<=to;i++) selectedRows.add(tab+'-'+_cachedData[i].id);
+    }
+  } else if(isCheckboxClick||e.ctrlKey||e.metaKey){
+    // Checkbox-klik of Ctrl+klik: toggle individueel zonder andere selectie te wissen
+    if(selectedRows.has(key)) selectedRows.delete(key); else selectedRows.add(key);
+    _lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return tab+'-'+r.id===key;}):null;
+  } else {
+    if(selectedRows.size===1&&selectedRows.has(key)) selectedRows.clear();
+    else {selectedRows.clear();selectedRows.add(key);}
+    _lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return tab+'-'+r.id===key;}):null;
+  }
+  updateSelectionUI(); // #41: lightweight + header/bar update
+}
+
+// ============================================================
+// PANEL MANAGEMENT
+// ============================================================
+// _panelPrevFocus, _panelTrapHandler verplaatst naar AppState
+function togglePanel(name){
+  if(activePanel===name){closePanel(name);return;}
+  if(activePanel) closePanel(activePanel);
+  activePanel=name;
+  _panelPrevFocus=document.activeElement; // #34: sla huidige focus op
+  var panel=document.getElementById('panel-'+name);
+  var overlay=document.getElementById('overlay-'+name);
+  var btn=document.getElementById('btn-'+name);
+  if(btn){
+    var r=btn.getBoundingClientRect();
+    panel.style.top=(r.bottom+6)+'px';
+    panel.style.left=Math.min(r.left,window.innerWidth-360)+'px';
+  } else {
+    panel.style.top='60px';
+    panel.style.right='16px';
+    panel.style.left='auto';
+  }
+  panel.classList.add('is-open'); // 1.3: state class i.p.v. style.display
+  overlay.classList.add('is-open');
+  if(btn) btn.classList.add('active');
+  if(name==='cols') renderColPanel('');
+  if(name==='filter') renderFilterPanel();
+  if(name==='sort'){_openSortDraft();renderSortPanel();}
+  if(name==='group') renderGroupPanel();
+  // #34: Focus-trap — zet focus op eerste interactief element
+  setTimeout(function(){trapFocusInPanel(panel);},50);
+}
+function closePanel(name){
+  activePanel=null;
+  var panel=document.getElementById('panel-'+name);
+  var overlay=document.getElementById('overlay-'+name);
+  var btn=document.getElementById('btn-'+name);
+  if(panel) panel.classList.remove('is-open'); // 1.3: state class i.p.v. style.display
+  if(overlay) overlay.classList.remove('is-open');
+  if(btn) btn.classList.remove('active');
+  // SORT-002: Bij sluiten sortpaneel zonder "Klaar" → verwerp draft
+  if(name==='sort'){_discardSortDraft();}
+  // Reset export mode en titel bij sluiten export panel
+  if(name==='export'){
+    _exportMode='all';
+    var titleEl=document.querySelector('#panel-export .panel-title');
+    if(titleEl) titleEl.textContent='\u2B07 Exporteren';
+  }
+  // #34: verwijder focus-trap en herstel focus
+  if(_panelTrapHandler){document.removeEventListener('keydown',_panelTrapHandler);_panelTrapHandler=null;}
+  if(_panelPrevFocus&&_panelPrevFocus.focus){try{_panelPrevFocus.focus();}catch(e){}_panelPrevFocus=null;}
+}
+// #34: Focus-trap helper
+function trapFocusInPanel(panel){
+  var focusable=panel.querySelectorAll('button,input,select,[tabindex]:not([tabindex="-1"]),.panel-close,.col-toggle');
+  if(focusable.length>0) focusable[0].focus();
+  if(_panelTrapHandler) document.removeEventListener('keydown',_panelTrapHandler);
+  _panelTrapHandler=function(e){
+    if(e.key!=='Tab') return;
+    var els=panel.querySelectorAll('button,input,select,[tabindex]:not([tabindex="-1"]),.panel-close,.col-toggle');
+    if(!els.length) return;
+    var first=els[0],last=els[els.length-1];
+    if(e.shiftKey){
+      if(document.activeElement===first){e.preventDefault();last.focus();}
+    } else {
+      if(document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  };
+  document.addEventListener('keydown',_panelTrapHandler);
+}
+
+// ============================================================
+// 2. COLUMN VISIBILITY PANEL
+// ============================================================
+function renderColPanel(search){
+  var cols=getCols();
+  var s=(search||'').toLowerCase();
+  document.getElementById('col-list').innerHTML=cols
+    .map(function(c,i){
+      if(s&&!c.label.toLowerCase().includes(s)) return '';
+      return '<div class="col-item" draggable="true" data-col-idx="'+i+'" data-col-key="'+c.key+'"'+
+        ' ondragstart="colDragStart(event,'+i+')"'+
+        ' ondragover="colDragOver(event,'+i+')"'+
+        ' ondragenter="colDragEnter(event,this)"'+
+        ' ondragleave="colDragLeave(event,this)"'+
+        ' ondrop="colDrop(event,'+i+')"'+
+        ' ondragend="colDragEnd(event)">'+
+        '<div class="col-drag" title="Sleep om te verplaatsen">⠿</div>'+
+        '<button class="col-toggle '+(c.visible?'on':'')+'" type="button" onclick="toggleCol(\''+escapeAttr(c.key)+'\')" role="switch" aria-checked="'+(c.visible?'true':'false')+'" aria-label="'+escapeAttr(c.label)+' tonen"></button>'+ /* #40: semantisch */
+        '<div class="col-name">'+escapeHtml(c.icon)+' '+escapeHtml(c.label)+'</div></div>';
+    }).join('');
+}
+function toggleCol(key){
+  var c=getCols().find(function(x){return x.key===key;});
+  if(c) c.visible=!c.visible;
+  renderColPanel('');
+  render();
+}
+// 10. Bulk toggle
+function toggleAllCols(val){
+  getCols().forEach(function(c){c.visible=val;});
+  renderColPanel('');
+  render();
+}
+
+// Column drag-and-drop reordering
+var colDragIdx=null;
+
+function colDragStart(e,idx){
+  colDragIdx=idx;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',idx);
+  requestAnimationFrame(function(){
+    var items=document.querySelectorAll('#col-list .col-item');
+    if(items[idx]) items[idx].classList.add('dragging');
+  });
+}
+
+function colDragOver(e,idx){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+}
+
+function colDragEnter(e,el){
+  e.preventDefault();
+  document.querySelectorAll('#col-list .col-item').forEach(function(item){
+    item.classList.remove('drag-over-top','drag-over-bottom');
+  });
+  if(colDragIdx===null) return;
+  var targetIdx=parseInt(el.getAttribute('data-col-idx'));
+  if(targetIdx===colDragIdx) return;
+  if(targetIdx<colDragIdx) el.classList.add('drag-over-top');
+  else el.classList.add('drag-over-bottom');
+}
+
+function colDragLeave(e,el){
+  el.classList.remove('drag-over-top','drag-over-bottom');
+}
+
+function colDrop(e,targetIdx){
+  e.preventDefault();
+  document.querySelectorAll('#col-list .col-item').forEach(function(item){
+    item.classList.remove('drag-over-top','drag-over-bottom','dragging');
+  });
+  if(colDragIdx===null||colDragIdx===targetIdx) return;
+  var cols=getCols();
+  var moved=cols.splice(colDragIdx,1)[0];
+  cols.splice(targetIdx,0,moved);
+  colDragIdx=null;
+  renderColPanel('');
+  render();
+  toast('Kolom "'+moved.label+'" verplaatst');
+}
+
+function colDragEnd(e){
+  colDragIdx=null;
+  document.querySelectorAll('#col-list .col-item').forEach(function(item){
+    item.classList.remove('dragging','drag-over-top','drag-over-bottom');
+  });
+}
+
+// Header column drag-and-drop
+var thDragKey=null;
+
+function thDragStart(e,key){
+  thDidDrag=true;
+  thDragKey=key;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',key);
+  requestAnimationFrame(function(){
+    var th=document.querySelector('th[data-col-key="'+key+'"]');
+    if(th) th.classList.add('th-dragging');
+  });
+}
+
+function thDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+}
+
+function thDragEnter(e,el,key){
+  e.preventDefault();
+  if(!thDragKey||thDragKey===key) return;
+  document.querySelectorAll('th').forEach(function(th){th.classList.remove('th-drag-left','th-drag-right');});
+  var cols=getCols();
+  var fromIdx=cols.findIndex(function(c){return c.key===thDragKey;});
+  var toIdx=cols.findIndex(function(c){return c.key===key;});
+  if(toIdx<fromIdx) el.classList.add('th-drag-left');
+  else el.classList.add('th-drag-right');
+}
+
+function thDragLeave(e,el){
+  el.classList.remove('th-drag-left','th-drag-right');
+}
+
+function thDrop(e,targetKey){
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('th').forEach(function(th){th.classList.remove('th-dragging','th-drag-left','th-drag-right');});
+  if(!thDragKey||thDragKey===targetKey) return;
+  var cols=getCols();
+  var fromIdx=cols.findIndex(function(c){return c.key===thDragKey;});
+  var toIdx=cols.findIndex(function(c){return c.key===targetKey;});
+  if(fromIdx<0||toIdx<0) return;
+  var moved=cols.splice(fromIdx,1)[0];
+  cols.splice(toIdx,0,moved);
+  thDragKey=null;
+  render();
+  toast('Kolom "'+moved.label+'" verplaatst');
+}
+
+function thDragEnd(e){
+  thDragKey=null;
+  document.querySelectorAll('th').forEach(function(th){th.classList.remove('th-dragging','th-drag-left','th-drag-right');});
+}
+
+// ============================================================
+// 1. FILTER PANEL
+// ============================================================
+function renderFilterPanel(){
+  var cols=getCols();
+  document.getElementById('filter-rules').innerHTML=filterRules.map(function(rule,i){
+    var needsVal=rule.op!=='empty'&&rule.op!=='not_empty';
+    return '<div class="filter-rule">'+
+      '<select onchange="filterRules['+i+'].field=this.value">'+
+        '<option value="">— Kolom —</option>'+
+        cols.map(function(c){return '<option value="'+escapeAttr(c.key)+'"'+(rule.field===c.key?' selected':'')+'>'+escapeHtml(c.label)+'</option>';}).join('')+
+      '</select>'+
+      '<select onchange="filterRules['+i+'].op=this.value;renderFilterPanel()">'+
+        Object.entries(filterOps).map(function(kv){return '<option value="'+escapeAttr(kv[1])+'"'+(rule.op===kv[1]?' selected':'')+'>'+escapeHtml(kv[0])+'</option>';}).join('')+
+      '</select>'+
+      (needsVal?'<input placeholder="Waarde..." value="'+escapeAttr(rule.value||'')+'" onchange="filterRules['+i+'].value=this.value">':'')+
+      '<button class="filter-remove" onclick="removeFilterRule('+i+')">✕</button>'+
+    '</div>';
+  }).join('');
+  document.getElementById('logic-and').classList.toggle('active',filterLogic==='AND');
+  document.getElementById('logic-or').classList.toggle('active',filterLogic==='OR');
+}
+function addFilterRule(){filterRules.push({field:'',op:'contains',value:''});renderFilterPanel();}
+function removeFilterRule(i){filterRules.splice(i,1);renderFilterPanel();}
+function setLogic(l){filterLogic=l;renderFilterPanel();}
+function applyFiltersAction(){render();closePanel('filter');}
+function clearAllFilters(){filterRules=[];render();updateFilterBadge();updateActiveFiltersBar();if(activePanel==='filter') renderFilterPanel();}
+
+function updateFilterBadge(){
+  var active=filterRules.filter(function(r){return r.field&&r.op;});
+  var btn=document.getElementById('btn-filter');
+  var badge=document.getElementById('filter-badge');
+  // #30: Inhoudsindicatie — bij 1 filter: veldnaam inline, bij >1: "(n)"
+  if(active.length===0){
+    badge.style.display='none';
+    btn.innerHTML='<span aria-hidden="true">⚡</span> Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px"></span>';
+  } else if(active.length===1){
+    var cols=getCols();
+    var col=cols.find(function(c){return c.key===active[0].field;});
+    var label=col?col.label:active[0].field;
+    var val=active[0].value?': '+active[0].value:'';
+    btn.innerHTML='<span aria-hidden="true">⚡</span> '+escapeHtml(label)+escapeHtml(val)+' <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px">1</span>';
+  } else {
+    btn.innerHTML='<span aria-hidden="true">⚡</span> Filteren <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px">'+active.length+'</span>';
+  }
+  btn.classList.toggle('active',active.length>0);
+}
+// 8. Active filters bar
+function updateActiveFiltersBar(){
+  var active=filterRules.filter(function(r){return r.field&&r.op;});
+  var bar=document.getElementById('active-filters-bar');
+  bar.classList.toggle('is-visible',active.length>0); // 1.3: state class
+  var cols=getCols();
+  document.getElementById('af-chips').innerHTML=active.map(function(rule){
+    var col=cols.find(function(c){return c.key===rule.field;});
+    var opLabel=Object.keys(filterOps).find(function(k){return filterOps[k]===rule.op;})||rule.op;
+    var idx=filterRules.indexOf(rule);
+    return '<div class="af-chip">'+escapeHtml(col?col.label:rule.field)+' '+escapeHtml(opLabel)+(rule.value?' "'+escapeHtml(rule.value)+'"':'')+
+      ' <span class="af-chip-remove" onclick="removeActiveFilter('+idx+')">✕</span></div>';
+  }).join('');
+}
+function removeActiveFilter(i){filterRules.splice(i,1);render();updateFilterBadge();updateActiveFiltersBar();}
+
+// #32: Tag klik → filter op die waarde
+function tagFilter(field,value){
+  // Toggle: als al gefilterd op exact deze waarde, verwijder de filter
+  var existing=filterRules.findIndex(function(r){return r.field===field&&r.op==='is'&&r.value===value;});
+  if(existing>=0){filterRules.splice(existing,1);}
+  else{filterRules.push({field:field,op:'is',value:value});}
+  render();updateFilterBadge();updateActiveFiltersBar();
+}
+
+// ============================================================
+// 3. SORT PANEL (multi-level)
+// ============================================================
+function renderSortPanel(){
+  var cols=getCols();
+  var rules=_getSortRulesForPanel();
+  // SORT-003: Bepaal welke kolommen al in gebruik zijn per regel
+  var usedFields=rules.map(function(r){return r.field;}).filter(function(f){return f!=='';});
+  document.getElementById('sort-rules').innerHTML=rules.map(function(rule,i){
+    return '<div class="sort-rule">'+
+      '<select onchange="_sortFieldChange('+i+',this.value)">'+
+        '<option value="">— Kolom —</option>'+
+        cols.map(function(c){
+          // SORT-003: Toon kolommen die al in een andere regel staan als disabled
+          var inUse=usedFields.indexOf(c.key)>=0&&c.key!==rule.field;
+          return '<option value="'+escapeAttr(c.key)+'"'+(rule.field===c.key?' selected':'')+(inUse?' disabled style="color:var(--text-muted)"':'')+'>'+escapeHtml(c.label)+(inUse?' (in gebruik)':'')+'</option>';
+        }).join('')+
+      '</select>'+
+      '<span style="font-size:11px;color:var(--text-muted);min-width:16px;text-align:center">'+(i+1)+'</span>'+
+      '<button class="sort-dir-btn '+(rule.dir)+'" onclick="_sortDirToggle('+i+')">'+
+        (rule.dir==='asc'?'A→Z ↑':'Z→A ↓')+
+      '</button>'+
+      '<button class="filter-remove" onclick="_sortRemoveRule('+i+')">✕</button>'+
+    '</div>';
+  }).join('');
+}
+// SORT-002: Paneel-acties werken op draft
+function _sortDirToggle(idx){
+  var rules=_getSortRulesForPanel();
+  rules[idx].dir=rules[idx].dir==='asc'?'desc':'asc';
+  _applySortDraft();
+}
+function _sortRemoveRule(idx){
+  var rules=_getSortRulesForPanel();
+  rules.splice(idx,1);
+  _applySortDraft();
+}
+// SORT-003: Voorkom duplicaat kolom bij veldwijziging
+function _sortFieldChange(idx,val){
+  var rules=_getSortRulesForPanel();
+  if(val){
+    var dup=rules.findIndex(function(r,j){return j!==idx&&r.field===val;});
+    if(dup>=0) rules[dup].field=rules[idx].field;
+  }
+  rules[idx].field=val;
+  _applySortDraft();
+}
+function addSortRule(){
+  var rules=_getSortRulesForPanel();
+  rules.push({field:'',dir:'asc'});
+  renderSortPanel();
+}
+// SORT-002: "Klaar" past toe, "Wissen" wist draft
+function applySortAction(){_commitSortDraft();closePanel('sort');}
+function clearSort(){
+  if(_draftSortRules!==null){_draftSortRules=[];}
+  else{sortRules=[];_invalidate(['sort','group','body','meta']);render();}
+  renderSortPanel();
+}
+
+// ============================================================
+// 4. GROUP PANEL (multi-level)
+// ============================================================
+function renderGroupPanel(){
+  var cols=getCols();
+  document.getElementById('group-rules').innerHTML=groupFields.map(function(field,i){
+    var levelColors=['var(--accent)','var(--accent3)','var(--accent4)','var(--accent2)'];
+    var lc=levelColors[i%levelColors.length];
+    return '<div class="group-item" style="border-left:3px solid '+lc+'">'
+      +'<span style="font-size:12px;color:'+lc+';font-weight:700;min-width:52px">Niveau '+(i+1)+'</span>'
+      +'<select onchange="groupFields['+i+']=this.value;collapsedGroups.clear()">'
+        +'<option value="">— Kolom —</option>'
+        +cols.map(function(c){return '<option value="'+escapeAttr(c.key)+'"'+(field===c.key?' selected':'')+'>'+escapeHtml(c.label)+'</option>';}).join('')
+      +'</select>'
+      +'<button class="filter-remove" onclick="groupFields.splice('+i+',1);collapsedGroups.clear();renderGroupPanel()">✕</button>'
+    +'</div>';
+  }).join('');
+}
+function addGroupField(){
+  groupFields.push('');
+  collapsedGroups.clear();
+  renderGroupPanel();
+}
+function applyGroupAction(){
+  groupFields=groupFields.filter(function(f){return f!=='';});
+  collapsedGroups.clear();
+  _invalidate(['group','body','meta']); // A2: targeted invalidation for grouping (NOT data, NOT agg)
+  render();
+  document.getElementById('btn-group').classList.toggle('active',groupFields.length>0);
+  var label=groupFields.length>0?'<span aria-hidden="true">⊞</span> Groeperen ('+groupFields.length+')':'<span aria-hidden="true">⊞</span> Groeperen';
+  document.getElementById('btn-group').innerHTML=label;
+  closePanel('group');
+}
+function clearGroup(){
+  groupFields=[];collapsedGroups.clear();  _invalidate(['group','body','meta']); // A2: targeted invalidation for grouping
+  render();
+  document.getElementById('btn-group').classList.remove('active');
+  document.getElementById('btn-group').innerHTML='<span aria-hidden="true">⊞</span> Groeperen';
+  closePanel('group');
+}
+
+// ============================================================
+// 5. CONDITIONAL FORMATTING
+// ============================================================
+function toggleCond(){
+  condEnabled=!condEnabled;
+  document.getElementById('btn-cond').classList.toggle('active',condEnabled);
+  _invalidate(['body']); // A2: targeted invalidation for conditional formatting (display only)
+  render();
+  toast(condEnabled?'Conditionele opmaak aan (rood=hoog/on hold, groen=voltooid, geel=review)':'Conditionele opmaak uit');
+}
+
+// ============================================================
+// 6. ROW HEIGHT
+// ============================================================
+// #36: Segmented control — directe selectie
+function setRowHeight(h){
+  rowHeight=h;
+  AppState.ui.density=h; // UI-state sync
+  // Update segmented control
+  ['compact','medium','tall'].forEach(function(o){
+    var el=document.getElementById('seg-'+o);
+    if(el) el.classList.toggle('active',o===h);
+  });
+  // Sprint 2, taak 2.4: density via CSS-class i.p.v. inline style
+  document.body.classList.remove('density-compact','density-medium','density-tall');
+  document.body.classList.add('density-'+h);
+  _invalidate(['header','body','widths']); // A2: targeted invalidation for row height
+  render();
+}
+// Legacy alias
+function cycleRowHeight(){
+  var opts=['compact','medium','tall'];
+  setRowHeight(opts[(opts.indexOf(rowHeight)+1)%3]);
+}
+
+// ============================================================
+// 7. FREEZE COLUMN
+// ============================================================
+// Freeze via CSS class toggle
+function toggleFreeze(){
+  freezeCol=!freezeCol;
+  AppState.ui.freezeFirstDataColumn=freezeCol;
+  document.getElementById('btn-freeze').classList.toggle('active',freezeCol);
+  // Toggle class on all table containers
+  document.querySelectorAll('.table-container').forEach(function(tc){
+    tc.classList.toggle('freeze-active',freezeCol);
+  });
+  // Forceer re-render zodat sticky kolommen correct worden weergegeven
+  _invalidate(['header','body','widths']);
+  render();
+  toast(freezeCol?'Eerste kolom bevroren':'Bevriezen uitgeschakeld');
+}
+
+// ============================================================
+// ADD / DELETE / TABS
+// ============================================================
+// [Template-refactoring sprint 1] addRow() en deleteSelected() verwijderd — dashboard is read-only
+// Sprint 5, taak 5.2: switchTab met save/restore viewState
+function switchTab(tabIdOrIndex){
+  // Accepteer zowel index (legacy) als tabId (string)
+  var newId;
+  if(typeof tabIdOrIndex==='string'){
+    newId=tabIdOrIndex;
+  } else {
+    var idx=tabIdOrIndex;
+    if(idx<0||idx>=dashboardConfig.tabs.length) return;
+    newId=dashboardConfig.tabs[idx].id;
+  }
+  if(newId===AppState.activeTabId) return; // geen noop-switch
+  // Sla viewState op voor huidige tab
+  saveTabViewState();
+  // Wissel activeTabId
+  AppState.activeTabId=newId;
+  var newIdx=getTabIndex(newId);
+  renderTabBar();
+  // Content-switching
+  dashboardConfig.tabs.forEach(function(tab,i){
+    var el=document.getElementById('content-'+i);
+    if(el) el.classList.toggle('active',i===newIdx);
+  });
+  // Herstel viewState van nieuwe tab
+  restoreTabViewState(newId);
+  document.getElementById('search-input').value='';
+  _invalidate(['data','sort','group','header','body','agg','meta']);
+  render();updateSelectionUI();
+  document.getElementById('global-name-filter').value='';
+}
+
+// #20: Record-badge in tabs
+function updateTabBadges(activeTab,count){
+  var tabEl=document.getElementById('tab-'+activeTab);
+  if(!tabEl) return;
+  var tabCfg=getTabConfigByIndex(activeTab);
+  var label=tabCfg?tabCfg.label:'';
+  var icon=tabCfg?tabCfg.icon:'';
+  tabEl.innerHTML='<span>'+escapeHtml(icon)+'</span> '+escapeHtml(label)+' <span style="font-size:11px;color:var(--text-muted);font-weight:400">('+escapeHtml(count)+')</span>';
+}
+
+// ============================================================
+// DYNAMIC TAB BAR (template-refactoring sprint 2, taak 2.4)
+// ============================================================
+function renderTabBar(){
+  var bar=document.getElementById('tab-bar');
+  if(!bar) return;
+  bar.innerHTML=dashboardConfig.tabs.map(function(tab,idx){
+    var active=idx===currentTab;
+    return '<button class="tab'+(active?' active':'')+'" type="button"'
+      +' data-action="switch-tab" data-tab-index="'+idx+'"'
+      +' id="tab-'+idx+'" role="tab"'
+      +' aria-selected="'+(active?'true':'false')+'">'
+      +'<span aria-hidden="true">'+escapeHtml(tab.icon)+'</span> '+escapeHtml(tab.label)
+      +'</button>';
+  }).join('');
+}
+// Event delegation op tab-bar
+document.getElementById('tab-bar').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-action="switch-tab"]');
+  if(btn) switchTab(parseInt(btn.dataset.tabIndex,10));
+});
+// Initieel renderen
+renderTabBar();
+
+// ============================================================
+// CONTEXT MENU
+// ============================================================
+function showCtx(e,key){
+  e.preventDefault();contextRow=key;selectedRows.add(key);updateSelectionUI(); // #53: geen volledige render
+  var m=document.getElementById('ctx-menu');
+  m.style.display='block';
+  m.style.left=Math.min(e.clientX,window.innerWidth-180)+'px';
+  m.style.top=Math.min(e.clientY,window.innerHeight-200)+'px';
+}
+// #31: Actie-knop trigger voor contextmenu
+function showCtxAt(e,key){
+  contextRow=key;selectedRows.add(key);updateSelectionUI();
+  var m=document.getElementById('ctx-menu');
+  m.style.display='block';
+  var rect=e.target.getBoundingClientRect();
+  m.style.left=Math.min(rect.right,window.innerWidth-180)+'px';
+  m.style.top=Math.min(rect.bottom+2,window.innerHeight-200)+'px';
+}
+document.addEventListener('click',function(){document.getElementById('ctx-menu').style.display='none';});
+
+// #75: Ctrl+A / Escape toetsenbordondersteuning voor selectie
+document.addEventListener('keydown',function(e){
+  // Ctrl+A: selecteer alle zichtbare rijen (niet als focus in input/select)
+  if((e.ctrlKey||e.metaKey)&&e.key==='a'&&!e.target.matches('input,select,textarea')){
+    e.preventDefault();
+    toggleSelectAll();
+  }
+  // Escape: wis selectie en sluit panels
+  if(e.key==='Escape'){
+    if(selectedRows.size>0){clearSelection();return;}
+    if(activePanel){closePanel(activePanel);}
+  }
+});
+function expandRow(){if(!contextRow) return;var tab=parseInt(contextRow.split('-')[0]);var id=parseInt(contextRow.split('-')[1]);openModal(tab,id);}
+// [Template-refactoring sprint 1] duplicateRow() verwijderd — dashboard is read-only
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(tab,id){
+  var data=getData(tab);
+  var r=data.find(function(x){return x.id===id;});
+  if(!r) return;
+  var cols=getCols(tab);
+  document.getElementById('modal-title').textContent=r.name||String(r.id);
+  document.getElementById('modal-body').innerHTML=cols.map(function(c){
+    var v=r[c.key];
+    var disp=v===true?'✓ Ja':v===false?'✗ Nee':(v===undefined||v===null?'—':escapeHtml(String(v)));
+    return '<div class="modal-field"><div class="modal-label">'+escapeHtml(c.icon)+' '+escapeHtml(c.label)+'</div><div class="modal-value">'+disp+'</div></div>';
+  }).join('');
+  document.getElementById('modal-overlay').classList.add('is-open'); // 1.3: state class
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay')){
+    // #18/#39: slide-out animatie
+    var modal=document.querySelector('.modal');
+    if(modal){
+      modal.style.animation='slideOut .2s ease forwards';
+      modal.addEventListener('animationend',function(){
+        modal.style.animation='';
+        document.getElementById('modal-overlay').classList.remove('is-open');
+      },{once:true});
+    } else {
+      document.getElementById('modal-overlay').classList.remove('is-open');
+    }
+  }
+}
+
+// ============================================================
+// COL RESIZE
+// ============================================================
+// #45: rAF-throttle op resize mousemove
+function startResize(e,handle){
+  e.preventDefault();e.stopPropagation();
+  var th=handle.parentElement;
+  var startX=e.clientX,startW=th.offsetWidth;
+  var resizeRaf=null;
+  handle.classList.add('dragging');
+  var colKey=th.getAttribute('data-col-key'); // #5: voor persistent opslaan
+  function onMove(e2){
+    if(resizeRaf) return; // throttle: max 1 update per frame
+    resizeRaf=requestAnimationFrame(function(){
+      var w=Math.max(80,startW+e2.clientX-startX);
+      th.style.width=w+'px';
+      th.querySelector('.th-inner').style.minWidth=w+'px';
+      // #5: sla breedte op in col-object
+      if(colKey){
+        var cols=getCols();
+        var col=cols.find(function(c){return c.key===colKey;});
+        if(col) col._width=w;
+      }
+      syncAggWidths();
+      resizeRaf=null;
+    });
+  }
+  function onUp(){
+    if(resizeRaf) cancelAnimationFrame(resizeRaf);
+    handle.classList.remove('dragging');
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+// #45: read-write batching — lees eerst alle breedtes, schrijf dan pas
+function syncAggWidths(){
+  var table=document.querySelector('table#table-'+currentTab);
+  if(!table) return;
+  var ths=table.querySelectorAll('thead th');
+  var agg=document.getElementById('agg-'+currentTab);
+  var aggCells=agg.querySelectorAll('.agg-cell');
+  if(ths.length!==aggCells.length) return;
+  // LEES alle breedtes in één batch (1 reflow)
+  var widths=new Array(ths.length);
+  for(var i=0;i<ths.length;i++) widths[i]=ths[i].offsetWidth;
+  // SCHRIJF alle breedtes in één batch (geen extra reflow)
+  for(var j=0;j<widths.length;j++){
+    if(widths[j]>0){aggCells[j].style.width=widths[j]+'px';aggCells[j].style.minWidth=widths[j]+'px';}
+  }
+}
+
+// ============================================================
+// EXPORT HELPERS
+// ============================================================
+function getExportData(){
+  // Selectie-export: alleen geselecteerde rijen
+  if(_exportMode==='selection'){
+    var sel=getSelectedExportData();
+    if(sel) return sel;
+  }
+  // G5: hergebruik gecachte data i.p.v. de pipeline opnieuw draaien
+  if(_cachedData&&_cachedCols) return {cols:_cachedCols,data:_cachedData};
+  // Fallback als cache leeg is
+  var cols=getCols().filter(function(c){return c.visible;});
+  var data=getData();
+  var search=document.getElementById('search-input').value.toLowerCase();
+  if(search) data=data.filter(function(r){return r._searchStr.includes(search);});
+  data=applyFiltersToData(data);
+  data=sortData(data);
+  return {cols:cols,data:data};
+}
+function dlFile(content,name,mime){
+  var blob=new Blob([content],{type:mime});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=name;a.click();
+  URL.revokeObjectURL(url);
+}
+// Sprint 4, taak 4.4: plainVal dispatcht op col.type, niet col.key
+function plainVal(col,r){
+  var v=r[col.key];
+  if(col.type==='boolean'||v===true||v===false) return v ? 'Ja' : 'Nee';
+  if(col.type==='date'||col.renderer==='date') return dateFmt(v);
+  if(col.renderer==='budget') return budgetFmt(v);
+  return String(v===undefined||v===null?'':v);
+}
+
+// Sprint 3, taak 3.2: generieke export-wrapper met error handling
+function exportAs(formatter,filename,mime,successMsg){
+  try{
+    var ed=getExportData();
+    if(!ed||!ed.data.length){toast('Geen data om te exporteren');return;}
+    var content=formatter(ed);
+    dlFile(content,filename,mime);
+    toast(successMsg||filename+' geëxporteerd');
+  }catch(err){
+    console.error('[export] Fout bij exporteren:',err);
+    toast('Fout bij exporteren: '+(err.message||'onbekend'));
+  }finally{
+    closePanel('export');
+  }
+}
+
+// 11. CSV
+function _formatCSV(ed){
+  var header=ed.cols.map(function(c){return '"'+c.label+'"';}).join(',');
+  var rows=ed.data.map(function(r){return ed.cols.map(function(c){return '"'+plainVal(c,r).replace(/"/g,'""')+'"';}).join(',');});
+  return [header].concat(rows).join('\n');
+}
+function exportCSV(){exportAs(_formatCSV,'export.csv','text/csv','CSV geëxporteerd');}
+
+// 12. JSON
+function _formatJSON(ed){
+  var out=ed.data.map(function(r){var o={};ed.cols.forEach(function(c){o[c.key]=r[c.key];});return o;});
+  return JSON.stringify(out,null,2);
+}
+function exportJSON(){exportAs(_formatJSON,'export.json','application/json','JSON geëxporteerd');}
+
+// 13. Excel (.xlsx) — apart vanwege lazy-loading
+// #51: XLSX lazy loading — library wordt pas geladen bij eerste export
+function _doExportXLSX(){
+  try{
+    var ed=getExportData();
+    if(!ed||!ed.data.length){toast('Geen data om te exporteren');return;}
+    var tabName=getTabLabel(currentTab);
+    var today=new Date().toISOString().split('T')[0];
+    var rows=ed.data.map(function(r){
+      var obj={};
+      ed.cols.forEach(function(c){
+        var v=r[c.key];
+        if(c.key==='budget') obj[c.label]=Number(v);
+        else if(c.key==='progress'||c.key==='capaciteit'||c.key==='beoordeling') obj[c.label]=Number(v);
+        else if(c.key==='approved'||c.key==='actief') obj[c.label]=v?'Ja':'Nee';
+        else obj[c.label]=v===undefined||v===null?'':v;
+      });
+      return obj;
+    });
+    var ws=XLSX.utils.json_to_sheet(rows);
+    var colWidths=ed.cols.map(function(c){
+      var maxLen=c.label.length;
+      ed.data.forEach(function(r){var v=plainVal(c,r);if(v.length>maxLen) maxLen=v.length;});
+      return {wch:Math.min(maxLen+2,40)};
+    });
+    ws['!cols']=colWidths;
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,tabName);
+    XLSX.writeFile(wb,tabName+'_'+today+'.xlsx');
+    toast('Excel geëxporteerd');
+  }catch(err){
+    console.error('[export] Fout bij Excel-export:',err);
+    toast('Fout bij Excel-export: '+(err.message||'onbekend'));
+  }finally{
+    closePanel('export');
+  }
+}
+function exportXLSX(){
+  if(typeof XLSX!=='undefined'){_doExportXLSX();return;}
+  toast('Excel-bibliotheek laden...');
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=function(){_doExportXLSX();};
+  s.onerror=function(){toast('Excel-bibliotheek kon niet worden geladen. Controleer je internetverbinding.');console.error('[xlsx] CDN load failed:',s.src);};
+  document.head.appendChild(s);
+}
+
+// 14. Markdown
+function _formatMarkdown(ed){
+  var header='| '+ed.cols.map(function(c){return c.label;}).join(' | ')+' |';
+  var sep='| '+ed.cols.map(function(){return '---';}).join(' | ')+' |';
+  var rows=ed.data.map(function(r){return '| '+ed.cols.map(function(c){return plainVal(c,r).replace(/\|/g,'\\|');}).join(' | ')+' |';});
+  return [header,sep].concat(rows).join('\n');
+}
+function exportMarkdown(){exportAs(_formatMarkdown,'export.md','text/markdown','Markdown geëxporteerd');}
+
+// 15. HTML
+function _formatHTML(ed){
+  var rows=ed.data.map(function(r){return '<tr>'+ed.cols.map(function(c){return '<td>'+plainVal(c,r)+'</td>';}).join('')+'</tr>';}).join('');
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><style>body{font-family:sans-serif;padding:20px;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:8px 12px;}th{background:#f5f5f5;font-weight:700;}tr:nth-child(even){background:#fafafa;}</style></head><body><h2>'+escapeHtml(getTabLabel(currentTab))+'</h2><table><thead><tr>'+ed.cols.map(function(c){return '<th>'+c.label+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+}
+function exportHTML(){exportAs(_formatHTML,'export.html','text/html','HTML geëxporteerd');}
+
+// 16. PNG — apart vanwege canvas-logica
+function exportPNG(){
+  try{
+    var ed=getExportData();
+    if(!ed||!ed.data.length){toast('Geen data om te exporteren');return;}
+    var rowH=28,colW=140,pad=12;
+    var W=ed.cols.length*colW+44+pad*2;
+    var H=(Math.min(ed.data.length,100)+2)*rowH+pad*2+40;
+    var canvas=document.createElement('canvas');
+    canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d');
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#007519';ctx.font='bold 14px sans-serif';
+    ctx.fillText(getTabLabel(currentTab)+' — '+ed.data.length+' records',pad,pad+14);
+    var tableY=pad+32;
+    ctx.fillStyle='#F5F5F5';ctx.fillRect(pad,tableY,W-pad*2,rowH);
+    ctx.fillStyle='#007519';ctx.font='bold 12px sans-serif';
+    var cx=pad+44;
+    ed.cols.forEach(function(c){ctx.fillText(c.label.substring(0,14),cx+5,tableY+rowH/2+4);cx+=colW;});
+    var maxRows=Math.min(ed.data.length,100);
+    for(var i=0;i<maxRows;i++){
+      var y=tableY+(i+1)*rowH;
+      ctx.fillStyle=i%2===0?'#FFFFFF':'#F5F5F5';
+      ctx.fillRect(pad,y,W-pad*2,rowH);
+      ctx.fillStyle='#737373';ctx.font='12px sans-serif';
+      ctx.fillText(i+1,pad+10,y+rowH/2+4);
+      var cx2=pad+44;
+      ed.cols.forEach(function(c){
+        var v=plainVal(c,ed.data[i]);
+        ctx.fillStyle=c.key==='name'?'#171717':'#525252';
+        ctx.font=(c.key==='name'?'bold ':'')+'11px sans-serif';
+        ctx.fillText(v.substring(0,16),cx2+5,y+rowH/2+4);
+        cx2+=colW;
+      });
+      ctx.strokeStyle='#DBE7EA';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad,y+rowH);ctx.lineTo(W-pad,y+rowH);ctx.stroke();
+    }
+    ctx.strokeStyle='#CAD6DA';ctx.lineWidth=1;
+    ctx.strokeRect(pad,tableY,W-pad*2,(maxRows+1)*rowH);
+    var link=document.createElement('a');link.download='export.png';link.href=canvas.toDataURL('image/png');link.click();
+    toast('PNG afbeelding geëxporteerd');
+  }catch(err){
+    console.error('[export] Fout bij PNG-export:',err);
+    toast('Fout bij PNG-export: '+(err.message||'onbekend'));
+  }finally{
+    closePanel('export');
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+var toastTimer;
+function toast(msg){
+  var t=document.getElementById('toast');
+  // #38: toast met sluitknop en progressbar
+  t.innerHTML='<span>✓ '+escapeHtml(msg)+'</span><span class="toast-close" onclick="closeToast()">✕</span><div class="toast-progress"></div>';
+  t.classList.add('is-visible'); // 1.3: state class i.p.v. style.display
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('is-visible');},2500);
+  // Sprint 4, taak 4.2: announce toast voor schermlezers
+  if(typeof announce==='function') announce(msg);
+}
+function closeToast(){var t=document.getElementById('toast');t.classList.remove('is-visible');clearTimeout(toastTimer);}
+
+// ============================================================
+// RESET VIEW
+// ============================================================
+function hasActiveSettings(){
+  var search=document.getElementById('search-input').value;
+  if(search) return true;
+  if(filterRules.length) return true;
+  if(sortRules.length) return true;
+  if(groupFields.length) return true;
+  if(condEnabled) return true;
+  if(rowHeight!=='compact') return true;
+  if(freezeCol) return true;
+  var cols=getCols();
+  if(cols.some(function(c){return !c.visible;})) return true;
+  return false;
+}
+function resetView(){
+  document.getElementById('search-input').value='';
+  document.getElementById('search-wrap').classList.remove('has-value'); // #29
+  filterRules=[];sortRules=[];groupFields=[];colFilters={};collapsedGroups.clear();globalNameFilter=null;
+  condEnabled=false;document.getElementById('btn-cond').classList.remove('active');
+  rowHeight='compact';setRowHeight('compact');
+  // Reset freeze via class removal
+  if(freezeCol){freezeCol=false;document.getElementById('btn-freeze').classList.remove('active');
+    document.querySelectorAll('.table-container').forEach(function(tc){ tc.classList.remove('freeze-active'); });
+  }
+  getCols().forEach(function(c){c.visible=true;});
+  document.getElementById('btn-group').classList.remove('active');
+  document.getElementById('btn-group').innerHTML='<span aria-hidden="true">⊞</span> Groeperen';
+  document.getElementById('btn-filter').classList.remove('active');
+  selectedRows.clear();
+  render();
+  toast('Weergave hersteld');
+}
+function updateResetBtn(){
+  var btn=document.getElementById('btn-reset');
+  if(btn) btn.style.display=hasActiveSettings()?'':'none';
+}
+
+// ============================================================
+// RESET VIEW STATE (read-only — brondata blijft ongewijzigd)
+// [Template-refactoring sprint 1] Hernoemd van resetDashboardValues, data-regeneratie verwijderd
+// ============================================================
+function resetViewState(){
+  selectedRows.clear();colFilters={};globalNameFilter=null;
+  filterRules=[];sortRules=[];groupFields=[];collapsedGroups.clear();
+  // Sprint 5: ook per-tab viewState resetten
+  saveTabViewState();
+  _avatarCache.clear();
+  AppState.clearCaches();
+  render();
+  initGlobalNameFilter();
+  toast('Weergave gereset');
+}
+
+// ============================================================
+// ACCESSIBILITY — Live region announcer (Sprint 4, taak 4.2)
+// ============================================================
+function announce(msg){
+  var el=document.getElementById('live-region');
+  if(el){el.textContent='';requestAnimationFrame(function(){el.textContent=msg;});}
+}
+
+// ============================================================
+// INLINE TEST SUITE (Sprint 4, taak 4.1)
+// ============================================================
+// Zichtbaar via de Test-knop wanneer _perfDebug === true
+function runTests(){
+  var t0=performance.now();
+  var passed=0,failed=0,results=[];
+  function assert(name,condition){
+    if(condition){passed++;}
+    else{failed++;results.push('FAIL: '+name);}
+  }
+
+  // --- escapeHtml ---
+  assert('escapeHtml: null → lege string', escapeHtml(null)==='');
+  assert('escapeHtml: undefined → lege string', escapeHtml(undefined)==='');
+  assert('escapeHtml: < en > worden geescaped', escapeHtml('<b>test</b>')==='&lt;b&gt;test&lt;/b&gt;');
+  assert('escapeHtml: & wordt geescaped', escapeHtml('a&b')==='a&amp;b');
+  assert('escapeHtml: aanhalingstekens', escapeHtml('"x"')==='&quot;x&quot;');
+
+  // --- escapeAttr ---
+  assert('escapeAttr: backslash wordt geescaped', escapeAttr('a\\b').indexOf('&#092;')!==-1);
+
+  // --- dateFmt ---
+  assert('dateFmt: lege waarde → leeg', dateFmt('')==='');
+  assert('dateFmt: null → leeg', dateFmt(null)==='');
+  assert('dateFmt: 2026-03-07 → 2026-03', dateFmt('2026-03-07')==='2026-03');
+
+  // --- budgetFmt ---
+  assert('budgetFmt: getal formatteert met €', budgetFmt(1000).indexOf('€')===0);
+
+  // --- matchRule ---
+  var testRow={name:'Test',priority:'Hoog',progress:75,budget:5000,status:'Actief'};
+  assert('matchRule: contains positief', matchRule(testRow,{field:'name',op:'contains',value:'est'}));
+  assert('matchRule: contains negatief', !matchRule(testRow,{field:'name',op:'contains',value:'xyz'}));
+  assert('matchRule: equals', matchRule(testRow,{field:'priority',op:'equals',value:'Hoog'}));
+  assert('matchRule: not_equals', matchRule(testRow,{field:'priority',op:'not_equals',value:'Laag'}));
+  assert('matchRule: gt numeriek', matchRule(testRow,{field:'progress',op:'gt',value:'50'}));
+  assert('matchRule: lt numeriek', matchRule(testRow,{field:'progress',op:'lt',value:'100'}));
+  assert('matchRule: gt met NaN → false', !matchRule(testRow,{field:'name',op:'gt',value:'50'}));
+  assert('matchRule: empty', matchRule({x:null},{field:'x',op:'empty',value:''}));
+  assert('matchRule: not_empty', matchRule(testRow,{field:'name',op:'not_empty',value:''}));
+
+  // --- condClass ---
+  var savedCond=AppState.condEnabled;
+  AppState.condEnabled=true;
+  assert('condClass: Hoog prioriteit → cond-red', condClass({priority:'Hoog',status:'Actief',progress:50})==='cond-red');
+  assert('condClass: On Hold → cond-red', condClass({priority:'Laag',status:'On Hold',progress:50})==='cond-red');
+  assert('condClass: Voltooid → cond-green', condClass({priority:'Laag',status:'Voltooid',progress:100})==='cond-green');
+  assert('condClass: In Review → cond-yellow', condClass({priority:'Laag',status:'In Review',progress:50})==='cond-yellow');
+  assert('condClass: progress <30 → cond-yellow', condClass({priority:'Laag',status:'Actief',progress:20})==='cond-yellow');
+  assert('condClass: normaal → leeg', condClass({priority:'Laag',status:'Actief',progress:50})==='');
+  AppState.condEnabled=false;
+  assert('condClass: uitgeschakeld → leeg', condClass({priority:'Hoog',status:'On Hold',progress:10})==='');
+  AppState.condEnabled=savedCond;
+
+  // --- sortData ---
+  var testData=[{name:'C',id:3},{name:'A',id:1},{name:'B',id:2}];
+  var savedSort=AppState.sortRules;
+  AppState.sortRules=[{field:'name',dir:'asc'}];
+  var sorted=sortData(testData);
+  assert('sortData: asc sortering', sorted[0].name==='A'&&sorted[1].name==='B'&&sorted[2].name==='C');
+  AppState.sortRules=[{field:'name',dir:'desc'}];
+  var sortedDesc=sortData(testData);
+  assert('sortData: desc sortering', sortedDesc[0].name==='C'&&sortedDesc[2].name==='A');
+  AppState.sortRules=[];
+  var sortedNone=sortData(testData);
+  assert('sortData: geen regels → ongewijzigd', sortedNone.length===3);
+  AppState.sortRules=savedSort;
+
+  // --- groupData ---
+  var gData=[{status:'A',id:1},{status:'B',id:2},{status:'A',id:3}];
+  var savedGroup=AppState.groupFields;
+  AppState.groupFields=['status'];
+  var grouped=groupData(gData);
+  assert('groupData: twee groepen', grouped!==null&&Object.keys(grouped._children).length===2);
+  assert('groupData: groep A heeft 2 rijen', grouped._children['A']._rows.length===2);
+  AppState.groupFields=[];
+  assert('groupData: geen velden → null', groupData(gData)===null);
+  AppState.groupFields=savedGroup;
+
+  // --- countLeafRows ---
+  var mockNode={_rows:[1,2],_children:{a:{_rows:[3],_children:{}}}};
+  delete mockNode._leafCount;
+  delete mockNode._children.a._leafCount;
+  assert('countLeafRows: telt blad-rijen recursief', countLeafRows(mockNode)===3);
+
+  // --- getRowH ---
+  var savedRH=AppState.rowHeight;
+  AppState.rowHeight='compact';
+  assert('getRowH: compact → 34', getRowH()===34);
+  AppState.rowHeight='medium';
+  assert('getRowH: medium → 42', getRowH()===42);
+  AppState.rowHeight='tall';
+  assert('getRowH: tall → 52', getRowH()===52);
+  AppState.rowHeight=savedRH;
+
+  // --- plainVal ---
+  var testCol={key:'budget',label:'Budget',renderer:'budget',type:'number'};
+  assert('plainVal: budget formatteert', plainVal(testCol,{budget:1000}).indexOf('€')!==-1);
+  var boolCol={key:'approved',label:'Goedgekeurd',renderer:'check',type:'boolean'};
+  assert('plainVal: true → Ja', plainVal(boolCol,{approved:true})==='Ja');
+  assert('plainVal: false → Nee', plainVal(boolCol,{approved:false})==='Nee');
+
+  // --- _formatCSV ---
+  var csvEd={cols:[{key:'name',label:'Naam'},{key:'status',label:'Status'}],data:[{name:'Test',status:'Actief'}]};
+  var csv=_formatCSV(csvEd);
+  assert('_formatCSV: bevat header', csv.indexOf('"Naam"')!==-1);
+  assert('_formatCSV: bevat datarij', csv.indexOf('"Test"')!==-1);
+
+  // --- _formatJSON ---
+  var json=_formatJSON(csvEd);
+  var parsed=JSON.parse(json);
+  assert('_formatJSON: geldig JSON met juiste data', parsed[0].name==='Test'&&parsed[0].status==='Actief');
+
+  // --- AppState ---
+  assert('AppState: currentTab accessor beschikbaar', 'currentTab' in AppState);
+  assert('AppState: reset is functie', typeof AppState.reset==='function');
+  assert('AppState: clearCaches is functie', typeof AppState.clearCaches==='function');
+  assert('AppState: _dirty object aanwezig', AppState._dirty&&typeof AppState._dirty.data==='boolean');
+  assert('AppState: _derived object aanwezig', AppState._derived&&AppState._derived.hasOwnProperty('filteredData'));
+
+  // --- read-only (template-refactoring sprint 1) ---
+  assert('addRow verwijderd', typeof window.addRow==='undefined');
+  assert('deleteSelected verwijderd', typeof window.deleteSelected==='undefined');
+  assert('duplicateRow verwijderd', typeof window.duplicateRow==='undefined');
+  assert('resetViewState bestaat', typeof window.resetViewState==='function');
+  assert('resetDashboardValues verwijderd', typeof window.resetDashboardValues==='undefined');
+
+  // --- dashboardConfig (template-refactoring sprint 2) ---
+  assert('config: tabs array aanwezig', Array.isArray(dashboardConfig.tabs)&&dashboardConfig.tabs.length>=1);
+  assert('config: eerste tab is projects', dashboardConfig.tabs[0].id==='projects');
+  assert('config: tweede tab is team', dashboardConfig.tabs[1].id==='team');
+  assert('getTabLabel(0) geeft Projecten', getTabLabel(0)==='Projecten');
+  assert('getTabLabel("team") geeft Teamleden', getTabLabel('team')==='Teamleden');
+  assert('getTabConfig("projects") heeft kolommen', getTabConfig('projects').columns.length>0);
+  assert('getTabIndex("team")===1', getTabIndex('team')===1);
+  assert('getTabConfigByIndex(0).icon is 📋', getTabConfigByIndex(0).icon==='📋');
+  assert('renderTabBar bestaat', typeof window.renderTabBar==='function');
+
+  // --- tabs abstraheren (template-refactoring sprint 3) ---
+  assert('_tabData is array met 2 entries', Array.isArray(_tabData)&&_tabData.length===2);
+  assert('_tabCols is array met 2 entries', Array.isArray(_tabCols)&&_tabCols.length===2);
+  assert('_tabData[0] bevat projectdata', _tabData[0].length>0&&_tabData[0][0].hasOwnProperty('budget'));
+  assert('_tabData[1] bevat teamdata', _tabData[1].length>0&&_tabData[1][0].hasOwnProperty('functie'));
+  assert('_tabCols[0] === cols0', _tabCols[0]===cols0);
+  assert('_tabCols[1] === cols1', _tabCols[1]===cols1);
+  assert('getData() retourneert huidige tab-data', getData()===_tabData[currentTab]);
+  assert('getData(0) retourneert projectdata', getData(0)===_tabData[0]);
+  assert('getData(1) retourneert teamdata', getData(1)===_tabData[1]);
+  assert('getCols(0) retourneert projectkolommen', getCols(0)===_tabCols[0]);
+  assert('getCols(1) retourneert teamkolommen', getCols(1)===_tabCols[1]);
+  assert('legacy data0 accessor werkt', window.data0===_tabData[0]);
+  assert('legacy data1 accessor werkt', window.data1===_tabData[1]);
+  assert('initTabDataFromConfig bestaat', typeof window.initTabDataFromConfig==='function');
+  assert('renderTabContainers bestaat', typeof window.renderTabContainers==='function');
+  assert('initTableDelegation bestaat', typeof window.initTableDelegation==='function');
+  assert('_tabSelections dynamisch (2 tabs)', Object.keys(AppState._tabSelections).length===dashboardConfig.tabs.length);
+  assert('tab-host element bestaat', !!document.getElementById('tab-host'));
+  assert('content-0 element bestaat', !!document.getElementById('content-0'));
+  assert('content-1 element bestaat', !!document.getElementById('content-1'));
+
+  // --- cellRenderers registry (template-refactoring sprint 4) ---
+  assert('cellRenderers is object', typeof cellRenderers==='object'&&cellRenderers!==null);
+  assert('cellRenderers.text is functie', typeof cellRenderers.text==='function');
+  assert('cellRenderers.date is functie', typeof cellRenderers.date==='function');
+  assert('cellRenderers.budget is functie', typeof cellRenderers.budget==='function');
+  assert('cellRenderers.avatar is functie', typeof cellRenderers.avatar==='function');
+  assert('cellRenderers.status is functie', typeof cellRenderers.status==='function');
+  assert('cellRenderers.priority is functie', typeof cellRenderers.priority==='function');
+  assert('cellRenderers.progress is functie', typeof cellRenderers.progress==='function');
+  assert('cellRenderers.check is functie', typeof cellRenderers.check==='function');
+  assert('cellRenderers.star is functie', typeof cellRenderers.star==='function');
+  assert('cellRenderers.tag is functie', typeof cellRenderers.tag==='function');
+  assert('cellRenderers.email is functie', typeof cellRenderers.email==='function');
+  assert('cellRenderers.note is functie', typeof cellRenderers.note==='function');
+  assert('cellRenderers.mono is functie', typeof cellRenderers.mono==='function');
+  assert('cellRenderers.number is functie', typeof cellRenderers.number==='function');
+  assert('cellRenderers.text escapet HTML', cellRenderers.text('<b>x</b>',{}).indexOf('&lt;')!==-1);
+  assert('cellRenderers.date formatteert datum', cellRenderers.date('2026-03-07',{}).indexOf('2026-03')!==-1);
+  assert('cellRenderers.tag met tagColors gebruikt kleur', cellRenderers.tag('Hoog',{tagColors:{Hoog:'tag-danger'}}).indexOf('tag-danger')!==-1);
+  assert('cellRenderers.tag zonder tagColors default tag-info', cellRenderers.tag('X',{}).indexOf('tag-info')!==-1);
+  assert('cellRenderers.number met suffix toont suffix', cellRenderers.number(5,{suffix:'u'}).indexOf('5u')!==-1);
+  assert('cellRenderers.mono met suffix toont suffix', cellRenderers.mono(10,{suffix:' km'}).indexOf('10 km')!==-1);
+
+  // --- kolomschema (sprint 4) ---
+  assert('cols0[0] heeft renderer', cols0[0].renderer!==undefined);
+  assert('cols0[0] heeft type', cols0[0].type!==undefined);
+  assert('cols1[0] heeft renderer', cols1[0].renderer!==undefined);
+  assert('cols1[0].renderer is avatar', cols1[0].renderer==='avatar');
+  var allCols0Valid=cols0.every(function(c){return c.renderer&&c.type;});
+  var allCols1Valid=cols1.every(function(c){return c.renderer&&c.type;});
+  assert('alle cols0 hebben renderer en type', allCols0Valid);
+  assert('alle cols1 hebben renderer en type', allCols1Valid);
+  var allRenderersExist=cols0.concat(cols1).every(function(c){return typeof cellRenderers[c.renderer]==='function';});
+  assert('alle col.renderer verwijzen naar bestaande renderer', allRenderersExist);
+
+  // --- plainVal (sprint 4) ---
+  var dateCol={key:'deadline',renderer:'date',type:'date'};
+  assert('plainVal: date kolom formatteert', plainVal(dateCol,{deadline:'2026-03-07'})==='2026-03');
+  var budgetCol={key:'budget',renderer:'budget',type:'number'};
+  assert('plainVal: budget kolom formatteert', plainVal(budgetCol,{budget:1000}).indexOf('€')===0);
+  var boolCol4={key:'approved',renderer:'check',type:'boolean'};
+  assert('plainVal: boolean true → Ja', plainVal(boolCol4,{approved:true})==='Ja');
+  assert('plainVal: boolean false → Nee', plainVal(boolCol4,{approved:false})==='Nee');
+
+  // --- activeTabId en per-tab viewState (sprint 5) ---
+  assert('AppState.activeTabId bestaat', typeof AppState.activeTabId==='string');
+  assert('AppState.activeTabId default is projects', AppState.activeTabId==='projects');
+  assert('AppState.tabs object bestaat', typeof AppState.tabs==='object'&&AppState.tabs!==null);
+  assert('AppState.tabs.projects bestaat', AppState.tabs.projects!==undefined);
+  assert('AppState.tabs.team bestaat', AppState.tabs.team!==undefined);
+  assert('AppState.tabs.projects.viewState.selection is Set', AppState.tabs.projects.viewState.selection instanceof Set);
+  assert('AppState.tabs.team.viewState.selection is Set', AppState.tabs.team.viewState.selection instanceof Set);
+  assert('AppState.tabs.projects.viewState.filterRules is array', Array.isArray(AppState.tabs.projects.viewState.filterRules));
+  assert('currentTab computed property werkt', AppState.currentTab===getTabIndex(AppState.activeTabId));
+  // Test legacy currentTab setter
+  var savedTabId=AppState.activeTabId;
+  AppState.currentTab=1;
+  assert('currentTab setter → activeTabId=team', AppState.activeTabId==='team');
+  AppState.currentTab=0;
+  assert('currentTab setter → activeTabId=projects', AppState.activeTabId==='projects');
+  AppState.activeTabId=savedTabId;
+  // Test saveTabViewState/restoreTabViewState
+  assert('saveTabViewState is functie', typeof saveTabViewState==='function');
+  assert('restoreTabViewState is functie', typeof restoreTabViewState==='function');
+  // save current, modify, restore and verify
+  saveTabViewState();
+  var origLen=AppState.filterRules.length;
+  AppState.filterRules=[{field:'test',op:'contains',value:'x'}];
+  restoreTabViewState(AppState.activeTabId);
+  assert('restoreTabViewState herstelt filterRules', AppState.filterRules.length===origLen);
+
+  // --- announce (accessibility) ---
+  announce('test');
+  var liveEl=document.getElementById('live-region');
+  assert('announce: live-region element bestaat', !!liveEl);
+
+  var elapsed=Math.round(performance.now()-t0);
+  var summary=passed+'/'+( passed+failed)+' tests geslaagd ('+elapsed+'ms)';
+  if(failed>0) summary+='\n'+results.join('\n');
+  console.log('[tests] '+summary);
+  toast(failed===0?'✅ '+summary:'❌ '+summary);
+  announce(summary);
+  return {passed:passed,failed:failed,results:results,elapsed:elapsed};
+}
+
+// ============================================================
+// DYNAMIC TAB CONTAINERS (template-refactoring sprint 3, taak 3.1)
+// ============================================================
+function renderTabContainers(){
+  var host=document.getElementById('tab-host');
+  if(!host) return;
+  host.innerHTML=dashboardConfig.tabs.map(function(tab,idx){
+    var active=idx===currentTab;
+    return '<div class="tab-content'+(active?' active':'')+'" id="content-'+idx+'">'
+      +'<div class="table-container" id="tc-'+idx+'">'
+      +'<table id="table-'+idx+'" role="grid"><thead><tr id="thead-'+idx+'-row"></tr></thead><tbody id="tbody-'+idx+'"></tbody></table>'
+      +'</div>'
+      +'<div class="agg-row" id="agg-'+idx+'"></div>'
+      +'</div>';
+  }).join('');
+}
+
+// ============================================================
+// TABLE EVENT DELEGATION (template-refactoring sprint 3, taak 3.5)
+// ============================================================
+function initTableDelegation(){
+  dashboardConfig.tabs.forEach(function(tab,idx){
+    var tc=document.getElementById('tc-'+idx);
+    if(!tc) return;
+    // Scroll-sync agg-row
+    tc.addEventListener('scroll',function(){
+      var agg=document.getElementById('agg-'+idx);
+      if(agg) agg.scrollLeft=tc.scrollLeft;
+    });
+    // Click delegation
+    tc.addEventListener('click',function(e){
+      var hdr=e.target.closest('.group-hdr[data-group-path]');
+      if(hdr){ e.stopPropagation(); toggleGroupCollapse(hdr.dataset.groupPath); return; }
+      var actionBtn=e.target.closest('[data-action="row-ctx"]');
+      if(actionBtn){ e.stopPropagation(); var tr=actionBtn.closest('tr[data-row-key]'); if(tr) showCtxAt(e,tr.dataset.rowKey); return; }
+      var tag=e.target.closest('.tag-clickable[data-tag-field]');
+      if(tag){ e.stopPropagation(); tagFilter(tag.dataset.tagField,tag.dataset.tagValue); return; }
+      var tr=e.target.closest('tr[data-row-key]');
+      if(tr) toggleRow(e,tr.dataset.rowKey);
+    });
+    // Dubbelklik → openModal
+    tc.addEventListener('dblclick',function(e){
+      var tr=e.target.closest('tr[data-row-key]');
+      if(tr){
+        var t=parseInt(tr.dataset.tab);
+        var id=parseInt(tr.dataset.rowKey.split('-')[1]);
+        openModal(t,id);
+      }
+    });
+    // Rechtermuisklik → contextmenu
+    tc.addEventListener('contextmenu',function(e){
+      var tr=e.target.closest('tr[data-row-key]');
+      if(tr) showCtx(e,tr.dataset.rowKey);
+    });
+  });
+}
+
+// INIT
+document.body.classList.add('density-compact'); // Sprint 2, taak 2.4: initiële density-class
+if(_perfDebug){var _btnTest=document.getElementById('btn-test');if(_btnTest)_btnTest.style.display='';}
+renderTabContainers(); // Sprint 3: dynamische tab-containers
+initTableDelegation(); // Sprint 3: event delegation op alle tabs
+render();
+initGlobalNameFilter();
+</script>
+</body>
+</html>
