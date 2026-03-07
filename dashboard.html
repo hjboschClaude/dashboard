@@ -3405,5 +3405,740 @@ initTableDelegation(); // Sprint 3: event delegation op alle tabs
 render();
 initGlobalNameFilter();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN TEST RUNNER — Ctrl+Shift+T om te openen/sluiten
+     Gebaseerd op TESTPLAN.md §T, §GATE en §P
+     Productie: geen effect, overlay is verborgen tenzij geactiveerd
+═══════════════════════════════════════════════════════════════ -->
+<style>
+#dtr-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9000;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  overflow-y: auto;
+}
+#dtr-overlay.dtr-open { display: flex; }
+#dtr-panel {
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 860px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+}
+#dtr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #1a2b30;
+  color: #fff;
+}
+#dtr-header h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .3px; }
+#dtr-header small { color: #8da8b0; font-size: 11px; margin-left: 12px; }
+#dtr-controls { display: flex; gap: 8px; align-items: center; }
+#dtr-run  { background: #00811f; color: #fff; border: none; border-radius: 4px;
+            padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+#dtr-run:hover { background: #006713; }
+#dtr-close { background: none; border: none; color: #8da8b0; font-size: 18px;
+              cursor: pointer; line-height: 1; padding: 2px 4px; }
+#dtr-close:hover { color: #fff; }
+#dtr-tabs { display: flex; gap: 0; border-bottom: 1px solid #e0e0e0; background: #f5f7f8; }
+.dtr-tab { padding: 8px 16px; font-size: 12px; font-weight: 500; color: #5a6a70;
+           border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; }
+.dtr-tab.dtr-active { color: #00811f; border-bottom-color: #00811f; background: #fff; font-weight: 600; }
+#dtr-body { padding: 16px 20px; max-height: 560px; overflow-y: auto; }
+#dtr-summary {
+  display: flex; gap: 16px; padding: 10px 20px;
+  background: #f5f7f8; border-bottom: 1px solid #e0e0e0; font-size: 12px;
+}
+.dtr-sum-item { display: flex; gap: 6px; align-items: center; }
+.dtr-sum-pass { color: #00811f; font-weight: 700; }
+.dtr-sum-fail { color: #c8000a; font-weight: 700; }
+.dtr-sum-warn { color: #c46200; font-weight: 700; }
+.dtr-group { margin-bottom: 16px; }
+.dtr-group-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: #8a9ba1; margin-bottom: 8px; padding-bottom: 4px;
+  border-bottom: 1px solid #eee;
+}
+.dtr-result {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 5px 8px; border-radius: 4px; margin-bottom: 3px; font-size: 12px;
+}
+.dtr-result:hover { background: #f5f7f8; }
+.dtr-icon { font-size: 13px; line-height: 1.4; flex-shrink: 0; width: 16px; text-align: center; }
+.dtr-label { flex: 1; color: #1a2b30; line-height: 1.5; }
+.dtr-detail { color: #8a9ba1; font-size: 11px; margin-top: 1px; }
+.dtr-value { margin-left: auto; font-size: 11px; color: #5a6a70; white-space: nowrap; padding-left: 12px; }
+.dtr-pass .dtr-icon { color: #00811f; }
+.dtr-fail .dtr-icon { color: #c8000a; }
+.dtr-warn .dtr-icon { color: #c46200; }
+.dtr-skip .dtr-icon { color: #b0b0b0; }
+.dtr-pass .dtr-label { color: #1a2b30; }
+.dtr-fail { background: #fdeaea; }
+.dtr-fail .dtr-label { color: #8b0000; }
+.dtr-warn { background: #fef3e2; }
+</style>
+
+<div id="dtr-overlay" role="dialog" aria-modal="true" aria-label="Design Test Runner">
+  <div id="dtr-panel">
+    <div id="dtr-header">
+      <div>
+        <h2>Design Test Runner</h2>
+        <small>TESTPLAN.md — Ctrl+Shift+T om te sluiten</small>
+      </div>
+      <div id="dtr-controls">
+        <button id="dtr-run">&#9654; Alle tests uitvoeren</button>
+        <button id="dtr-close" title="Sluiten">&#x2715;</button>
+      </div>
+    </div>
+    <div id="dtr-tabs">
+      <button class="dtr-tab dtr-active" data-tab="design">Design (T)</button>
+      <button class="dtr-tab" data-tab="gates">Implementatie (GATE)</button>
+      <button class="dtr-tab" data-tab="perf">Performance (P)</button>
+      <button class="dtr-tab" data-tab="regr">Regressie (RC)</button>
+    </div>
+    <div id="dtr-summary">
+      <span class="dtr-sum-item">Geslaagd: <span class="dtr-sum-pass" id="dtr-cnt-pass">—</span></span>
+      <span class="dtr-sum-item">Mislukt: <span class="dtr-sum-fail" id="dtr-cnt-fail">—</span></span>
+      <span class="dtr-sum-item">Waarschuwing: <span class="dtr-sum-warn" id="dtr-cnt-warn">—</span></span>
+      <span style="margin-left:auto;color:#8a9ba1" id="dtr-timestamp"></span>
+    </div>
+    <div id="dtr-body">
+      <p style="color:#8a9ba1;text-align:center;padding:24px 0">
+        Klik <strong>Alle tests uitvoeren</strong> om te starten.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+// ── Hulpfuncties ────────────────────────────────────────────────
+function css(el) { return getComputedStyle(el); }
+function root() { return css(document.documentElement); }
+function token(name) { return root().getPropertyValue(name).trim(); }
+function allCssText() {
+  return [...document.styleSheets].map(s => {
+    try { return [...s.cssRules].map(r => r.cssText).join(' '); } catch(e) { return ''; }
+  }).join(' ');
+}
+function rootTokens() {
+  return [...document.styleSheets].flatMap(s => {
+    try {
+      return [...s.cssRules].filter(r => r.selectorText === ':root')
+        .flatMap(r => [...r.style].filter(p => p.startsWith('--')));
+    } catch(e) { return []; }
+  });
+}
+
+// ── Test-definitie helpers ──────────────────────────────────────
+function pass(label, value) { return { status:'pass', label, value: value ?? '' }; }
+function fail(label, value) { return { status:'fail', label, value: value ?? '' }; }
+function warn(label, value) { return { status:'warn', label, value: value ?? '' }; }
+function skip(label, reason) { return { status:'skip', label, value: reason ?? '' }; }
+
+// ══════════════════════════════════════════════════════════════
+// SECTIE T — Design checks
+// ══════════════════════════════════════════════════════════════
+var TESTS_DESIGN = [
+  {
+    group: 'T1 — Tokens',
+    run: function() {
+      var results = [];
+      var required = ['--font-size-xs','--font-size-sm','--font-size-md','--font-size-lg',
+        '--font-weight-regular','--font-weight-medium','--font-weight-semibold',
+        '--space-1','--space-2','--space-3','--space-4',
+        '--row-height','--btn-height','--radius-sm','--radius-md',
+        '--color-accent','--color-accent-light','--color-danger',
+        '--border','--border-strong','--text','--text-muted',
+        '--shadow-sm','--shadow-md','--duration-fast','--duration-normal'];
+      var missing = required.filter(t => !token(t));
+      results.push(missing.length === 0
+        ? pass('T1.1 Alle nieuwe tokens aanwezig', required.length + ' tokens')
+        : fail('T1.1 Ontbrekende tokens: ' + missing.slice(0,3).join(', ') + (missing.length > 3 ? '…' : ''), missing.length + ' ontbrekend'));
+
+      var removed = ['--surface2','--surface3','--border-hover','--input-border','--accent2','--accent3','--accent4','--shadow-1','--shadow-2'];
+      var present = removed.filter(t => token(t));
+      results.push(present.length === 0
+        ? pass('T1.2 Verouderde tokens verwijderd')
+        : warn('T1.2 Verouderde tokens nog aanwezig', present.join(', ')));
+
+      var checks = [['--font-size-xs','11px'],['--font-size-sm','12px'],['--font-size-md','14px'],
+        ['--space-1','4px'],['--space-2','8px'],['--radius-sm','4px'],['--radius-md','6px']];
+      var wrong = checks.filter(([t,v]) => token(t).toLowerCase() !== v);
+      results.push(wrong.length === 0
+        ? pass('T1.3 Token waarden correct', checks.length + ' gecontroleerd')
+        : fail('T1.3 Verkeerde waarden: ' + wrong.map(([t,v]) => t+'='+token(t)+'(verwacht '+v+')').join(', ')));
+      return results;
+    }
+  },
+  {
+    group: 'T2 — Typografie',
+    run: function() {
+      var results = [];
+      var th = document.querySelector('thead th');
+      if (th) {
+        var s = css(th);
+        results.push(s.fontSize === '11px' ? pass('T2.1a th font-size: 11px', s.fontSize)
+          : fail('T2.1a th font-size', s.fontSize + ' (verwacht 11px)'));
+        results.push(s.textTransform === 'uppercase' ? pass('T2.1b th uppercase')
+          : fail('T2.1b th text-transform', s.textTransform));
+      } else results.push(skip('T2.1 thead th', 'element niet gevonden'));
+
+      var cp = document.querySelector('.cell-primary');
+      if (cp) {
+        results.push(css(cp).fontSize === '14px' ? pass('T2.2 .cell-primary 14px')
+          : fail('T2.2 .cell-primary font-size', css(cp).fontSize));
+      } else results.push(skip('T2.2 .cell-primary', 'element niet gevonden'));
+
+      var forbidden = ['9px','10px','13px','16px','22px','36px'];
+      var found = {};
+      document.querySelectorAll('*').forEach(el => {
+        var fs = css(el).fontSize;
+        if (forbidden.includes(fs)) found[fs] = (found[fs]||0) + 1;
+      });
+      results.push(Object.keys(found).length === 0
+        ? pass('T2.3 Geen verboden font-sizes')
+        : warn('T2.3 Verboden font-sizes', Object.entries(found).map(([s,n])=>s+'×'+n).join(', ')));
+
+      var btns = [...document.querySelectorAll('.btn,.tab')];
+      var heavy = btns.filter(el => css(el).fontWeight === '700');
+      results.push(heavy.length === 0
+        ? pass('T2.4 Geen font-weight 700 op btn/tab')
+        : warn('T2.4 font-weight 700 op ' + heavy.length + ' btn/tab', heavy[0] ? heavy[0].className : ''));
+      return results;
+    }
+  },
+  {
+    group: 'T3 — Kleur',
+    run: function() {
+      var results = [];
+      var cssText = allCssText().toLowerCase();
+
+      results.push(cssText.includes('#dcf0f5')
+        ? fail('T3.1 Hardcoded blauwe btn-hover (#DCF0F5) weg', 'nog aanwezig')
+        : pass('T3.1 Geen hardcoded #DCF0F5'));
+      results.push(cssText.includes('#edf8fa')
+        ? fail('T3.2 Hardcoded cyaan row-hover (#EDF8FA) weg', 'nog aanwezig')
+        : pass('T3.2 Geen hardcoded #EDF8FA'));
+
+      var at = document.querySelector('.tab.active');
+      if (at) {
+        var bg = css(at).backgroundColor;
+        results.push(bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent'
+          ? pass('T3.3 Actieve tab transparante achtergrond')
+          : fail('T3.3 Actieve tab achtergrond', bg));
+      } else results.push(skip('T3.3 .tab.active', 'geen actieve tab'));
+
+      var aggSpans = document.querySelectorAll('.agg-cell span');
+      var greenAgg = [...aggSpans].filter(el => {
+        var c = css(el).color;
+        return c.match(/rgb\(0,\s*(9[7-9]|1[01]\d|12[0-9]),/);
+      });
+      results.push(greenAgg.length === 0
+        ? pass('T3.4 Aggregatierij niet groen')
+        : warn('T3.4 Groene agg-cel spans', greenAgg.length + ' gevonden'));
+      return results;
+    }
+  },
+  {
+    group: 'T4 — Borders',
+    run: function() {
+      var results = [];
+      var td = document.querySelector('tbody td');
+      if (td) {
+        var s = css(td);
+        results.push(s.borderLeftWidth === '0px' && s.borderRightWidth === '0px'
+          ? pass('T4.1 Geen verticale celgrenzen')
+          : fail('T4.1 td heeft border', 'L:'+s.borderLeftWidth+' R:'+s.borderRightWidth));
+      }
+      var thead = document.querySelector('thead');
+      if (thead) {
+        var bw = parseFloat(css(thead).borderBottomWidth);
+        results.push(bw <= 1 ? pass('T4.2 thead border-bottom ≤ 1px', bw+'px')
+          : fail('T4.2 thead border-bottom', bw+'px (max 1px)'));
+      }
+      var invalid = [];
+      document.querySelectorAll('.btn,.tab,.tag,.af-chip,input,select').forEach(el => {
+        var br = parseFloat(css(el).borderRadius);
+        if (br > 0 && br < 4) invalid.push(el.className || el.tagName);
+      });
+      results.push(invalid.length === 0
+        ? pass('T4.3 Border-radius ≥ 4px op interactieve elementen')
+        : warn('T4.3 Border-radius < 4px', [...new Set(invalid)].slice(0,3).join(', ')));
+      var vseps = [...document.querySelectorAll('.vsep')];
+      var vis = vseps.filter(el => el.offsetWidth > 0 && css(el).display !== 'none');
+      results.push(vis.length === 0
+        ? pass('T4.4 Geen zichtbare .vsep dividers')
+        : warn('T4.4 Zichtbare .vsep', vis.length + ' gevonden'));
+      return results;
+    }
+  },
+  {
+    group: 'T5 — Spacing',
+    run: function() {
+      var results = [];
+      var rows = [...document.querySelectorAll('tbody tr')];
+      var wrong = rows.filter(r => r.offsetHeight !== 32);
+      results.push(wrong.length === 0
+        ? pass('T5.1 Rijhoogte 32px', rows.length + ' rijen')
+        : fail('T5.1 Rijhoogte', wrong[0].offsetHeight+'px (verwacht 32px), '+wrong.length+' rijen'));
+
+      var toolbar = document.querySelector('.toolbar');
+      if (toolbar) {
+        var h = toolbar.offsetHeight;
+        results.push(h >= 36 && h <= 44 ? pass('T5.2 Toolbar hoogte ~40px', h+'px')
+          : warn('T5.2 Toolbar hoogte', h+'px (verwacht 36-44px)'));
+      }
+
+      var ph = document.querySelector('.panel-header');
+      if (ph) {
+        var sl = css(ph);
+        results.push(sl.paddingLeft === sl.paddingRight
+          ? pass('T5.3 Panel-header padding symmetrisch', 'L/R: '+sl.paddingLeft)
+          : fail('T5.3 Panel-header padding', 'L:'+sl.paddingLeft+' R:'+sl.paddingRight));
+      }
+
+      var offGrid = 0;
+      document.querySelectorAll('.btn,.tab,.toolbar,.topbar,.panel-header,.panel-body,.panel-footer').forEach(el => {
+        ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(p => {
+          var v = parseFloat(css(el)[p]);
+          if (v > 0 && v % 4 !== 0) offGrid++;
+        });
+      });
+      results.push(offGrid < 5 ? pass('T5.4 Spacing op 4px-grid (kerncomponenten)', offGrid+' off-grid waarden')
+        : warn('T5.4 Off-grid padding', offGrid+' waarden (drempel: <5)'));
+      return results;
+    }
+  },
+  {
+    group: 'T7 — Iconen',
+    run: function() {
+      var results = [];
+      var toolbar = document.querySelector('.toolbar');
+      if (toolbar) {
+        var emoji = ['🔄','⚡','🎨','❄','🧪','📄','📊'];
+        var found = emoji.filter(e => toolbar.innerText.includes(e));
+        results.push(found.length === 0
+          ? pass('T7.1 Geen gekleurde emoji in toolbar')
+          : warn('T7.1 Emoji in toolbar', found.join(' ')));
+      }
+      var avatars = [...document.querySelectorAll('.avatar')];
+      var colored = avatars.filter(av => {
+        var bg = (av.style.background || av.style.backgroundColor || '').toLowerCase();
+        return bg && !bg.includes('gray') && !bg.match(/#[cdefCDEF][0-9a-fA-F]{5}/) && !bg.match(/rgba\(0/);
+      });
+      results.push(colored.length === 0
+        ? pass('T7.2 Avatars monochroom', avatars.length + ' avatars')
+        : warn('T7.2 Gekleurde avatars', colored.length + ' van ' + avatars.length));
+      return results;
+    }
+  }
+];
+
+// ══════════════════════════════════════════════════════════════
+// SECTIE GATE — Implementatieplan fasegaten
+// ══════════════════════════════════════════════════════════════
+var TESTS_GATES = [
+  {
+    group: 'GATE-1 — Token-definitie',
+    run: function() {
+      var results = [];
+      var required = ['--font-size-xs','--space-1','--radius-sm','--color-accent-light',
+        '--color-danger','--shadow-sm','--duration-fast','--duration-normal','--border-strong'];
+      var missing = required.filter(t => !token(t));
+      results.push(missing.length === 0 ? pass('Nieuwe tokens aanwezig', required.length+' tokens')
+        : fail('Ontbrekende tokens', missing.join(', ')));
+      var aliases = ['--surface2','--surface3','--border-hover','--accent2','--accent3'];
+      var missingAlias = aliases.filter(t => !token(t));
+      results.push(missingAlias.length === 0 ? pass('Backward-compat aliassen aanwezig')
+        : warn('Aliassen ontbreken (tijdelijk vereist in Fase 1)', missingAlias.join(', ')));
+      results.push(document.styleSheets.length > 0 ? pass('Stylesheet geladen')
+        : fail('Stylesheet niet geladen'));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-2 — Typografie',
+    run: function() {
+      var results = [];
+      results.push(css(document.body).fontSize === '14px' ? pass('body font-size: 14px')
+        : fail('body font-size', css(document.body).fontSize));
+      var th = document.querySelector('thead th');
+      if (th) {
+        var s = css(th);
+        results.push(s.fontSize === '11px' ? pass('thead th: 11px') : fail('thead th font-size', s.fontSize));
+        results.push(s.textTransform === 'uppercase' ? pass('thead th: uppercase') : fail('thead th transform', s.textTransform));
+        results.push(['500','600'].includes(s.fontWeight) ? pass('thead th: semibold') : warn('thead th font-weight', s.fontWeight));
+      }
+      var btn = document.querySelector('.btn');
+      results.push(!btn || css(btn).fontWeight !== '700' ? pass('.btn niet 700') : warn('.btn font-weight 700'));
+      results.push(document.querySelector('.label-caps') ? pass('.label-caps klasse in gebruik')
+        : warn('.label-caps nog niet toegepast in DOM'));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-3 — Kleur',
+    run: function() {
+      var results = [];
+      var cssLow = allCssText().toLowerCase();
+      results.push(!cssLow.includes('#dcf0f5') ? pass('Geen #DCF0F5 (blauwe hover)') : fail('#DCF0F5 nog aanwezig'));
+      results.push(!cssLow.includes('#edf8fa') ? pass('Geen #EDF8FA (cyaan row-hover)') : fail('#EDF8FA nog aanwezig'));
+      results.push(!cssLow.includes('#daf2e8') ? pass('Geen #DAF2E8 (groen selected)') : fail('#DAF2E8 nog aanwezig'));
+      var at = document.querySelector('.tab.active');
+      if (at) {
+        var bg = css(at).backgroundColor;
+        results.push(bg === 'rgba(0, 0, 0, 0)' ? pass('Tab.active: transparante bg')
+          : fail('Tab.active achtergrond', bg));
+      }
+      var rv = token('--row-hover');
+      results.push(!rv.toLowerCase().includes('edf8fa') ? pass('--row-hover is niet cyaan', rv)
+        : fail('--row-hover is nog cyaan', rv));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-4 — Borders & lijnen',
+    run: function() {
+      var results = [];
+      var td = document.querySelector('tbody td');
+      if (td) {
+        var s = css(td);
+        results.push(s.borderLeftWidth === '0px' && s.borderRightWidth === '0px'
+          ? pass('Geen verticale celgrenzen') : fail('td verticale border', 'L:'+s.borderLeftWidth));
+      }
+      var thead = document.querySelector('thead');
+      if (thead) results.push(parseFloat(css(thead).borderBottomWidth) <= 1
+        ? pass('thead border-bottom ≤ 1px') : fail('thead border-bottom > 1px', css(thead).borderBottomWidth));
+      var inv = [];
+      document.querySelectorAll('.btn,.tab,.tag,.af-chip,input,select').forEach(el => {
+        var br = parseFloat(css(el).borderRadius);
+        if (br > 0 && br < 4) inv.push(el.className || el.tagName);
+      });
+      results.push(inv.length === 0 ? pass('Border-radius ≥ 4px') : warn('Border-radius < 4px gevonden', [...new Set(inv)].slice(0,2).join(', ')));
+      var vis = [...document.querySelectorAll('.vsep')].filter(el => el.offsetWidth > 0);
+      results.push(vis.length === 0 ? pass('.vsep verborgen') : warn('.vsep zichtbaar', vis.length + ' elementen'));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-5 — Spacing',
+    run: function() {
+      var results = [];
+      var wrong = [...document.querySelectorAll('tbody tr')].filter(r => r.offsetHeight !== 32);
+      results.push(wrong.length === 0 ? pass('Rijhoogte 32px')
+        : fail('Rijhoogte afwijkend', wrong[0].offsetHeight+'px op '+wrong.length+' rijen'));
+      var tb = document.querySelector('.toolbar');
+      if (tb) results.push(tb.offsetHeight >= 36 && tb.offsetHeight <= 44
+        ? pass('Toolbar hoogte ~40px', tb.offsetHeight+'px')
+        : warn('Toolbar hoogte', tb.offsetHeight+'px'));
+      var ph = document.querySelector('.panel-header');
+      if (ph) results.push(css(ph).paddingLeft === css(ph).paddingRight
+        ? pass('Panel-header padding symmetrisch') : fail('Panel-header padding asymmetrisch'));
+      var off = 0;
+      document.querySelectorAll('.btn,.tab,.toolbar,.topbar,.panel-header').forEach(el => {
+        ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(p => {
+          var v = parseFloat(css(el)[p]); if (v > 0 && v % 4 !== 0) off++;
+        });
+      });
+      results.push(off < 5 ? pass('Spacing op 4px-grid', off+' uitzonderingen') : warn('Off-grid padding', off+' waarden'));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-6 — Schaduwen & animaties',
+    run: function() {
+      var results = [];
+      var cssText = allCssText();
+      results.push(!cssText.includes('@keyframes slideOut') ? pass('@keyframes slideOut verwijderd')
+        : warn('@keyframes slideOut nog aanwezig'));
+      var heavy = cssText.match(/rgba\(0,\s*0,\s*0,\s*\.(1[2-9]|[2-9]\d)\)/g);
+      results.push(!heavy ? pass('Geen zware schaduw-opaciteit (≥ .12)')
+        : warn('Zware schaduw-opaciteit', [...new Set(heavy)].join(', ')));
+      results.push(token('--duration-fast') ? pass('--duration-fast aanwezig', token('--duration-fast'))
+        : fail('--duration-fast ontbreekt'));
+      results.push(token('--duration-normal') ? pass('--duration-normal aanwezig', token('--duration-normal'))
+        : fail('--duration-normal ontbreekt'));
+      return results;
+    }
+  },
+  {
+    group: 'GATE-7 — Implementatie voltooid',
+    run: function() {
+      var results = [];
+      var tb = document.querySelector('.toolbar');
+      if (tb) {
+        var foundEmoji = ['🔄','⚡','🎨','❄','🧪','📄','📊'].filter(e => tb.innerText.includes(e));
+        results.push(foundEmoji.length === 0 ? pass('Geen emoji in toolbar')
+          : warn('Emoji in toolbar', foundEmoji.join(' ')));
+      }
+      var oldTokens = ['--surface2','--surface3','--border-hover','--input-border','--accent2','--shadow-1','--shadow-2'];
+      var still = oldTokens.filter(t => token(t));
+      results.push(still.length === 0 ? pass('Verouderde aliassen verwijderd')
+        : warn('Aliassen nog aanwezig', still.join(', ')));
+      var th = document.querySelector('thead th');
+      results.push(!th || css(th).textTransform === 'uppercase' ? pass('Regressie: th uppercase OK')
+        : fail('Regressie: th niet uppercase'));
+      var td = document.querySelector('tbody td');
+      results.push(!td || css(td).borderLeftWidth === '0px' ? pass('Regressie: geen td border-left')
+        : fail('Regressie: td border-left terug'));
+      return results;
+    }
+  }
+];
+
+// ══════════════════════════════════════════════════════════════
+// SECTIE P — Performance
+// ══════════════════════════════════════════════════════════════
+var TESTS_PERF = [
+  {
+    group: 'P1–P4 — CSS & Typografie metrics',
+    run: function() {
+      var results = [];
+
+      // P1 Paint timing
+      var paints = performance.getEntriesByType('paint');
+      if (paints.length) {
+        paints.forEach(p => {
+          var ms = Math.round(p.startTime);
+          results.push(ms < 500 ? pass('P1 ' + p.name + ': ' + ms + 'ms', 'snel')
+            : warn('P1 ' + p.name + ': ' + ms + 'ms', 'drempel: <500ms'));
+        });
+      } else results.push(skip('P1 Paint timing', 'Doe Ctrl+Shift+R voor paint-entries'));
+
+      // P2 CSS grootte & regels
+      var totalRules = 0, totalChars = 0;
+      [...document.styleSheets].forEach(s => {
+        try { var r = [...s.cssRules]; totalRules += r.length; totalChars += r.map(x=>x.cssText).join('').length; }
+        catch(e) {}
+      });
+      var kb = Math.round(totalChars / 1024 * 10) / 10;
+      results.push(totalRules < 600 ? pass('P2a CSS regelcount', totalRules + ' regels')
+        : warn('P2a CSS regelcount', totalRules + ' (drempel: <600)'));
+      results.push(kb < 40 ? pass('P2b CSS grootte', kb + ' KB')
+        : warn('P2b CSS grootte', kb + ' KB (drempel: <40 KB)'));
+
+      // P3 Token count
+      var tokens = rootTokens();
+      results.push(tokens.length <= 42 ? pass('P3 Design tokens ≤ 42', tokens.length + ' tokens')
+        : warn('P3 Design tokens', tokens.length + ' (doel: ≤42)'));
+
+      // P4 Font-sizes
+      var sizes = new Set([...document.querySelectorAll('*')].map(el => css(el).fontSize));
+      results.push(sizes.size <= 6 ? pass('P4 Unieke font-sizes ≤ 6', [...sizes].sort((a,b)=>parseFloat(a)-parseFloat(b)).join(', '))
+        : warn('P4 Unieke font-sizes', sizes.size + ': ' + [...sizes].sort((a,b)=>parseFloat(a)-parseFloat(b)).join(', ')));
+
+      return results;
+    }
+  },
+  {
+    group: 'P7–P9 — Runtime metrics',
+    run: function() {
+      var results = [];
+
+      // P7 Load timing
+      var nav = performance.getEntriesByType('navigation')[0];
+      if (nav) {
+        var loadMs = Math.round(nav.loadEventEnd - nav.startTime);
+        var domMs  = Math.round(nav.domContentLoadedEventEnd - nav.startTime);
+        results.push(loadMs < 1000 ? pass('P7a Load tijd', loadMs + 'ms')
+          : warn('P7a Load tijd', loadMs + 'ms (drempel: <1000ms)'));
+        results.push(pass('P7b DOM gereed', domMs + 'ms'));
+      } else results.push(skip('P7 Navigatie-timing', 'niet beschikbaar'));
+
+      // P8 Geheugen
+      if (performance.memory) {
+        var used = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024 * 10) / 10;
+        results.push(used < 30 ? pass('P8 JS heap', used + ' MB')
+          : warn('P8 JS heap', used + ' MB (drempel: <30 MB)'));
+      } else results.push(skip('P8 JS heap', 'Activeer chrome://flags/#enable-precise-memory-info'));
+
+      // P9 DOM complexiteit
+      var nodeCount = document.querySelectorAll('*').length;
+      results.push(nodeCount < 3000 ? pass('P9a DOM nodes', nodeCount + ' nodes')
+        : warn('P9a DOM nodes', nodeCount + ' (drempel: <3000)'));
+
+      // Off-grid padding
+      var off = 0;
+      document.querySelectorAll('.btn,.tab,.toolbar,.topbar,.panel-header,.panel-body').forEach(el => {
+        ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(p => {
+          var v = parseFloat(css(el)[p]); if (v > 0 && v % 4 !== 0) off++;
+        });
+      });
+      results.push(off < 5 ? pass('P9b Off-grid padding', off + ' waarden')
+        : warn('P9b Off-grid padding', off + ' waarden (drempel: <5)'));
+
+      // Hardcoded kleuren
+      var cssLow = allCssText().toLowerCase();
+      var hard = ['#dcf0f5','#edf8fa','#daf2e8','#eff4f6'].filter(c => cssLow.includes(c));
+      results.push(hard.length === 0 ? pass('P9c Geen hardcoded accentkleuren')
+        : warn('P9c Hardcoded kleuren', hard.join(', ')));
+
+      return results;
+    }
+  },
+  {
+    group: 'P5–P6 — Interactie-latency',
+    run: function() {
+      var results = [];
+
+      // P6 Hover latency
+      var row = document.querySelector('tbody tr');
+      if (row) {
+        var t0 = performance.now();
+        row.classList.add('dtr-hover-probe');
+        void row.offsetHeight;
+        row.classList.remove('dtr-hover-probe');
+        var ms = Math.round((performance.now() - t0) * 100) / 100;
+        results.push(ms < 2 ? pass('P6 Hover reflow latency', ms + 'ms')
+          : warn('P6 Hover reflow latency', ms + 'ms (drempel: <2ms)'));
+      }
+
+      // P5 — FPS kan niet synchroon gemeten worden
+      results.push(skip('P5 Scroll FPS', 'Open DevTools Performance tab → Record → scroll → stop'));
+
+      return results;
+    }
+  }
+];
+
+// ══════════════════════════════════════════════════════════════
+// SECTIE RC — Regressie (handmatige checks)
+// ══════════════════════════════════════════════════════════════
+var TESTS_REGR = [
+  {
+    group: 'RC — Handmatige functionele checks',
+    run: function() {
+      return [
+        skip('RC1 Tabs wisselen', 'Klik op een andere tab — inhoud moet wisselen'),
+        skip('RC2 Filters openen', 'Klik Filter → voeg regel toe → Toepassen → tabel filtert'),
+        skip('RC3 Kolomsortering', 'Klik kolomheader → sorteerindicator → opnieuw → richting wisselt'),
+        skip('RC4 Rijselectie', 'Checkbox rij → groene bg → select-all checkbox → alle geselecteerd'),
+        skip('RC5 Contextmenu', 'Rechtsklik rij → menu verschijnt → klik buiten → sluit'),
+        skip('RC6 Kolom resize', 'Sleep rechterrand kolomheader → breedte past aan'),
+        skip('RC7 Panel animaties', 'Open/sluit filter/kolommen → subtiele fade, geen harde sprong'),
+        skip('RC8 Geen console errors', 'Controleer Console tab — geen rode regels'),
+      ];
+    }
+  }
+];
+
+// ══════════════════════════════════════════════════════════════
+// UI RENDERER
+// ══════════════════════════════════════════════════════════════
+var SUITE_MAP = { design: TESTS_DESIGN, gates: TESTS_GATES, perf: TESTS_PERF, regr: TESTS_REGR };
+var activeTab = 'design';
+
+function renderResults(suiteKey) {
+  var suite = SUITE_MAP[suiteKey];
+  var body = document.getElementById('dtr-body');
+  body.innerHTML = '';
+
+  var allResults = [];
+  suite.forEach(function(group) {
+    var results = group.run();
+    allResults = allResults.concat(results);
+
+    var div = document.createElement('div');
+    div.className = 'dtr-group';
+    div.innerHTML = '<div class="dtr-group-title">' + group.group + '</div>';
+
+    results.forEach(function(r) {
+      var icon = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : r.status === 'warn' ? '△' : '○';
+      var el = document.createElement('div');
+      el.className = 'dtr-result dtr-' + r.status;
+      el.innerHTML =
+        '<span class="dtr-icon">' + icon + '</span>' +
+        '<span class="dtr-label">' + r.label + '</span>' +
+        (r.value ? '<span class="dtr-value">' + r.value + '</span>' : '');
+      div.appendChild(el);
+    });
+    body.appendChild(div);
+  });
+
+  // Summary
+  var pass = allResults.filter(r => r.status === 'pass').length;
+  var fail = allResults.filter(r => r.status === 'fail').length;
+  var warn = allResults.filter(r => r.status === 'warn').length;
+  document.getElementById('dtr-cnt-pass').textContent = pass;
+  document.getElementById('dtr-cnt-fail').textContent = fail;
+  document.getElementById('dtr-cnt-warn').textContent = warn;
+  document.getElementById('dtr-timestamp').textContent =
+    new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  // Console output
+  console.group('Design Test Runner — ' + suiteKey + ' [' + new Date().toLocaleTimeString('nl-NL') + ']');
+  suite.forEach(function(group) {
+    var results = group.run();
+    console.group(group.group);
+    results.forEach(function(r) {
+      var style = r.status === 'pass' ? 'color:green' : r.status === 'fail' ? 'color:red' : r.status === 'warn' ? 'color:orange' : 'color:gray';
+      var icon = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : r.status === 'warn' ? '△' : '○';
+      console.log('%c' + icon + ' ' + r.label + (r.value ? ' — ' + r.value : ''), style);
+    });
+    console.groupEnd();
+  });
+  console.log('%c' + pass + ' geslaagd  ' + fail + ' mislukt  ' + warn + ' waarschuwingen',
+    fail > 0 ? 'color:red;font-weight:bold' : warn > 0 ? 'color:orange;font-weight:bold' : 'color:green;font-weight:bold');
+  console.groupEnd();
+}
+
+// ── Event handlers ──────────────────────────────────────────────
+document.getElementById('dtr-run').addEventListener('click', function() {
+  renderResults(activeTab);
+});
+
+document.getElementById('dtr-close').addEventListener('click', function() {
+  document.getElementById('dtr-overlay').classList.remove('dtr-open');
+});
+
+document.getElementById('dtr-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('dtr-open');
+});
+
+document.querySelectorAll('.dtr-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.dtr-tab').forEach(t => t.classList.remove('dtr-active'));
+    this.classList.add('dtr-active');
+    activeTab = this.dataset.tab;
+    document.getElementById('dtr-body').innerHTML =
+      '<p style="color:#8a9ba1;text-align:center;padding:24px 0">Klik <strong>Alle tests uitvoeren</strong> om te starten.</p>';
+    document.getElementById('dtr-cnt-pass').textContent = '—';
+    document.getElementById('dtr-cnt-fail').textContent = '—';
+    document.getElementById('dtr-cnt-warn').textContent = '—';
+  });
+});
+
+// ── Keyboard shortcut Ctrl+Shift+T ─────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+    e.preventDefault();
+    var overlay = document.getElementById('dtr-overlay');
+    overlay.classList.toggle('dtr-open');
+    if (overlay.classList.contains('dtr-open')) {
+      renderResults(activeTab);
+    }
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('dtr-overlay').classList.remove('dtr-open');
+  }
+});
+
+})();
+</script>
 </body>
 </html>
