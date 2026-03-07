@@ -19,6 +19,8 @@
 7. [Fase 7 — Iconen](#7-fase-7-iconen)
 8. [Regressie — functionele checks](#8-regressie--functionele-checks)
 9. [Consolescripts — snelle bulk-audit](#9-consolescripts--snelle-bulk-audit)
+10. [Implementatieplan — fasegaten (go/no-go)](#10-implementatieplan--fasegaten-gono-go)
+11. [Performance tests](#11-performance-tests)
 
 ---
 
@@ -754,6 +756,685 @@ if (offGrid.length === 0) {
 
 ---
 
+## 10. Implementatieplan — fasegaten (go/no-go)
+
+Per fase uit DESIGN_PLAN.md §12 een go/no-go check.
+Voer de check uit **nadat** je een fase hebt afgerond, vóór de volgende fase begint.
+
+### Fase 1 voltooid? — Token-definitie
+
+```javascript
+// GATE-1 — Mag ik naar Fase 2?
+(function gate1() {
+  const r = getComputedStyle(document.documentElement);
+
+  // 1a. Nieuwe tokens aanwezig
+  const newTokens = ['--font-size-xs','--space-1','--radius-sm','--color-accent-light',
+    '--color-danger','--shadow-sm','--duration-fast','--duration-normal','--border-strong'];
+  const missingNew = newTokens.filter(t => !r.getPropertyValue(t).trim());
+
+  // 1b. Backward-compat aliassen aanwezig (tijdelijk vereist in Fase 1)
+  const aliases = ['--surface2','--surface3','--border-hover','--accent2','--accent3'];
+  const missingAlias = aliases.filter(t => !r.getPropertyValue(t).trim());
+
+  // 1c. Geen CSS-parseerfouten (stylesheet laadt)
+  const sheetLoaded = document.styleSheets.length > 0;
+
+  console.group('GATE-1 — Fase 1: Tokens');
+  if (missingNew.length)   console.error('✗ Ontbrekende nieuwe tokens: ' + missingNew.join(', '));
+  else                     console.log('%c✓ Nieuwe tokens aanwezig', 'color:green');
+  if (missingAlias.length) console.warn('△ Ontbrekende aliassen (nog nodig!): ' + missingAlias.join(', '));
+  else                     console.log('%c✓ Backward-compat aliassen aanwezig', 'color:green');
+  if (!sheetLoaded)        console.error('✗ Stylesheet niet geladen — CSS-fout?');
+  else                     console.log('%c✓ Stylesheet geladen', 'color:green');
+  const go = !missingNew.length && !missingAlias.length && sheetLoaded;
+  console.log(go ? '%c▶ GO — door naar Fase 2' : '%c✋ NO-GO — herstel fouten eerst',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 2 voltooid? — Typografie
+
+```javascript
+// GATE-2 — Mag ik naar Fase 3?
+(function gate2() {
+  const errors = [];
+
+  // 2a. body font-size
+  const bodyFs = getComputedStyle(document.body).fontSize;
+  if (bodyFs !== '14px') errors.push(`body font-size: ${bodyFs} (verwacht 14px)`);
+
+  // 2b. thead th: 11px uppercase
+  const th = document.querySelector('thead th');
+  if (th) {
+    const s = getComputedStyle(th);
+    if (s.fontSize !== '11px')        errors.push(`th font-size: ${s.fontSize}`);
+    if (s.textTransform !== 'uppercase') errors.push(`th text-transform: ${s.textTransform}`);
+    if (!['500','600','700'].includes(s.fontWeight)) errors.push(`th font-weight: ${s.fontWeight}`);
+  } else errors.push('Geen thead th gevonden');
+
+  // 2c. .cell-primary: 14px
+  const cp = document.querySelector('.cell-primary');
+  if (cp) {
+    if (getComputedStyle(cp).fontSize !== '14px') errors.push('.cell-primary font-size ≠ 14px');
+  }
+
+  // 2d. .btn: niet 700
+  const btn = document.querySelector('.btn');
+  if (btn && getComputedStyle(btn).fontWeight === '700') errors.push('.btn font-weight nog 700');
+
+  // 2e. .label-caps klasse bestaat
+  const lc = document.querySelector('.label-caps');
+  if (!lc) errors.push('.label-caps klasse niet gevonden in DOM (pas toe op .af-label of .modal-label)');
+
+  console.group('GATE-2 — Fase 2: Typografie');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) console.log('%c✓ Alle typografiechecks geslaagd', 'color:green;font-weight:bold');
+  console.log(go ? '%c▶ GO — door naar Fase 3' : '%c✋ NO-GO',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 3 voltooid? — Kleur
+
+```javascript
+// GATE-3 — Mag ik naar Fase 4?
+(function gate3() {
+  const errors = [];
+  const css = [...document.styleSheets].map(s => {
+    try { return [...s.cssRules].map(r => r.cssText).join(' '); } catch(e) { return ''; }
+  }).join(' ').toLowerCase();
+
+  // 3a. Hardcoded blauwe hover weg
+  if (css.includes('#dcf0f5')) errors.push('Hardcoded #DCF0F5 (blauwe btn hover) nog aanwezig');
+
+  // 3b. Hardcoded cyaan row-hover weg
+  if (css.includes('#edf8fa')) errors.push('Hardcoded #EDF8FA (cyaan row-hover) nog aanwezig');
+
+  // 3c. Hardcoded groen selected weg
+  if (css.includes('#daf2e8')) errors.push('Hardcoded #DAF2E8 (groen selected) nog aanwezig');
+
+  // 3d. Actieve tab: transparante achtergrond
+  const activeTab = document.querySelector('.tab.active');
+  if (activeTab) {
+    const bg = getComputedStyle(activeTab).backgroundColor;
+    if (bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent')
+      errors.push(`Tab.active achtergrond niet transparant: ${bg}`);
+  }
+
+  // 3e. Row hover kleur niet cyaan
+  const rowHover = getComputedStyle(document.documentElement).getPropertyValue('--row-hover').trim();
+  if (rowHover.toLowerCase() === '#edf8fa') errors.push('--row-hover is nog cyaan (#EDF8FA)');
+
+  console.group('GATE-3 — Fase 3: Kleur');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) console.log('%c✓ Alle kleurchecks geslaagd', 'color:green;font-weight:bold');
+  console.log(go ? '%c▶ GO — door naar Fase 4' : '%c✋ NO-GO',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 4 voltooid? — Borders & lijnen
+
+```javascript
+// GATE-4 — Mag ik naar Fase 5?
+(function gate4() {
+  const errors = [];
+
+  // 4a. Geen verticale celgrenzen
+  const td = document.querySelector('tbody td');
+  if (td) {
+    const s = getComputedStyle(td);
+    if (s.borderLeftWidth !== '0px')  errors.push(`td border-left: ${s.borderLeftWidth} (verwacht 0px)`);
+    if (s.borderRightWidth !== '0px') errors.push(`td border-right: ${s.borderRightWidth} (verwacht 0px)`);
+  }
+
+  // 4b. thead border-bottom max 1px
+  const thead = document.querySelector('thead');
+  if (thead) {
+    const bw = parseFloat(getComputedStyle(thead).borderBottomWidth);
+    if (bw > 1) errors.push(`thead border-bottom: ${bw}px (max 1px)`);
+  }
+
+  // 4c. Geen border-radius < 4px op interactieve elementen
+  const interactive = [...document.querySelectorAll('.btn,.tab,.tag,.af-chip,input,select')];
+  interactive.forEach(el => {
+    const br = parseFloat(getComputedStyle(el).borderRadius);
+    if (br > 0 && br < 4) errors.push(`${el.className} border-radius: ${br}px (min 4px)`);
+  });
+
+  // 4d. Panels en modal: max 6px radius
+  [...document.querySelectorAll('.panel,.modal,.ctx-menu,.toast')].forEach(el => {
+    const br = parseFloat(getComputedStyle(el).borderTopLeftRadius);
+    if (br > 6) errors.push(`${el.className} border-radius: ${br}px (max 6px)`);
+  });
+
+  // 4e. .vsep niet zichtbaar
+  const vseps = [...document.querySelectorAll('.vsep')];
+  const visibleVsep = vseps.filter(el => el.offsetWidth > 0 && getComputedStyle(el).display !== 'none');
+  if (visibleVsep.length > 0) errors.push(`${visibleVsep.length} zichtbare .vsep elementen (moeten verborgen zijn)`);
+
+  console.group('GATE-4 — Fase 4: Borders & lijnen');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) console.log('%c✓ Alle border-checks geslaagd', 'color:green;font-weight:bold');
+  console.log(go ? '%c▶ GO — door naar Fase 5' : '%c✋ NO-GO',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 5 voltooid? — Spacing
+
+```javascript
+// GATE-5 — Mag ik naar Fase 6?
+(function gate5() {
+  const errors = [];
+
+  // 5a. Rijhoogte 32px
+  const rows = [...document.querySelectorAll('tbody tr')];
+  const wrongHeight = rows.filter(r => r.offsetHeight !== 32);
+  if (wrongHeight.length > 0) errors.push(`${wrongHeight.length} rijen niet 32px hoog (eerste: ${wrongHeight[0].offsetHeight}px)`);
+
+  // 5b. Toolbar hoogte ~40px
+  const toolbar = document.querySelector('.toolbar');
+  if (toolbar && (toolbar.offsetHeight < 36 || toolbar.offsetHeight > 44))
+    errors.push(`toolbar hoogte: ${toolbar.offsetHeight}px (verwacht ~40px)`);
+
+  // 5c. Panel-header L/R padding gelijk
+  const ph = document.querySelector('.panel-header');
+  if (ph) {
+    const s = getComputedStyle(ph);
+    if (s.paddingLeft !== s.paddingRight)
+      errors.push(`panel-header padding L(${s.paddingLeft}) ≠ R(${s.paddingRight})`);
+  }
+
+  // 5d. Off-grid waarden < 5 (wat resteert is inline/JS-gegenereerd)
+  let offGridCount = 0;
+  document.querySelectorAll('.btn,.tab,.toolbar,.topbar,.panel-header,.panel-body,.panel-footer').forEach(el => {
+    const s = getComputedStyle(el);
+    ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(p => {
+      const v = parseFloat(s[p]);
+      if (v > 0 && v % 4 !== 0) offGridCount++;
+    });
+  });
+  if (offGridCount > 4) errors.push(`${offGridCount} off-grid padding waarden in kerncomponenten (max 4 toegestaan)`);
+
+  console.group('GATE-5 — Fase 5: Spacing');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) console.log('%c✓ Alle spacing-checks geslaagd', 'color:green;font-weight:bold');
+  console.log(go ? '%c▶ GO — door naar Fase 6' : '%c✋ NO-GO',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 6 voltooid? — Schaduwen & animaties
+
+```javascript
+// GATE-6 — Mag ik naar Fase 7?
+(function gate6() {
+  const errors = [];
+  const css = [...document.styleSheets].map(s => {
+    try { return [...s.cssRules].map(r => r.cssText).join(' '); } catch(e) { return ''; }
+  }).join(' ');
+
+  // 6a. slideOut keyframe verwijderd
+  if (css.includes('@keyframes slideOut')) errors.push('@keyframes slideOut is nog aanwezig (verwijder)');
+
+  // 6b. Geen zware schaduwen meer (rgba .12 of hoger)
+  const heavyShadow = css.match(/rgba\(0,\s*0,\s*0,\s*\.(1[2-9]|[2-9]\d)\)/g);
+  if (heavyShadow) errors.push(`Zware schaduw-opaciteit gevonden: ${[...new Set(heavyShadow)].join(', ')}`);
+
+  // 6c. Frozen column: geen box-shadow, wél border-right
+  const frozenCss = [...document.styleSheets].map(s => {
+    try {
+      return [...s.cssRules].filter(r => r.selectorText &&
+        (r.selectorText.includes('frozen-col-header') || r.selectorText.includes('frozen-col-body')))
+        .map(r => r.cssText).join(' ');
+    } catch(e) { return ''; }
+  }).join('');
+  if (frozenCss.includes('box-shadow') && !frozenCss.includes('none'))
+    errors.push('Frozen column heeft nog box-shadow (vervang door border-right)');
+
+  // 6d. Duur-tokens aanwezig
+  const r = getComputedStyle(document.documentElement);
+  if (!r.getPropertyValue('--duration-fast').trim())   errors.push('--duration-fast ontbreekt');
+  if (!r.getPropertyValue('--duration-normal').trim()) errors.push('--duration-normal ontbreekt');
+
+  console.group('GATE-6 — Fase 6: Schaduwen & animaties');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) console.log('%c✓ Alle schaduw/animatie-checks geslaagd', 'color:green;font-weight:bold');
+  console.log(go ? '%c▶ GO — door naar Fase 7' : '%c✋ NO-GO',
+    go ? 'color:green;font-weight:bold;font-size:14px' : 'color:red;font-weight:bold;font-size:14px');
+  console.groupEnd();
+})();
+```
+
+---
+
+### Fase 7 voltooid? — Implementatie klaar
+
+```javascript
+// GATE-7 — Volledige implementatie gereed?
+(function gate7() {
+  const errors = [];
+
+  // 7a. Geen gekleurde emoji in toolbar
+  const toolbar = document.querySelector('.toolbar');
+  if (toolbar) {
+    ['🔄','⚡','🎨','❄','🧪','📄','📊'].forEach(e => {
+      if (toolbar.innerText.includes(e)) errors.push(`Emoji ${e} nog aanwezig in toolbar`);
+    });
+  }
+
+  // 7b. Avatar monochroom (geen inline background met non-gray kleur)
+  [...document.querySelectorAll('.avatar')].forEach((av, i) => {
+    const bg = (av.style.background || av.style.backgroundColor || '').toLowerCase();
+    if (bg && !bg.includes('gray') && !bg.includes('#d') && !bg.match(/#[89a-f][0-9a-f]{5}/i)) {
+      errors.push(`Avatar ${i+1} heeft gekleurde achtergrond: ${bg}`);
+    }
+  });
+
+  // 7c. Backward-compat aliassen verwijderd (Fase 1 aliassen zijn niet meer nodig)
+  const r = getComputedStyle(document.documentElement);
+  ['--surface2','--surface3','--border-hover','--input-border',
+   '--accent2','--accent3','--accent4','--shadow-1','--shadow-2'].forEach(t => {
+    if (r.getPropertyValue(t).trim()) errors.push(`Verouderd alias ${t} nog aanwezig`);
+  });
+
+  // 7d. Alle vorige gate-criteria nog steeds geldig (spot check)
+  const th = document.querySelector('thead th');
+  if (th && getComputedStyle(th).textTransform !== 'uppercase')
+    errors.push('Regressie: thead th niet meer uppercase');
+  const td = document.querySelector('tbody td');
+  if (td && getComputedStyle(td).borderLeftWidth !== '0px')
+    errors.push('Regressie: td heeft weer border-left');
+
+  console.group('GATE-7 — Implementatie voltooid');
+  errors.forEach(e => console.error('✗ ' + e));
+  const go = errors.length === 0;
+  if (go) {
+    console.log('%c✓ Alle fasen succesvol afgerond', 'color:green;font-weight:bold');
+    console.log('%c🏁 IMPLEMENTATIE KLAAR — voer RC1–RC8 regressiecheck uit', 'color:green;font-size:14px');
+  } else {
+    console.log('%c✋ NO-GO — herstel bovenstaande punten', 'color:red;font-weight:bold;font-size:14px');
+  }
+  console.groupEnd();
+})();
+```
+
+---
+
+## 11. Performance tests
+
+### Overzicht meetpunten
+
+| Metriek | Instrument | Drempelwaarde |
+|---|---|---|
+| First Contentful Paint | `PerformanceObserver` | < 500ms (lokaal bestand) |
+| CSS-regeltal | `document.styleSheets` | < 600 regels |
+| Stylesheet grootte | `cssRules` totaal | < 40 KB |
+| Unieke font-sizes | DOM-scan | ≤ 4 |
+| Token-count | `:root` properties | ≤ 42 |
+| Off-grid padding | DOM-scan | < 5 |
+| Hardcoded kleuren | CSS-tekst scan | 0 |
+| Scroll-FPS (60 rijen) | `requestAnimationFrame` | ≥ 55 fps gemiddeld |
+| Hover-reactietijd | `performance.now()` | < 16ms (één frame) |
+| JS-heap geheugen | `performance.memory` | < 30 MB |
+| Lange taken (> 50ms) | `PerformanceObserver` | 0 bij laden |
+
+---
+
+### P1 — Paint timing (FCP)
+
+```javascript
+// P1 — First Contentful Paint meten
+// Voer uit DIRECT na het laden van de pagina (of na hard refresh Ctrl+Shift+R)
+const paints = performance.getEntriesByType('paint');
+if (paints.length === 0) {
+  console.warn('△ P1 — Geen paint entries. Doe Ctrl+Shift+R en voer dit script direct daarna uit.');
+} else {
+  paints.forEach(p => {
+    const ms = Math.round(p.startTime);
+    const ok = ms < 500;
+    const icon = ok ? '✓' : '✗';
+    const style = ok ? 'color:green;font-weight:bold' : 'color:red;font-weight:bold';
+    console.log(`%c${icon} ${p.name}: ${ms}ms ${ok ? '(snel)' : '(langzaam — drempel: 500ms)'}`, style);
+  });
+}
+```
+
+**Verwacht (lokaal bestand, geen netwerkvertraging):**
+- `first-paint` < 300ms
+- `first-contentful-paint` < 500ms
+
+---
+
+### P2 — CSS stylesheet grootte & regelcount
+
+```javascript
+// P2 — Stylesheet audit: grootte en aantal regels
+let totalRules = 0;
+let totalChars = 0;
+[...document.styleSheets].forEach((sheet, i) => {
+  try {
+    const rules = [...sheet.cssRules];
+    const text = rules.map(r => r.cssText).join('\n');
+    totalRules += rules.length;
+    totalChars += text.length;
+    console.log(`Stylesheet ${i+1}: ${rules.length} regels, ~${Math.round(text.length/1024*10)/10} KB`);
+  } catch(e) {
+    console.warn(`Stylesheet ${i+1}: geen toegang (cross-origin of Google Fonts)`);
+  }
+});
+const kb = Math.round(totalChars / 1024 * 10) / 10;
+console.log('─'.repeat(50));
+const rulesOk = totalRules < 600;
+const sizeOk  = kb < 40;
+console.log(`%cTotaal regels: ${totalRules} ${rulesOk ? '✓' : '✗ (drempel: 600)'}`,
+  rulesOk ? 'color:green' : 'color:red');
+console.log(`%cTotaal grootte: ${kb} KB ${sizeOk ? '✓' : '✗ (drempel: 40 KB)'}`,
+  sizeOk ? 'color:green' : 'color:red');
+```
+
+---
+
+### P3 — CSS token-count (DESIGN_PLAN §2 doelstelling)
+
+```javascript
+// P3 — Verifieer tokenreductie: voor=65+, doel=42
+const allTokens = [...document.styleSheets].flatMap(s => {
+  try {
+    return [...s.cssRules]
+      .filter(r => r.selectorText === ':root')
+      .flatMap(r => [...r.style].filter(p => p.startsWith('--')));
+  } catch(e) { return []; }
+});
+const count = allTokens.length;
+const target = 42;
+const ok = count <= target;
+console.log(`%c${ok ? '✓' : '△'} CSS custom properties: ${count} (doel: ≤${target})`,
+  ok ? 'color:green;font-weight:bold' : 'color:orange;font-weight:bold');
+if (!ok) {
+  console.log(`  Surplus van ${count - target} tokens. Kandidaten om te verwijderen:`);
+  // Toon kleurschaal-tokens die wegkunnen
+  const surplus = allTokens.filter(t =>
+    t.match(/--(?:green|red|blue|orange|yellow|magenta)-\d+/) ||
+    ['--cta','--cta-hover','--cta-bg','--color-ui-active'].includes(t)
+  );
+  surplus.forEach(t => console.log('  ' + t));
+}
+```
+
+---
+
+### P4 — Unieke font-sizes (doel: 4)
+
+```javascript
+// P4 — Tel unieke font-sizes in gebruik op zichtbare elementen
+const sizes = new Set();
+document.querySelectorAll('*').forEach(el => {
+  if (!el.checkVisibility || el.checkVisibility({visibilityProperty: true})) {
+    sizes.add(getComputedStyle(el).fontSize);
+  }
+});
+const count = sizes.size;
+const target = 6; // 4 formeel + kleine uitzonderingen tolerantie
+const ok = count <= target;
+console.log(`%c${ok ? '✓' : '✗'} Unieke font-sizes: ${count} (doel: ≤4, tolerantie: ≤6)`,
+  ok ? 'color:green;font-weight:bold' : 'color:red;font-weight:bold');
+console.log('Gevonden sizes:', [...sizes].sort((a,b) => parseFloat(a)-parseFloat(b)).join(', '));
+```
+
+---
+
+### P5 — Scroll performance (FPS-meting)
+
+```javascript
+// P5 — Meet frames per second tijdens scrollen
+// Stap 1: Voer dit script uit
+// Stap 2: Scroll snel door de tabel gedurende 2 seconden
+// Stap 3: Resultaat verschijnt automatisch
+
+(function measureFPS() {
+  let frames = 0;
+  let start = null;
+  const duration = 2000; // 2 seconden meten
+
+  function tick(timestamp) {
+    if (!start) start = timestamp;
+    frames++;
+    if (timestamp - start < duration) {
+      requestAnimationFrame(tick);
+    } else {
+      const fps = Math.round(frames / (duration / 1000));
+      const ok = fps >= 55;
+      console.log(
+        `%c${ok ? '✓' : '✗'} Gemiddeld FPS: ${fps} (drempel: ≥55 fps)`,
+        ok ? 'color:green;font-weight:bold' : 'color:red;font-weight:bold'
+      );
+      if (!ok) console.log('  Oorzaak: zware CSS-transitions, te veel DOM-nodes, of zware repaints');
+    }
+  }
+
+  console.log('△ P5 — Scroll nu door de tabel (2 seconden meten)...');
+  requestAnimationFrame(tick);
+})();
+```
+
+---
+
+### P6 — Hover-reactietijd (één rij)
+
+```javascript
+// P6 — Meet hoe snel een rij reageert op hover (CSS transition moet < 1 frame zijn)
+// Methode: simuleer een classList-wijziging en meet layout-tijd
+
+const row = document.querySelector('tbody tr');
+if (!row) {
+  console.warn('△ P6 — Geen tbody tr gevonden');
+} else {
+  const t0 = performance.now();
+  row.classList.add('hovered-test');  // trigger reflow
+  void row.offsetHeight;              // forceer layout-flush
+  row.classList.remove('hovered-test');
+  const t1 = performance.now();
+  const ms = Math.round((t1 - t0) * 100) / 100;
+  const ok = ms < 2;
+  console.log(
+    `%c${ok ? '✓' : '△'} Rij classList-wijziging: ${ms}ms (drempel: <2ms)`,
+    ok ? 'color:green;font-weight:bold' : 'color:orange;font-weight:bold'
+  );
+  console.log('  (CSS hover-transition voegt hier de animatieduur aan toe: ~100ms bij --duration-fast)');
+}
+```
+
+---
+
+### P7 — Lange taken detecteren (bij pageload)
+
+```javascript
+// P7 — Detecteer JavaScript-taken langer dan 50ms (Long Tasks API)
+// BELANGRIJK: voer dit script uit VOOR je de pagina laadt
+// (of open een nieuw tabblad, plak dit als eerste, dan navigeer naar dashboard.html)
+
+// Als de pagina al geladen is, gebruik deze retrospectieve meting:
+const navEntry = performance.getEntriesByType('navigation')[0];
+if (navEntry) {
+  const loadTime = Math.round(navEntry.loadEventEnd - navEntry.startTime);
+  const domReady = Math.round(navEntry.domContentLoadedEventEnd - navEntry.startTime);
+  const ok = loadTime < 1000;
+  console.log(`%c${ok ? '✓' : '△'} Pagina load tijd: ${loadTime}ms (doel: <1000ms lokaal)`,
+    ok ? 'color:green' : 'color:orange');
+  console.log(`  DOM gereed: ${domReady}ms`);
+  console.log(`  Serverrespons: ${Math.round(navEntry.responseEnd - navEntry.requestStart)}ms`);
+} else {
+  console.warn('△ P7 — Geen navigatie-entry beschikbaar');
+}
+
+// Voor actieve Long Task monitoring (werkt alleen als je dit VÓÓr het laden uitvoert):
+try {
+  const longTasks = [];
+  new PerformanceObserver(list => {
+    list.getEntries().forEach(entry => {
+      longTasks.push({duration: Math.round(entry.duration) + 'ms', start: Math.round(entry.startTime) + 'ms'});
+      console.warn(`⚠ Lange taak: ${Math.round(entry.duration)}ms op t=${Math.round(entry.startTime)}ms`);
+    });
+  }).observe({ entryTypes: ['longtask'] });
+  console.log('△ P7 — Long Task observer actief (werkt na interacties zoals filter openen)');
+} catch(e) {
+  console.warn('△ P7 — Long Tasks API niet beschikbaar in deze context');
+}
+```
+
+---
+
+### P8 — Geheugengebruik (JS heap)
+
+```javascript
+// P8 — JavaScript heap geheugen
+if (!performance.memory) {
+  console.warn('△ P8 — performance.memory niet beschikbaar.');
+  console.log('  Activeer via: chrome://flags/#enable-precise-memory-info');
+} else {
+  const used   = Math.round(performance.memory.usedJSHeapSize   / 1024 / 1024 * 10) / 10;
+  const total  = Math.round(performance.memory.totalJSHeapSize  / 1024 / 1024 * 10) / 10;
+  const limit  = Math.round(performance.memory.jsHeapSizeLimit  / 1024 / 1024 * 10) / 10;
+  const okUsed = used < 30;
+  console.log(`%c${okUsed ? '✓' : '△'} JS heap gebruikt: ${used} MB (doel: <30 MB)`,
+    okUsed ? 'color:green;font-weight:bold' : 'color:orange;font-weight:bold');
+  console.log(`  Gealloceerd: ${total} MB`);
+  console.log(`  Limiet:      ${limit} MB`);
+  console.log(`  Benutting:   ${Math.round(used/limit*100)}%`);
+}
+```
+
+---
+
+### P9 — DOM-omvang (complexiteit)
+
+```javascript
+// P9 — DOM-node count en nesting-diepte
+const allNodes = document.querySelectorAll('*').length;
+const okNodes  = allNodes < 3000;
+
+// Bereken maximale nesting-diepte
+function depth(el, d = 0) {
+  return el.children.length ? Math.max(...[...el.children].map(c => depth(c, d+1))) : d;
+}
+const maxDepth = depth(document.body);
+const okDepth  = maxDepth < 20;
+
+console.log(`%c${okNodes ? '✓' : '△'} DOM-nodes: ${allNodes} (doel: <3000)`,
+  okNodes ? 'color:green' : 'color:orange');
+console.log(`%c${okDepth ? '✓' : '△'} Max nesting-diepte: ${maxDepth} (doel: <20)`,
+  okDepth ? 'color:green' : 'color:orange');
+
+// Zoek naar de diepste keten
+let deepest = document.body;
+let cur = document.body;
+while (cur.children.length) {
+  cur = [...cur.children].reduce((a, b) =>
+    (b.querySelectorAll('*').length > a.querySelectorAll('*').length ? b : a));
+  deepest = cur;
+}
+console.log(`  Diepste tak: ${deepest.tagName}.${[...deepest.classList].join('.')}`);
+```
+
+---
+
+### P10 — Volledige performance-snapshot (combineer alles)
+
+```javascript
+// P10 — Snel overzicht van alle performance-metrieken
+(async function perfSnapshot() {
+  console.group('⚡ Performance Snapshot');
+
+  // Stylesheet grootte
+  let cssChars = 0, cssRules = 0;
+  [...document.styleSheets].forEach(s => {
+    try { const r = [...s.cssRules]; cssRules += r.length; cssChars += r.map(x=>x.cssText).join('').length; }
+    catch(e) {}
+  });
+
+  // Font-sizes
+  const fontSizes = new Set([...document.querySelectorAll('*')].map(el => getComputedStyle(el).fontSize));
+
+  // Tokens
+  const tokens = [...document.styleSheets].flatMap(s => {
+    try { return [...s.cssRules].filter(r=>r.selectorText===':root').flatMap(r=>[...r.style].filter(p=>p.startsWith('--'))); }
+    catch(e) { return []; }
+  });
+
+  // Off-grid padding
+  let offGrid = 0;
+  document.querySelectorAll('.btn,.tab,.toolbar,.topbar,.panel-header,.panel-body').forEach(el => {
+    ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(p => {
+      const v = parseFloat(getComputedStyle(el)[p]);
+      if (v > 0 && v % 4 !== 0) offGrid++;
+    });
+  });
+
+  // Hardcoded kleuren
+  const css = [...document.styleSheets].map(s => { try { return [...s.cssRules].map(r=>r.cssText).join(' '); } catch(e){return '';} }).join('').toLowerCase();
+  const hardcoded = ['#dcf0f5','#edf8fa','#daf2e8','#eff4f6','#ffffff'].filter(c => css.includes(c));
+
+  // Navigatie-timing
+  const nav = performance.getEntriesByType('navigation')[0];
+  const loadMs = nav ? Math.round(nav.loadEventEnd - nav.startTime) : null;
+
+  // DOM
+  const domCount = document.querySelectorAll('*').length;
+
+  // Resultaten
+  const rows = [
+    { metriek: 'CSS regels',         waarde: cssRules,                    doel: '< 600',   ok: cssRules < 600 },
+    { metriek: 'CSS grootte (KB)',    waarde: Math.round(cssChars/1024),   doel: '< 40',    ok: cssChars/1024 < 40 },
+    { metriek: 'Design tokens',       waarde: tokens.length,               doel: '≤ 42',    ok: tokens.length <= 42 },
+    { metriek: 'Unieke font-sizes',   waarde: fontSizes.size,              doel: '≤ 6',     ok: fontSizes.size <= 6 },
+    { metriek: 'Off-grid padding',    waarde: offGrid,                     doel: '< 5',     ok: offGrid < 5 },
+    { metriek: 'Hardcoded kleuren',   waarde: hardcoded.length,            doel: '0',       ok: hardcoded.length === 0 },
+    { metriek: 'DOM nodes',           waarde: domCount,                    doel: '< 3000',  ok: domCount < 3000 },
+    { metriek: 'Load tijd (ms)',      waarde: loadMs ?? 'n/a',             doel: '< 1000',  ok: loadMs === null || loadMs < 1000 },
+  ];
+
+  console.table(rows.map(r => ({
+    '': r.ok ? '✓' : '✗',
+    Metriek: r.metriek,
+    Waarde: r.waarde,
+    Doel: r.doel
+  })));
+
+  const failed = rows.filter(r => !r.ok);
+  if (failed.length === 0) {
+    console.log('%c✓ Alle performance-targets gehaald', 'color:green;font-weight:bold;font-size:14px');
+  } else {
+    console.warn(`△ ${failed.length} target(s) niet gehaald: ${failed.map(r=>r.metriek).join(', ')}`);
+  }
+  console.groupEnd();
+})();
+```
+
+---
+
 ## Samenvatting testresultaten
 
 Gebruik deze tabel om je voortgang bij te houden:
@@ -782,5 +1463,24 @@ Gebruik deze tabel om je voortgang bij te houden:
 | T7.1 | Geen emoji in toolbar | ☐ |
 | T7.2 | Avatar monochroom | ☐ |
 | RC1–RC8 | Alle functionele tests | ☐ |
+| **IMPLEMENTATIEPLAN** | | |
+| GATE-1 | Tokens aanwezig + aliassen actief | ☐ |
+| GATE-2 | Typografie correct (11/12/14px, weights) | ☐ |
+| GATE-3 | Kleuren clean (geen hardcoded, tab transparant) | ☐ |
+| GATE-4 | Borders correct (0px vertical, radius 4/6px) | ☐ |
+| GATE-5 | Spacing op 4px-grid, rijhoogte 32px | ☐ |
+| GATE-6 | Schaduwen subtiel, slideOut weg, duraties tokens | ☐ |
+| GATE-7 | Implementatie volledig (aliassen weg, emoji weg) | ☐ |
+| **PERFORMANCE** | | |
+| P1 | First Contentful Paint < 500ms | ☐ |
+| P2 | CSS regels < 600, grootte < 40 KB | ☐ |
+| P3 | Design tokens ≤ 42 | ☐ |
+| P4 | Unieke font-sizes ≤ 6 | ☐ |
+| P5 | Scroll FPS ≥ 55 | ☐ |
+| P6 | Hover latency < 2ms | ☐ |
+| P7 | Pagina load < 1000ms, 0 lange taken | ☐ |
+| P8 | JS heap < 30 MB | ☐ |
+| P9 | DOM nodes < 3000, nesting < 20 | ☐ |
+| P10 | Volledig performance-snapshot groen | ☐ |
 
 **Acceptatiecriterium:** Alle T-tests geslaagd. RC-tests: geen rode console-errors.
