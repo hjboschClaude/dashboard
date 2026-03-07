@@ -3449,6 +3449,10 @@ initGlobalNameFilter();
 #dtr-run  { background: #00811f; color: #fff; border: none; border-radius: 4px;
             padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
 #dtr-run:hover { background: #006713; }
+#dtr-export { background: none; color: #8da8b0; border: 1px solid #3a5060; border-radius: 4px;
+              padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
+#dtr-export:not([disabled]):hover { background: #2a3d45; color: #fff; border-color: #5a8090; }
+#dtr-export[disabled] { opacity: .35; cursor: default; }
 #dtr-close { background: none; border: none; color: #8da8b0; font-size: 18px;
               cursor: pointer; line-height: 1; padding: 2px 4px; }
 #dtr-close:hover { color: #fff; }
@@ -3499,6 +3503,7 @@ initGlobalNameFilter();
       </div>
       <div id="dtr-controls">
         <button id="dtr-run">&#9654; Alle tests uitvoeren</button>
+        <button id="dtr-export" disabled title="Exporteer resultaten als Markdown">&#8595; Export MD</button>
         <button id="dtr-close" title="Sluiten">&#x2715;</button>
       </div>
     </div>
@@ -4041,66 +4046,211 @@ var TESTS_REGR = [
 // UI RENDERER
 // ══════════════════════════════════════════════════════════════
 var SUITE_MAP = { design: TESTS_DESIGN, gates: TESTS_GATES, perf: TESTS_PERF, regr: TESTS_REGR };
+var SUITE_LABELS = { design: 'Design (T)', gates: 'Implementatie (GATE)', perf: 'Performance (P)', regr: 'Regressie (RC)' };
 var activeTab = 'design';
+var _lastResults = null; // { suiteKey: { label, groups: [{title, results}] } }
 
+// ── Hulp: één resultaatrij renderen ────────────────────────────
+function _resultEl(r) {
+  var icon = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : r.status === 'warn' ? '△' : '○';
+  var el = document.createElement('div');
+  el.className = 'dtr-result dtr-' + r.status;
+  el.innerHTML = '<span class="dtr-icon">' + icon + '</span><span class="dtr-label">' + r.label + '</span>' +
+    (r.value ? '<span class="dtr-value">' + r.value + '</span>' : '');
+  return el;
+}
+
+// ── renderResults: één suite (tab-klik) ────────────────────────
 function renderResults(suiteKey) {
   var suite = SUITE_MAP[suiteKey];
   var body = document.getElementById('dtr-body');
   body.innerHTML = '';
+  if (!_lastResults) _lastResults = {};
+  _lastResults[suiteKey] = { label: SUITE_LABELS[suiteKey], groups: [] };
 
   var allResults = [];
   suite.forEach(function(group) {
     var results = group.run();
     allResults = allResults.concat(results);
+    _lastResults[suiteKey].groups.push({ title: group.group, results: results });
 
     var div = document.createElement('div');
     div.className = 'dtr-group';
     div.innerHTML = '<div class="dtr-group-title">' + group.group + '</div>';
-
-    results.forEach(function(r) {
-      var icon = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : r.status === 'warn' ? '△' : '○';
-      var el = document.createElement('div');
-      el.className = 'dtr-result dtr-' + r.status;
-      el.innerHTML =
-        '<span class="dtr-icon">' + icon + '</span>' +
-        '<span class="dtr-label">' + r.label + '</span>' +
-        (r.value ? '<span class="dtr-value">' + r.value + '</span>' : '');
-      div.appendChild(el);
-    });
+    results.forEach(function(r) { div.appendChild(_resultEl(r)); });
     body.appendChild(div);
   });
 
-  // Summary
-  var pass = allResults.filter(r => r.status === 'pass').length;
-  var fail = allResults.filter(r => r.status === 'fail').length;
-  var warn = allResults.filter(r => r.status === 'warn').length;
-  document.getElementById('dtr-cnt-pass').textContent = pass;
-  document.getElementById('dtr-cnt-fail').textContent = fail;
-  document.getElementById('dtr-cnt-warn').textContent = warn;
-  document.getElementById('dtr-timestamp').textContent =
-    new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var p = allResults.filter(r => r.status === 'pass').length;
+  var f = allResults.filter(r => r.status === 'fail').length;
+  var w = allResults.filter(r => r.status === 'warn').length;
+  document.getElementById('dtr-cnt-pass').textContent = p;
+  document.getElementById('dtr-cnt-fail').textContent = f;
+  document.getElementById('dtr-cnt-warn').textContent = w;
+  var ts = new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dtr-timestamp').textContent = ts;
+  document.getElementById('dtr-export').disabled = false;
 
-  // Console output
-  console.group('Design Test Runner — ' + suiteKey + ' [' + new Date().toLocaleTimeString('nl-NL') + ']');
-  suite.forEach(function(group) {
-    var results = group.run();
-    console.group(group.group);
-    results.forEach(function(r) {
-      var style = r.status === 'pass' ? 'color:green' : r.status === 'fail' ? 'color:red' : r.status === 'warn' ? 'color:orange' : 'color:gray';
-      var icon = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : r.status === 'warn' ? '△' : '○';
-      console.log('%c' + icon + ' ' + r.label + (r.value ? ' — ' + r.value : ''), style);
+  _consoleLog(suiteKey, _lastResults[suiteKey].groups, p, f, w, ts);
+}
+
+// ── runAll: alle suites tegelijk ───────────────────────────────
+function runAll() {
+  _lastResults = {};
+  var allPass = 0, allFail = 0, allWarn = 0;
+  var body = document.getElementById('dtr-body');
+  body.innerHTML = '';
+  document.querySelectorAll('.dtr-tab').forEach(t => t.classList.remove('dtr-active'));
+
+  Object.keys(SUITE_MAP).forEach(function(suiteKey) {
+    var suite = SUITE_MAP[suiteKey];
+    var label = SUITE_LABELS[suiteKey];
+    _lastResults[suiteKey] = { label: label, groups: [] };
+    var sp = 0, sf = 0, sw = 0, ss = 0;
+
+    var header = document.createElement('div');
+    header.style.cssText = 'font-size:13px;font-weight:700;color:#1a2b30;padding:10px 0 5px;border-bottom:2px solid #1a2b30;margin:20px 0 10px';
+    header.textContent = label;
+    body.appendChild(header);
+
+    suite.forEach(function(group) {
+      var results = group.run();
+      _lastResults[suiteKey].groups.push({ title: group.group, results: results });
+      results.forEach(function(r) {
+        if (r.status === 'pass') { sp++; allPass++; }
+        else if (r.status === 'fail') { sf++; allFail++; }
+        else if (r.status === 'warn') { sw++; allWarn++; }
+        else ss++;
+      });
+      var div = document.createElement('div');
+      div.className = 'dtr-group';
+      div.innerHTML = '<div class="dtr-group-title">' + group.group + '</div>';
+      results.forEach(function(r) { div.appendChild(_resultEl(r)); });
+      body.appendChild(div);
     });
-    console.groupEnd();
+
+    var sub = document.createElement('div');
+    sub.style.cssText = 'font-size:11px;text-align:right;padding:4px 0 12px;border-bottom:1px solid #e8e8e8;margin-bottom:4px';
+    sub.innerHTML = '<span style="color:#00811f">✓ '+sp+'</span>  <span style="color:#c8000a">✗ '+sf+'</span>  ' +
+      '<span style="color:#c46200">△ '+sw+'</span>  <span style="color:#8a9ba1">○ '+ss+'</span>';
+    body.appendChild(sub);
   });
-  console.log('%c' + pass + ' geslaagd  ' + fail + ' mislukt  ' + warn + ' waarschuwingen',
-    fail > 0 ? 'color:red;font-weight:bold' : warn > 0 ? 'color:orange;font-weight:bold' : 'color:green;font-weight:bold');
+
+  document.getElementById('dtr-cnt-pass').textContent = allPass;
+  document.getElementById('dtr-cnt-fail').textContent = allFail;
+  document.getElementById('dtr-cnt-warn').textContent = allWarn;
+  var ts = new Date().toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dtr-timestamp').textContent = ts;
+  document.getElementById('dtr-export').disabled = false;
+
+  console.group('Design Test Runner — Alle suites [' + ts + ']');
+  Object.keys(_lastResults).forEach(function(sk) {
+    var sd = _lastResults[sk];
+    var sp=0,sf=0,sw=0;
+    sd.groups.forEach(g => g.results.forEach(r => {
+      if(r.status==='pass') sp++; else if(r.status==='fail') sf++; else if(r.status==='warn') sw++;
+    }));
+    _consoleLog(sk, sd.groups, sp, sf, sw, ts);
+  });
+  console.log('%c'+allPass+' geslaagd  '+allFail+' mislukt  '+allWarn+' waarschuwingen',
+    allFail>0?'color:red;font-weight:bold':allWarn>0?'color:orange;font-weight:bold':'color:green;font-weight:bold');
   console.groupEnd();
 }
 
+// ── Console helper ──────────────────────────────────────────────
+function _consoleLog(suiteKey, groups, p, f, w, ts) {
+  console.group((SUITE_LABELS[suiteKey] || suiteKey) + ' [' + ts + ']');
+  groups.forEach(function(g) {
+    console.group(g.title);
+    g.results.forEach(function(r) {
+      var col = r.status==='pass'?'color:green':r.status==='fail'?'color:red':r.status==='warn'?'color:orange':'color:gray';
+      var icon = r.status==='pass'?'✓':r.status==='fail'?'✗':r.status==='warn'?'△':'○';
+      console.log('%c'+icon+' '+r.label+(r.value?' — '+r.value:''), col);
+    });
+    console.groupEnd();
+  });
+  console.log('%c'+p+' ✓  '+f+' ✗  '+w+' △',
+    f>0?'color:red;font-weight:bold':w>0?'color:orange;font-weight:bold':'color:green;font-weight:bold');
+  console.groupEnd();
+}
+
+// ── exportMarkdown ──────────────────────────────────────────────
+function exportMarkdown() {
+  if (!_lastResults) return;
+  var version = typeof DASHBOARD_VERSION !== 'undefined' ? DASHBOARD_VERSION : '?';
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('nl-NL', {day:'2-digit',month:'2-digit',year:'numeric'});
+  var timeStr = now.toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  var totalPass=0, totalFail=0, totalWarn=0, totalSkip=0;
+  Object.keys(_lastResults).forEach(function(sk) {
+    _lastResults[sk].groups.forEach(function(g) {
+      g.results.forEach(function(r) {
+        if (r.status==='pass') totalPass++; else if (r.status==='fail') totalFail++;
+        else if (r.status==='warn') totalWarn++; else totalSkip++;
+      });
+    });
+  });
+  var status = totalFail > 0 ? 'NIET GESLAAGD' : totalWarn > 0 ? 'GESLAAGD MET WAARSCHUWINGEN' : 'GESLAAGD';
+
+  var lines = [
+    '# Design Test Rapport — Dashboard v' + version,
+    '',
+    '| | |',
+    '|---|---|',
+    '| **Dashboard versie** | `' + version + '` |',
+    '| **Datum** | ' + dateStr + ' ' + timeStr + ' |',
+    '| **Testplan** | TESTPLAN.md |',
+    '| **Resultaat** | **' + status + '** |',
+    '',
+    '---',
+    '',
+    '## Samenvatting',
+    '',
+    '| Suite | ✓ Geslaagd | ✗ Mislukt | △ Waarsch. | ○ Skip |',
+    '|---|---:|---:|---:|---:|',
+  ];
+
+  Object.keys(_lastResults).forEach(function(sk) {
+    var sd = _lastResults[sk];
+    var sp=0,sf=0,sw=0,ss=0;
+    sd.groups.forEach(function(g) {
+      g.results.forEach(function(r) {
+        if (r.status==='pass') sp++; else if (r.status==='fail') sf++;
+        else if (r.status==='warn') sw++; else ss++;
+      });
+    });
+    lines.push('| ' + sd.label + ' | ' + sp + ' | ' + sf + ' | ' + sw + ' | ' + ss + ' |');
+  });
+  lines.push('| **Totaal** | **'+totalPass+'** | **'+totalFail+'** | **'+totalWarn+'** | **'+totalSkip+'** |');
+  lines.push('', '---', '');
+
+  Object.keys(_lastResults).forEach(function(sk) {
+    var sd = _lastResults[sk];
+    lines.push('## ' + sd.label, '');
+    sd.groups.forEach(function(g) {
+      lines.push('### ' + g.title, '');
+      g.results.forEach(function(r) {
+        var icon = r.status==='pass'?'✓':r.status==='fail'?'✗':r.status==='warn'?'△':'○';
+        lines.push('- ' + icon + ' **' + r.label + '**' + (r.value ? ' — `' + r.value + '`' : ''));
+      });
+      lines.push('');
+    });
+  });
+  lines.push('---', '', '*Gegenereerd door Design Test Runner — Dashboard v' + version + '*');
+
+  var md = lines.join('\n');
+  var fname = 'testrapport-v' + version + '-' + now.toISOString().slice(0,10) + '.md';
+  var blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = fname; a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── Event handlers ──────────────────────────────────────────────
-document.getElementById('dtr-run').addEventListener('click', function() {
-  renderResults(activeTab);
-});
+document.getElementById('dtr-run').addEventListener('click', runAll);
+document.getElementById('dtr-export').addEventListener('click', exportMarkdown);
 
 document.getElementById('dtr-close').addEventListener('click', function() {
   document.getElementById('dtr-overlay').classList.remove('dtr-open');
@@ -4115,11 +4265,7 @@ document.querySelectorAll('.dtr-tab').forEach(function(btn) {
     document.querySelectorAll('.dtr-tab').forEach(t => t.classList.remove('dtr-active'));
     this.classList.add('dtr-active');
     activeTab = this.dataset.tab;
-    document.getElementById('dtr-body').innerHTML =
-      '<p style="color:#8a9ba1;text-align:center;padding:24px 0">Klik <strong>Alle tests uitvoeren</strong> om te starten.</p>';
-    document.getElementById('dtr-cnt-pass').textContent = '—';
-    document.getElementById('dtr-cnt-fail').textContent = '—';
-    document.getElementById('dtr-cnt-warn').textContent = '—';
+    renderResults(activeTab);
   });
 });
 
@@ -4130,9 +4276,7 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     var overlay = document.getElementById('dtr-overlay');
     overlay.classList.toggle('dtr-open');
-    if (overlay.classList.contains('dtr-open')) {
-      renderResults(activeTab);
-    }
+    if (overlay.classList.contains('dtr-open')) runAll();
   }
   if (e.key === 'Escape') {
     document.getElementById('dtr-overlay').classList.remove('dtr-open');
