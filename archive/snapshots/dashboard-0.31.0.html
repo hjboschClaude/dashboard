@@ -12,7 +12,7 @@
   /* === RODS Rotterdam Design System — White Theme === */
   /* Achtergrondlagen (BG-0, BG-1, BG-2) */
   --bg:#FFFFFF;        /* White — BG-0 buitenste */
-  --surface:#F5F7F8;   /* Gray 50 — BG-1 middelste (P9c fix: was #EFF4F6 cyaan-getint, nu neutraal grijs = var(--gray-50)) */
+  --surface:#EFF4F6;   /* Gray 50 — BG-1 middelste */
   --surface2:#FFFFFF;  /* White — BG-2 binnenste */
   --surface3:#E5E5E5;  /* Dark Gray 200 */
   /* Borders: Gray 300 voor lijnen, Gray 400 voor hover */
@@ -27,9 +27,9 @@
   /* C.3 WCAG AA contrast-ratios (gemeten 2026-03-07):
      --text-body #000000 op --bg  #FFFFFF : 21.0:1  ✓ AAA
      --text      #404B4F op --bg  #FFFFFF :  8.8:1  ✓ AAA
-     --text      #404B4F op --sfc #F5F7F8 : 10.7:1  ✓ AAA
+     --text      #404B4F op --sfc #EFF4F6 :  8.0:1  ✓ AAA
      --text-muted #617179 op --bg #FFFFFF :  5.1:1  ✓ AA   (was #65757B: 4.8:1)
-     --text-muted #617179 op --sfc#F5F7F8 :  5.1:1  ✓ AA   (was #65757B: 4.3:1 ✗)
+     --text-muted #617179 op --sfc#EFF4F6 :  4.6:1  ✓ AA   (was #65757B: 4.3:1 ✗)
      --text-dim  #536165 op --bg  #FFFFFF :  6.5:1  ✓ AA
      --accent    #00811F op --bg  #FFFFFF :  5.0:1  ✓ AA  */
   --text-body:#000000;--text:#404B4F;--text-muted:#617179;--text-dim:#536165; /* C.3: text-muted #65757B→#617179 voor AA op --surface */
@@ -59,12 +59,12 @@
   /* Magenta */
   --magenta-400:#D96AA3;--magenta-500:#C93675;--magenta-600:#B52B65;
   /* Gray */
-  --gray-50:#F5F7F8; /* D.4: neutraal grijs, was #EFF4F6 (cyaan-getint) */--gray-100:#E4EEF1;--gray-200:#DBE7EA;--gray-300:#CAD6DA;
+  --gray-50:#EFF4F6;--gray-100:#E4EEF1;--gray-200:#DBE7EA;--gray-300:#CAD6DA;
   --gray-400:#B6C4C8;--gray-500:#9DAFB6;--gray-600:#8D9DA4;--gray-700:#7C8B90;
   --gray-800:#65757B;--gray-900:#536165;--gray-950:#404B4F;
   /* Elevatie (schaduw) */
   --shadow-1:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
-  --shadow-2:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05); /* D.4: gereduceerde schaduw-opaciteit */
+  --shadow-2:0 4px 16px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08);
   /* Sprint 3, taak 3.5: Semantische kleurrollen — alias naar RODS-kleuren */
   --color-ui-active:var(--accent);
   --color-success:var(--green-500);
@@ -75,7 +75,7 @@
   --color-accent:var(--accent);
   --color-accent-light:var(--green-50);
   /* Typografie-tokens */
-  --font-size-xs:11px;--font-size-sm:12px;--font-size-md:14px;--font-size-lg:14px;--font-size-xl:20px; /* D.5: --font-size-lg 16→14px */
+  --font-size-xs:11px;--font-size-sm:12px;--font-size-md:14px;--font-size-lg:16px;--font-size-xl:20px;
   --font-weight-regular:400;--font-weight-medium:500;--font-weight-semibold:600;
   /* Spacing-tokens (4px-raster) */
   --space-0:2px;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;
@@ -95,15 +95,14 @@
 /* #57: Spacing-tokens op 4px-raster */
 /* sp-1:4px sp-2:8px sp-3:12px sp-4:16px sp-5:20px sp-6:24px sp-8:32px */
 *{margin:0;padding:0;box-sizing:border-box;}
-html{font-size:14px;} /* T2.3 fix: root font-size normaliseert head-elementen (html/head/meta/title/style) die anders browser-default 16px erven */
 body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text-body);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px;line-height:24px;}
 .topbar{display:flex;align-items:center;padding:0 16px;height:48px;background:var(--toolbar-bg);border-bottom:1px solid var(--border);gap:12px;flex-shrink:0;} /* #55: samenvoegen, 48px */
-.logo{font-size:14px;font-weight:600;letter-spacing:-0.3px;color:var(--accent);} /* D.5: 16→14px */
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.3px;color:var(--accent);}
 .logo span{color:var(--text);}
 .vsep{width:1px;height:18px;background:var(--border);}
-.base-name{font-size:14px;line-height:24px;font-weight:500;}
+.base-name{font-size:14px;line-height:24px;font-weight:700;}
 .topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center;} /* #28: gap 8px */
-.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:4px;font-size:14px;font-weight:500;line-height:24px;font-family:system-ui,-apple-system,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap;position:relative;min-height:36px;} /* #62: 14px, #21: min-h 36px, D.5: gap 5→4, padding-v 6→4 */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;font-size:14px;font-weight:700;line-height:24px;font-family:system-ui,-apple-system,sans-serif;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:all .15s;white-space:nowrap;position:relative;min-height:36px;} /* #62: 14px, #21: min-h 36px */
 .btn:hover{border-color:var(--border-hover);color:var(--text);background:var(--gray-100);}
 .btn.active{box-shadow:inset 0 0 0 1px var(--accent);color:var(--green-800);background:var(--green-50);} /* #24: box-shadow ipv border, geen layout-shift */
 .btn:disabled,.btn[disabled]{opacity:0.4;cursor:not-allowed;pointer-events:none;} /* #25: disabled-state */
@@ -113,7 +112,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .btn-danger:hover{background:var(--red-50);border-color:var(--accent2);}
 .btn-export{color:var(--accent3);border-color:var(--blue-100);}
 .btn-export:hover{background:var(--blue-50);border-color:var(--accent3);}
-.btn-ghost{border-color:transparent;background:transparent;color:var(--text-muted);min-height:32px;font-size:12px;} /* D.5: 13→12px */ /* #27: tertiaire stijl */
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-muted);min-height:32px;font-size:13px;} /* #27: tertiaire stijl */
 .btn-ghost:hover{background:var(--surface3);color:var(--text-dim);border-color:transparent;}
 .btn-ghost.active{background:var(--surface3);color:var(--text);border-color:var(--border-hover);box-shadow:none;} /* BUG-012: subtielere actieve staat, override box-shadow van .btn.active */
 /* 1.5: Reset voor semantische buttons die als div gestyled waren */
@@ -122,31 +121,31 @@ button.col-toggle,button.logic-btn,button.col-bulk-btn,button.export-item,button
 .btn-system{border-color:transparent;background:transparent;color:var(--text-muted);font-size:12px;}
 .btn-system:hover{background:var(--surface3);color:var(--text-dim);}
 /* Sprint 2, taak 2.4: Density via CSS-classes */
-.density-compact .toolbar{padding:0 16px;}
-.density-medium .toolbar{padding:0 16px;}
-.density-tall .toolbar{padding:0 16px;}
+.density-compact .toolbar{padding:6px 16px;}
+.density-medium .toolbar{padding:7px 16px;}
+.density-tall .toolbar{padding:8px 16px;}
 .tabbar{display:none;} /* #55: verborgen — tabs verplaatst naar topbar */
 .topbar-tabs{display:flex;align-items:center;gap:4px;margin-left:8px;}
-.tab{display:flex;align-items:center;gap:8px;padding:4px 12px;height:32px;border-radius:4px;font-size:12px;font-weight:500;line-height:20px;color:var(--text-muted);cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s;user-select:none;} /* #55: inline tab, D.5: gap 6→8 */
+.tab{display:flex;align-items:center;gap:6px;padding:4px 12px;height:32px;border-radius:4px;font-size:12px;font-weight:700;line-height:20px;color:var(--text-muted);cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s;user-select:none;} /* #55: inline tab */
 .tab:hover{color:var(--text-dim);background:var(--surface3);}
-.tab.active{color:var(--green-800);background:transparent;border-color:var(--accent);font-weight:600;}
+.tab.active{color:var(--green-800);background:transparent;border-color:var(--accent);}
 .tab-add{width:26px;height:26px;border-radius:4px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);cursor:pointer;margin-left:4px;margin-bottom:4px;transition:all .15s;}
 .tab-add:hover{border-color:var(--accent);color:var(--accent);}
-.toolbar{display:flex;align-items:center;padding:0 16px;height:40px;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:nowrap;overflow-x:auto;} /* BUG-013: nowrap + scroll i.p.v. wrap */
+.toolbar{display:flex;align-items:center;padding:6px 16px;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:nowrap;overflow-x:auto;} /* BUG-013: nowrap + scroll i.p.v. wrap */
 .toolbar::-webkit-scrollbar{height:0;} /* verberg horizontale scrollbar */
 .hsep{width:1px;height:calc(100% - 16px);background:var(--border);margin:0 4px;flex-shrink:0;} /* #63: hoogte calc, #61: 1px divider */
-.search-wrap{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);font-size:12px;min-width:170px;transition:border-color .15s;} /* D.5: gap 6→8, padding 10→8 */
+.search-wrap{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);font-size:12px;min-width:170px;transition:border-color .15s;}
 .search-wrap:focus-within{border-color:var(--accent);}
 .search-wrap input{background:none;border:none;outline:none;font-size:12px;font-family:system-ui,-apple-system,sans-serif;color:var(--text);width:100%;}
 .search-wrap input::placeholder{color:var(--text-muted);}
-.row-count{margin-left:auto;font-size:12px;line-height:20px;font-family:system-ui,-apple-system,sans-serif;color:var(--text-muted);background:var(--surface2);padding:4px 8px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;} /* D.5: padding-v 3→4 */
-.active-filters{display:none;align-items:center;padding:4px 16px;gap:8px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;} /* D.5: padding 5→4 14→16, gap 6→8 */
+.row-count{margin-left:auto;font-size:12px;line-height:20px;font-family:system-ui,-apple-system,sans-serif;color:var(--text-muted);background:var(--surface2);padding:3px 8px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;}
+.active-filters{display:none;align-items:center;padding:5px 14px;gap:6px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
 /* 1.3: State classes — vervangen inline display-mutaties */
 .is-open{display:block;}
 .is-visible{display:flex;}
 .active-filters.is-visible{display:flex;}
-.af-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;}
-.af-chip{display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);font-size:12px;color:var(--green-800);} /* D.5: gap 5→4, padding-v 3→4 */
+.af-label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;}
+.af-chip{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);font-size:12px;color:var(--green-800);}
 .af-chip-remove{cursor:pointer;opacity:.6;font-size:12px;}
 .af-chip-remove:hover{opacity:1;}
 .af-clear{font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:underline;margin-left:4px;}
@@ -162,8 +161,8 @@ button.col-toggle,button.logic-btn,button.col-bulk-btn,button.export-item,button
 table{border-collapse:separate;border-spacing:0;min-width:100%;font-size:12px;line-height:20px;} /* BUG-014/015: separate zodat sticky cellen naburige cellen correct afdekken */
 thead{position:sticky;top:0;z-index:10;}
 thead tr{background:var(--header-bg);}
-th{padding:0;border-right:1px solid var(--border);border-bottom:2px solid var(--border);font-weight:600;font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.5px;line-height:20px;white-space:nowrap;user-select:none;position:relative;} /* #61: 2px indicator border-bottom */
-th .th-inner{display:flex;align-items:center;gap:8px;padding:0 12px;min-width:120px;height:32px;cursor:pointer;} /* D.5: gap 6→8, padding 6 11→0 12 */
+th{padding:0;border-right:1px solid var(--border);border-bottom:2px solid var(--border);font-weight:700;font-size:var(--font-size-xs);text-transform:uppercase;letter-spacing:.5px;line-height:20px;white-space:nowrap;user-select:none;position:relative;} /* #61: 2px indicator border-bottom */
+th .th-inner{display:flex;align-items:center;gap:6px;padding:6px 11px;min-width:120px;height:32px;cursor:pointer;}
 th:hover .th-inner{background:var(--gray-100);}
 th.th-dragging{opacity:.4;}
 th.th-drag-left{box-shadow:inset 3px 0 0 0 var(--accent);}
@@ -171,12 +170,12 @@ th.th-drag-right{box-shadow:inset -3px 0 0 0 var(--accent);}
 th.sorted .th-inner{background:var(--green-50);color:var(--green-800);}
 th .sort-icon{margin-left:auto;font-size:14px;opacity:.6;} /* #33: 14px, opacity .6 */
 th.sorted .sort-icon{opacity:1;color:var(--accent);}
-th .col-filter-btn{font-size:11px;opacity:0;margin-left:2px;cursor:pointer;padding:2px 4px;border-radius:4px;color:var(--text-muted);transition:opacity .15s,background .15s;} /* D.5: 9→11px, padding 3→4 */
+th .col-filter-btn{font-size:9px;opacity:0;margin-left:2px;cursor:pointer;padding:2px 3px;border-radius:3px;color:var(--text-muted);transition:opacity .15s,background .15s;}
 th:hover .col-filter-btn{opacity:.5;}
 th .col-filter-btn:hover{opacity:1;background:var(--surface3);color:var(--accent);}
 th .col-filter-btn.col-filter-active{opacity:1;color:var(--accent);}
 th .col-filter-btn:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:1px;border-radius:2px;} /* C.1: toetsenbord-focus indicator */
-.col-type-icon{font-size:12px;opacity:.6;pointer-events:none;user-select:none;} /* BUG-016 fix: emoji-iconen zijn geen drag-doelwit meer, voorkomt thDidDrag=true bij klik op icon */
+.col-type-icon{font-size:12px;opacity:.6;}
 th:first-child{min-width:44px;width:44px;}
 th:first-child .th-inner{min-width:44px;justify-content:center;cursor:pointer;} /* #71: cursor:pointer */
 thead tr th:first-child{position:sticky;left:0;z-index:12;background:var(--header-bg);}
@@ -193,8 +192,8 @@ td{padding:0 12px;height:var(--row-height);white-space:nowrap;overflow:hidden;te
 td:first-child{text-align:center;color:var(--text-muted);font-size:12px;width:44px;min-width:44px;max-width:44px;font-family:system-ui,-apple-system,sans-serif;padding:0;position:sticky;left:0;z-index:5;background:var(--bg);}
 tbody tr:hover td:first-child{background:var(--row-hover)!important;}
 tbody tr.selected td:first-child{background:var(--selected)!important;}
-td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:500;font-size:14px;line-height:24px;color:var(--text-body);}
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;line-height:20px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;letter-spacing:.2px;}
+td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:700;font-size:14px;line-height:24px;color:var(--text-body);}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;line-height:20px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;letter-spacing:.2px;}
 .tag-blue{background:var(--blue-50);color:var(--blue-700);}
 .tag-green{background:var(--green-50);color:var(--green-700);}
 .tag-orange{background:var(--orange-50);color:var(--orange-500);}
@@ -215,12 +214,12 @@ td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:500;f
 .check-box{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border-hover);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--accent);position:relative;} /* #35: 18px + hit-area */
 .check-box::before{content:'';position:absolute;inset:-6px;border-radius:8px;} /* #35: 30px hit-area */
 .check-box.checked{background:var(--green-50);border-color:var(--accent);}
-.avatar-cell{display:flex;align-items:center;gap:8px;} /* D.5: gap 7→8 */
-.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:system-ui,-apple-system,sans-serif;background:var(--gray-200);color:var(--text-dim);flex-shrink:0;} /* D.4: monochroom avatar */
+.avatar-cell{display:flex;align-items:center;gap:7px;}
+.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;flex-shrink:0;}
 .agg-row{display:flex;background:var(--header-bg);border-top:1px solid var(--border);flex-shrink:0;font-size:12px;font-family:system-ui,-apple-system,sans-serif;color:var(--text-muted);overflow:hidden;flex-wrap:nowrap;}
-.agg-cell{padding:4px 12px;border-right:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;gap:4px;flex-shrink:0;} /* D.5: padding 5→4, 11→12 */
-.agg-cell span{color:var(--text-muted);} /* D.4: geen groen op agg-waarden */
-.add-row{height:34px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 0 0 44px;color:var(--text-muted);font-size:12px;cursor:pointer;gap:8px;transition:background .1s;} /* D.5: gap 6→8 */
+.agg-cell{padding:5px 11px;border-right:1px solid var(--border);white-space:nowrap;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.agg-cell span{color:var(--green-700);font-weight:700;}
+.add-row{height:34px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 0 0 44px;color:var(--text-muted);font-size:12px;cursor:pointer;gap:6px;transition:background .1s;}
 .add-row:hover{background:var(--row-hover);color:var(--text-dim);}
 /* PANELS */
 .panel-overlay{position:fixed;inset:0;z-index:50;display:none;}
@@ -228,28 +227,28 @@ td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:500;f
 .panel{position:fixed;background:var(--surface2);border:1px solid var(--border-hover);border-radius:8px;padding:0;z-index:51;box-shadow:var(--shadow-2);min-width:320px;max-width:440px;animation:popIn .15s ease;overflow:hidden;display:none;} /* #58: 8px, 1.3: default hidden, BUG-011: breder panel */
 .panel.is-open{display:block;}
 @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-6px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);} /* D.5: padding 14→16, 10→12 */
-.panel-title{font-size:14px;line-height:24px;font-weight:600;color:var(--text);}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;border-bottom:1px solid var(--border);}
+.panel-title{font-size:14px;line-height:24px;font-weight:700;color:var(--text);}
 .panel-close{width:32px;height:32px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;} /* #22: 32px */
 .panel-close:hover{color:var(--text);}
-.panel-body{padding:8px 16px;max-height:420px;overflow-y:auto;overflow-x:hidden;} /* BUG-011: verberg horizontale overflow, D.5: padding 10→8, 14→16 */
+.panel-body{padding:10px 14px;max-height:420px;overflow-y:auto;overflow-x:hidden;} /* BUG-011: verberg horizontale overflow */
 .panel-body::-webkit-scrollbar{width:5px;height:0;} /* verberg horizontale scrollbar */
 .panel-body::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:3px;}
-.panel-footer{padding:8px 16px;border-top:1px solid var(--border);display:flex;gap:8px;} /* D.5: padding 10→8, 14→16, gap 6→8 */
+.panel-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;}
 /* Filter */
-.filter-rule{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);flex-wrap:wrap;} /* BUG-011: flex-wrap voor smalle panelen, D.5: gap 6→8, padding 7 9→8 */
-.filter-rule select,.filter-rule input{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 8px;outline:none;cursor:pointer;min-width:0;flex:1 1 auto;} /* BUG-011: flex sizing, D.5: padding 7→8 */
+.filter-rule{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);flex-wrap:wrap;} /* BUG-011: flex-wrap voor smalle panelen */
+.filter-rule select,.filter-rule input{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 7px;outline:none;cursor:pointer;min-width:0;flex:1 1 auto;} /* BUG-011: flex sizing */
 .filter-rule select:focus,.filter-rule input:focus{border-color:var(--accent);}
 .filter-rule input{min-width:60px;max-width:120px;} /* BUG-011: begrensde breedte */
 .filter-remove{width:20px;height:20px;border-radius:3px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
 .filter-remove:hover{color:var(--accent2);}
-.filter-logic{display:flex;gap:8px;margin-bottom:8px;} /* D.5: gap 6→8, margin 10→8 */
-.logic-btn{flex:1;padding:4px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;text-align:center;} /* D.5: padding 5→4 */
+.filter-logic{display:flex;gap:6px;margin-bottom:10px;}
+.logic-btn{flex:1;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;text-align:center;}
 .logic-btn.active{border-color:var(--accent);color:var(--green-800);background:var(--green-50);}
-.add-filter-btn{width:100%;padding:8px;border-radius:4px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;} /* D.5: padding 7→8 */
+.add-filter-btn{width:100%;padding:7px;border-radius:4px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;}
 .add-filter-btn:hover{border-color:var(--accent);color:var(--accent);}
 /* Columns */
-.col-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);} /* D.5: padding-v 6→8 */
+.col-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
 .col-item:last-child{border-bottom:none;}
 .col-toggle{width:30px;height:16px;border-radius:8px;background:var(--border-hover);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
 .col-toggle.on{background:var(--accent);}
@@ -262,50 +261,50 @@ td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:500;f
 .col-item.dragging{opacity:.4;background:var(--surface3);border-radius:6px;}
 .col-item.drag-over-top{border-top:2px solid var(--green-400);padding-top:4px;}
 .col-item.drag-over-bottom{border-bottom:2px solid var(--green-400);padding-bottom:4px;}
-.col-search{width:100%;padding:8px;border-radius:4px;border:1px solid var(--input-border);background:var(--surface3);color:var(--text);font-size:12px;font-family:system-ui,-apple-system,sans-serif;outline:none;margin-bottom:8px;} /* D.5: padding 6 9→8 */
+.col-search{width:100%;padding:6px 9px;border-radius:4px;border:1px solid var(--input-border);background:var(--surface3);color:var(--text);font-size:12px;font-family:system-ui,-apple-system,sans-serif;outline:none;margin-bottom:8px;}
 .col-search:focus{border-color:var(--accent);}
-.col-bulk{display:flex;gap:8px;margin-bottom:8px;} /* D.5: gap 6→8 */
-.col-bulk-btn{flex:1;padding:4px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;text-align:center;} /* D.5: padding 5→4 */
+.col-bulk{display:flex;gap:6px;margin-bottom:8px;}
+.col-bulk-btn{flex:1;padding:5px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;text-align:center;}
 .col-bulk-btn:hover{border-color:var(--accent);color:var(--accent);}
 /* Sort */
-.sort-rule{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);} /* D.5: gap 6→8, padding 7 9→8 */
-.sort-rule select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 8px;outline:none;cursor:pointer;flex:1;} /* D.5: padding 7→8 */
-.sort-dir-btn{padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;} /* D.5: padding 10→8 */
+.sort-rule{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);}
+.sort-rule select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 7px;outline:none;cursor:pointer;flex:1;}
+.sort-dir-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;}
 .sort-dir-btn.asc{border-color:var(--accent);color:var(--green-700);}
 .sort-dir-btn.desc{border-color:var(--accent4);color:var(--orange-500);}
 /* Group */
-.group-item{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);margin-bottom:8px;} /* D.5: padding 7 9→8 */
-.group-item select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 8px;outline:none;flex:1;} /* D.5: padding 7→8 */
+.group-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--surface3);border-radius:4px;border:1px solid var(--border);margin-bottom:8px;}
+.group-item select{background:var(--surface2);border:1px solid var(--input-border);border-radius:4px;color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;padding:4px 7px;outline:none;flex:1;}
 /* Export */
 .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0;}
-.export-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);cursor:pointer;transition:all .2s;} /* #66: 12px sym, #58: 8px radius, D.5: gap 6→8 */
+.export-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface3);cursor:pointer;transition:all .2s;} /* #66: 12px sym, #58: 8px radius */
 .export-item:hover{border-color:var(--accent);background:var(--green-50);}
-.export-icon{font-size:20px;} /* D.5: 22→20px */
-.export-label{font-size:12px;font-weight:500;color:var(--text-dim);}
+.export-icon{font-size:22px;}
+.export-label{font-size:12px;font-weight:700;color:var(--text-dim);}
 .export-desc{font-size:12px;color:var(--text-muted);text-align:center;}
 .export-item:hover .export-label{color:var(--green-800);}
 /* Context */
 .ctx-menu{position:fixed;background:var(--surface2);border:1px solid var(--border-hover);border-radius:8px;padding:4px;min-width:165px;z-index:200;box-shadow:var(--shadow-2);display:none;animation:popIn .1s ease;} /* #58: 8px */
-.ctx-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:4px;font-size:12px;color:var(--text-dim);cursor:pointer;transition:background .1s;} /* D.5: padding 7 10→8 */
+.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:4px;font-size:12px;color:var(--text-dim);cursor:pointer;transition:background .1s;}
 .ctx-item:hover{background:var(--surface);color:var(--text);}
 .ctx-item.danger{color:var(--accent2);}
 .ctx-item.danger:hover{background:var(--red-50);}
-.ctx-sep{height:1px;background:var(--border);margin:4px;} /* D.5: margin 3→4 */
+.ctx-sep{height:1px;background:var(--border);margin:3px 4px;}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:100;display:none;} /* #65: blur verwijderd, #18: side-panel */
 .modal-overlay.is-open{display:block;}
 .modal{background:var(--surface2);border-left:1px solid var(--border-hover);border-radius:0;width:420px;max-width:90vw;height:100vh;overflow-y:auto;padding:24px;position:fixed;top:0;right:0;animation:slideIn .2s ease;box-shadow:var(--shadow-2);} /* #18: side-panel */
 @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-/* D.4: @keyframes slideOut verwijderd — modal gebruikt .closing → popOut */
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;} /* D.5: margin 18→16 */
-.modal-title{font-size:20px;line-height:28px;font-weight:600;}
+@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:20px;line-height:28px;font-weight:700;}
 .modal-close{width:26px;height:26px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;}
 .modal-close:hover{color:var(--text);}
 .modal-field{margin-bottom:12px;}
-.modal-label{font-size:12px;line-height:20px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
-.modal-value{font-size:14px;line-height:24px;font-family:system-ui,-apple-system,sans-serif;color:var(--text-dim);padding:8px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);} /* D.5: padding 7 10→8 */
+.modal-label{font-size:12px;line-height:20px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.modal-value{font-size:14px;line-height:24px;font-family:system-ui,-apple-system,sans-serif;color:var(--text-dim);padding:7px 10px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);}
 /* Toast */
-.toast{position:fixed;bottom:20px;right:20px;background:#FFFFFF;border:1px solid var(--accent);border-radius:8px;box-shadow:var(--shadow-2);padding:8px 16px;font-size:12px;color:var(--green-700);z-index:999;display:none;gap:8px;align-items:center;} /* #38: verbeterd, D.5: padding-v 10→8 */
+.toast{position:fixed;bottom:20px;right:20px;background:#FFFFFF;border:1px solid var(--accent);border-radius:8px;box-shadow:var(--shadow-2);padding:10px 16px;font-size:12px;color:var(--green-700);z-index:999;display:none;gap:8px;align-items:center;} /* #38: verbeterd */
 .toast.is-visible{display:flex;position:relative;overflow:hidden;}
 .toast-close{cursor:pointer;color:var(--text-muted);font-size:14px;margin-left:8px;line-height:1;padding:2px;}
 .toast-close:hover{color:var(--text);}
@@ -334,7 +333,7 @@ td:first-child .row-select-cb{margin:0 auto;} /* #76: centreer in 44px kolom */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;color:var(--text-muted);gap:12px;}
 .empty-state-icon{font-size:36px;opacity:.5;}
 .empty-state-text{font-size:14px;line-height:24px;text-align:center;}
-.empty-state-btn{padding:8px 16px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);color:var(--green-800);font-size:12px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;} /* D.5: padding-v 6→8 */
+.empty-state-btn{padding:6px 16px;border-radius:4px;border:1px solid var(--accent);background:var(--green-50);color:var(--green-800);font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;}
 .empty-state-btn:hover{background:var(--green-100);}
 /* #14: Actieve filters prominenter */
 #active-filters-bar.is-visible{background:var(--green-50);border-left:3px solid var(--accent);}
@@ -349,12 +348,11 @@ td:first-child .row-select-cb{margin:0 auto;} /* #76: centreer in 44px kolom */
 .row-action-btn{display:none;width:24px;height:24px;border-radius:4px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;align-items:center;justify-content:center;position:absolute;right:4px;top:50%;transform:translateY(-50%);}
 .row-action-btn:hover{background:var(--surface3);color:var(--text);}
 tr:hover .row-action-btn{display:flex;}
-.cell-primary{position:relative;} /* BUG-017 fix: was inline style op td, verhinderde position:sticky van freeze-CSS */
 /* #6: Inline stijlen → CSS-klassen */
-.toolbar-select{padding:4px 8px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;outline:none;min-height:32px;} /* D.5: padding 10→8 */
+.toolbar-select{padding:4px 10px;border:1px solid var(--input-border);border-radius:4px;background:var(--surface2);color:var(--text-dim);font-size:12px;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;outline:none;min-height:32px;}
 .toolbar-select:focus{border-color:var(--accent);}
 /* #36: Segmented control */
-.btn-seg{padding:4px 8px;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:500;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;min-height:32px;} /* D.5: padding 10→8 */
+.btn-seg{padding:4px 10px;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;cursor:pointer;transition:all .15s;min-height:32px;}
 .btn-seg:last-child{border-right:none;}
 .btn-seg:hover{background:var(--surface3);color:var(--text-dim);}
 .btn-seg.active{background:var(--green-50);color:var(--green-800);}
@@ -362,13 +360,13 @@ tr:hover .row-action-btn{display:flex;}
 .btn:focus-visible,.tab:focus-visible,.col-toggle:focus-visible,.logic-btn:focus-visible,.panel-close:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 /* Group header */
-.group-hdr td{background:var(--surface3)!important;font-family:system-ui,-apple-system,sans-serif!important;font-weight:600!important;font-size:14px!important;line-height:24px!important;color:var(--text-dim)!important;}
+.group-hdr td{background:var(--surface3)!important;font-family:system-ui,-apple-system,sans-serif!important;font-weight:700!important;font-size:14px!important;line-height:24px!important;color:var(--text-dim)!important;}
 .group-hdr:hover td{background:var(--gray-100)!important;}
 .group-hdr td{transition:background .1s;}
 /* Sticky group header labels — blijven zichtbaar bij horizontaal scrollen */
 .group-hdr-inner{
   position:sticky;
-  left:16px; /* D.5: 14→16 */
+  left:14px;
   display:inline-flex;
   align-items:center;
   min-height:100%;
@@ -378,14 +376,14 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
   white-space:nowrap;
 }
 .table-container.freeze-active .group-hdr-inner{
-  left:60px; /* 44px (selectie-kolom) + 16px padding, D.5: 58→60 */
+  left:58px; /* 44px (selectie-kolom) + 14px padding */
 }
 /* Freeze column via CSS classes — BUG-009/012 fix */
 .table-container.freeze-active table thead th:nth-child(2){
   position:sticky;left:44px;z-index:11;background:var(--header-bg);
 }
 .table-container.freeze-active table tbody td:nth-child(2){
-  position:sticky;left:44px;z-index:4;background:var(--bg); /* BUG-017 fix: was #FFFFFF, nu var(--bg) voor dark-mode */
+  position:sticky;left:44px;z-index:4;background:#FFFFFF;
 }
 .table-container.freeze-active table tbody tr:nth-child(even) td:nth-child(2){background:var(--surface);}
 .table-container.freeze-active table tbody tr:hover td:nth-child(2){background:var(--row-hover)!important;}
@@ -417,11 +415,11 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
   </div>
   <div class="hsep"></div>
   <!-- #26/#27: aria-hidden op emoji, ghost-style voor toolbar -->
-  <button class="btn btn-ghost" id="btn-filter" onclick="togglePanel('filter')">Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 4px;font-size:12px;margin-left:2px"> /* D.5: padding 5→4 */</span></button>
+  <button class="btn btn-ghost" id="btn-filter" onclick="togglePanel('filter')"><span aria-hidden="true">⚡</span> Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px"></span></button>
   <button class="btn btn-ghost" id="btn-cols" onclick="togglePanel('cols')"><span aria-hidden="true">☰</span> Kolommen</button>
   <button class="btn btn-ghost" id="btn-sort" onclick="togglePanel('sort')"><span aria-hidden="true">↕</span> Sorteren</button>
   <button class="btn btn-ghost" id="btn-group" onclick="togglePanel('group')"><span aria-hidden="true">⊞</span> Groeperen</button>
-  <button class="btn btn-ghost" id="btn-cond" onclick="toggleCond()">Opmaak</button>
+  <button class="btn btn-ghost" id="btn-cond" onclick="toggleCond()"><span aria-hidden="true">🎨</span> Opmaak</button>
   <div class="hsep"></div>
   <!-- 6. Rijhoogte aanpassen -->
   <!-- #36: Segmented control voor rijhoogte -->
@@ -431,24 +429,24 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
     <button class="btn-seg" onclick="setRowHeight('tall')" id="seg-tall" title="Ruim">L</button>
   </div>
   <!-- 7. Kolom bevriezen -->
-  <button class="btn btn-ghost" id="btn-freeze" onclick="toggleFreeze()">Bevriezen</button>
+  <button class="btn btn-ghost" id="btn-freeze" onclick="toggleFreeze()"><span aria-hidden="true">❄</span> Bevriezen</button>
   <div class="hsep"></div>
   <button class="btn btn-ghost" id="btn-reset" onclick="resetView()" style="display:none"><span aria-hidden="true">↺</span> Reset</button>
-  <button class="btn btn-ghost" id="btn-test" onclick="document.getElementById('dtr-overlay').classList.add('dtr-open');renderResults(typeof activeTab!=='undefined'?activeTab:'design')">Tests</button>
+  <button class="btn btn-ghost" id="btn-test" onclick="document.getElementById('dtr-overlay').classList.add('dtr-open');renderResults(typeof activeTab!=='undefined'?activeTab:'design')"><span aria-hidden="true">🧪</span> Tests</button>
   <div class="row-count" id="row-count">50 records</div>
 </div>
 
 <!-- #73: Bulk-actie toolbar bij multi-selectie -->
 <div class="active-filters" id="selection-bar" style="background:var(--green-50);border-bottom-color:var(--green-200)">
   <span class="af-label" id="selection-count" style="color:var(--green-800)">0 geselecteerd</span>
-  <button class="btn btn-export" onclick="openSelectionExport()" style="font-size:12px;padding:4px 8px">Exporteer selectie</button> <!-- D.5: padding 3 10→4 8 -->
+  <button class="btn btn-export" onclick="openSelectionExport()" style="font-size:12px;padding:3px 10px">Exporteer selectie</button>
   <span class="af-clear" onclick="clearSelection()" style="color:var(--green-700)">Deselecteer</span>
 </div>
 
 <!-- 8. Actieve filters balk -->
 <div class="active-filters" id="active-filters-bar">
-  <span class="af-label label-caps">Actieve filters:</span>
-  <div id="af-chips" style="display:flex;gap:4px;flex-wrap:wrap"></div> <!-- D.5: gap 5→4 -->
+  <span class="af-label">Actieve filters:</span>
+  <div id="af-chips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
   <span class="af-clear" onclick="clearAllFilters()">Alles wissen</span>
 </div>
 
@@ -479,7 +477,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 <!-- FILTER PANEL -->
 <div class="panel-overlay" id="overlay-filter" onclick="closePanel('filter')"></div>
 <div class="panel" id="panel-filter">
-  <div class="panel-header"><div class="panel-title">Filters</div><div class="panel-close" onclick="closePanel('filter')">✕</div></div>
+  <div class="panel-header"><div class="panel-title">⚡ Filters</div><div class="panel-close" onclick="closePanel('filter')">✕</div></div>
   <div class="panel-body">
     <div class="filter-logic">
       <button class="logic-btn active" type="button" id="logic-and" onclick="setLogic('AND',this)">EN (AND)</button>
@@ -529,7 +527,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 <div class="panel" id="panel-group" style="min-width:320px">
   <div class="panel-header"><div class="panel-title">⊞ Groeperen op meerdere niveaus</div><div class="panel-close" onclick="closePanel('group')">✕</div></div>
   <div class="panel-body">
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Voeg meerdere groepeerniveaus toe. Rijen worden genest van boven naar onder.</div> <!-- D.5: margin 10→8 -->
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Voeg meerdere groepeerniveaus toe. Rijen worden genest van boven naar onder.</div>
     <div id="group-rules"></div>
     <button class="add-filter-btn" onclick="addGroupField()">+ Groepeerniveau toevoegen</button>
   </div>
@@ -544,7 +542,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 <div class="panel" id="panel-export" style="max-width:340px">
   <div class="panel-header"><div class="panel-title">⬇ Exporteren</div><div class="panel-close" onclick="closePanel('export')">✕</div></div>
   <div class="panel-body">
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Exporteert huidige weergave incl. actieve filters en zichtbare kolommen.</div> <!-- D.5: margin 10→8 -->
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Exporteert huidige weergave incl. actieve filters en zichtbare kolommen.</div>
     <!-- #37: Primaire exports eerst, visueel prominent -->
     <div class="export-grid" style="grid-template-columns:1fr 1fr;">
       <button class="export-item" type="button" onclick="exportCSV()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-icon">📄</div><div class="export-label" style="color:var(--green-800)">CSV</div><div class="export-desc">Kommagescheiden</div></button>
@@ -565,7 +563,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.34.0';
+const DASHBOARD_VERSION = '0.31.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -1159,9 +1157,10 @@ function avatarCell(name){
   if(_avatarCache.has(name)) return _avatarCache.get(name);
   // B.2: FIFO-evictie — verwijder oudste entry als cache vol is
   if(_avatarCache.size >= _AVATAR_CACHE_MAX) _avatarCache.delete(_avatarCache.keys().next().value);
+  var c=avatarColors[Math.abs((name||'').charCodeAt(0))%avatarColors.length];
   var ini=escapeHtml((name||'?').split(' ').map(function(w){return w[0];}).join('').substring(0,2));
   var safeName=escapeHtml(name);
-  var html='<div class="avatar-cell"><div class="avatar">'+ini+'</div>'+safeName+'</div>'; /* D.4: monochroom — kleur via CSS, geen inline style */
+  var html='<div class="avatar-cell"><div class="avatar" style="background:'+c+'22;color:'+c+'">'+ini+'</div>'+safeName+'</div>';
   _avatarCache.set(name,html);
   return html;
 }
@@ -1342,9 +1341,9 @@ function rebuildColFilterPanelContent(panel,colKey,info){
   var totalData=vals.reduce(function(s,v){return s+counts[v];},0);
 
   // Header met samenvatting
-  var html='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);">' /* D.5: padding 10→8 */+
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid var(--border);">'+
     '<div style="display:flex;flex-direction:column;gap:1px;">'+
-    '<div style="font-size:12px;font-weight:600;color:var(--text);">'+escapeHtml(colLabel)+'</div>' /* D.5: 13→12px, 700→600 */+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);">'+escapeHtml(colLabel)+'</div>'+
     '<div style="font-size:11px;color:var(--text-muted);">'+(allChecked?'Alle waarden':'<span style="color:var(--accent);font-weight:600;">'+checkedCount+' van '+vals.length+'</span> geselecteerd')+'</div>'+
     '</div>'+
     '<div style="width:22px;height:22px;border-radius:4px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;" onclick="closeColFilterPanel()">✕</div>'+
@@ -1352,15 +1351,15 @@ function rebuildColFilterPanelContent(panel,colKey,info){
 
   // Zoekbalk bij > 8 waarden
   if(vals.length>8){
-    html+='<div style="padding:8px 12px 4px;"><input class="cf-search" type="text" placeholder="Zoek waarde\u2026" value="'+escapeAttr(AppState._colFilterSearch||'')+'" oninput="AppState._colFilterSearch=this.value;_cfRefresh();" style="width:100%;box-sizing:border-box;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;outline:none;background:var(--surface3);color:var(--text);"/></div>'; /* D.5: padding 5→4 */
+    html+='<div style="padding:8px 12px 4px;"><input class="cf-search" type="text" placeholder="Zoek waarde\u2026" value="'+escapeAttr(AppState._colFilterSearch||'')+'" oninput="AppState._colFilterSearch=this.value;_cfRefresh();" style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;outline:none;background:var(--surface3);color:var(--text);"/></div>';
   }
 
-  html+='<div style="padding:8px 12px 4px;">'; /* D.5: padding-v 6→8 */
+  html+='<div style="padding:6px 12px 4px;">';
   // Alles / Geen / Inverteer buttons
-  html+='<div style="display:flex;gap:4px;margin-bottom:8px;">'+  /* D.5: margin 6→8 */
-    '<div style="flex:1;padding:4px 8px;border-radius:4px;border:1px solid '+(allChecked?'var(--accent)':'var(--border)')+';background:'+(allChecked?'var(--green-50)':'var(--surface3)')+';color:'+(allChecked?'var(--green-800)':'var(--text-muted)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',true)">✓ Alles</div>'+  /* D.5: padding 3 6→4 8, 700→600 */
-    '<div style="flex:1;padding:4px 8px;border-radius:4px;border:1px solid '+(noneChecked?'var(--accent2)':'var(--border)')+';background:'+(noneChecked?'var(--red-50)':'var(--surface3)')+';color:'+(noneChecked?'var(--red-700)':'var(--text-muted)')+';font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',false)">✕ Geen</div>'+  /* D.5: padding 3 6→4 8, 700→600 */
-    '<div style="flex:1;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterInvert(\''+escapeAttr(colKey)+'\')">⇄ Inverteer</div>'+  /* D.5: padding 3 6→4 8, 700→600 */
+  html+='<div style="display:flex;gap:4px;margin-bottom:6px;">'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid '+(allChecked?'var(--accent)':'var(--border)')+';background:'+(allChecked?'var(--green-50)':'var(--surface3)')+';color:'+(allChecked?'var(--green-800)':'var(--text-muted)')+';font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',true)">✓ Alles</div>'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid '+(noneChecked?'var(--accent2)':'var(--border)')+';background:'+(noneChecked?'var(--red-50)':'var(--surface3)')+';color:'+(noneChecked?'var(--red-700)':'var(--text-muted)')+';font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterSelectAll(\''+escapeAttr(colKey)+'\',false)">✕ Geen</div>'+
+    '<div style="flex:1;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;" onclick="colFilterInvert(\''+escapeAttr(colKey)+'\')">⇄ Inverteer</div>'+
     '</div>';
   html+='</div>';
 
@@ -1379,14 +1378,14 @@ function rebuildColFilterPanelContent(panel,colKey,info){
     // Kleurcodering: tag-kleur als beschikbaar
     var labelHtml;
     if(tagColors&&tagColors[v]){
-      labelHtml='<span class="tag '+tagColors[v]+'" style="font-size:11px;padding:2px 4px;">'+escapeHtml(v)+'</span>'; /* D.5: padding 1 6→2 4 */
+      labelHtml='<span class="tag '+tagColors[v]+'" style="font-size:11px;padding:1px 6px;">'+escapeHtml(v)+'</span>';
     } else {
       labelHtml='<span style="font-size:12px;color:var(--text-dim);user-select:none;">'+escapeHtml(v)+'</span>';
     }
     html+='<div style="display:flex;align-items:center;gap:8px;padding:4px 4px;border-radius:4px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background=\'var(--row-hover)\'" onmouseout="this.style.background=\'transparent\'" onclick="colFilterToggleVal(\''+escapeAttr(colKey)+'\',\''+safeV+'\')">'+
       '<div style="'+boxStyle+'">'+(checked?'✓':'')+'</div>'+
       labelHtml+
-      '<span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums;background:var(--surface3);padding:0 4px;border-radius:8px;min-width:20px;text-align:center;">'+count+'</span>' /* D.5: 10→11px, padding 5→4 */+
+      '<span style="margin-left:auto;font-size:10px;color:var(--text-muted);font-variant-numeric:tabular-nums;background:var(--surface3);padding:0 5px;border-radius:8px;min-width:20px;text-align:center;">'+count+'</span>'+
       '</div>';
   });
   html+='</div>';
@@ -1879,7 +1878,7 @@ function rowHtml(r,rn,cols,tab,hpx){
       var cell=renderCell(c,r);
       // #31: actie-knop in de name-kolom — delegation via data-action
       if(c.key==='name') cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
-      return '<td class="'+cls+'">'+cell+'</td>'; /* BUG-017 fix: position:relative verplaatst naar .cell-primary CSS */
+      return '<td class="'+cls+'"'+(c.key==='name'?' style="position:relative"':'')+'>'+cell+'</td>';
     }).join('')
     +'</tr>';
 }
@@ -2048,8 +2047,8 @@ function _groupItemHtml(item, cols, tab, hpx) {
     var ac = accentColors[item.depth % accentColors.length];
     return '<tr class="group-hdr" data-group-path="' + escapeAttr(item.path) + '" style="cursor:pointer">'
       + '<td colspan="' + (cols.length + 1) + '" style="height:' + (hpx + 2) + 'px;padding:0;border-left:3px solid ' + ac + '">'
-      + '<div class="group-hdr-inner" style="padding-left:' + (16 + indent) + 'px;height:' + (hpx + 2) + 'px">' /* D.5: padding-left 14→16 */
-      + '<span style="color:' + ac + ';font-size:14px;margin-right:8px">' + arrow + '</span>' /* D.5: margin 6→8 */
+      + '<div class="group-hdr-inner" style="padding-left:' + (14 + indent) + 'px;height:' + (hpx + 2) + 'px">'
+      + '<span style="color:' + ac + ';font-size:14px;margin-right:6px">' + arrow + '</span>'
       + '<span style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-right:4px">' + escapeHtml(item.fieldLabel) + '</span>'
       + '<span style="color:var(--text-body);font-weight:700;font-size:14px;line-height:24px">' + escapeHtml(item.key) + '</span>'
       + ' <span style="color:var(--text-muted);font-weight:400;margin-left:8px;font-size:12px">' + escapeHtml(item.count) + ' records</span>'
@@ -2183,9 +2182,6 @@ function renderAgg(tab,cols,data){
 function _toggleSortDir(dir){ return dir==='asc'?'desc':'asc'; }
 
 var thDidDrag=false;
-/* BUG-016 opgelost: .col-type-icon heeft nu pointer-events:none;user-select:none
-   Emoji-iconen (👔/📋) zijn zo geen drag-doelwit meer en triggeren geen thDragStart().
-   thDidDrag blijft false bij klikken op icongebied → clickSort() sorteert correct. */
 function clickSort(key){
   if(thDidDrag){thDidDrag=false;return;}
   var ex=AppState.sortRules.findIndex(function(r){return r.field===key;});
@@ -2198,7 +2194,7 @@ function clickSort(key){
   }
   // SORT-003: Verwijder lege regels
   AppState.sortRules=AppState.sortRules.filter(function(r){return r.field!=='';});
-  _invalidate(['sort','group','body','meta','header']); // A2: targeted invalidation for sort; 'header' toegevoegd zodat sort-indicator (↑/↓) zichtbaar wordt na klik
+  _invalidate(['sort','group','body','meta']); // A2: targeted invalidation for sort (NOT data, NOT agg)
   render();
   if(AppState.activePanel==='sort') renderSortPanel();
 }
@@ -2551,7 +2547,6 @@ function thDrop(e,targetKey){
 
 function thDragEnd(e){
   thDragKey=null;
-  thDidDrag=false; // Fix: reset na drag zodat volgende klik op kolomheader wél sorteert (was: alleen clickSort() resettte thDidDrag)
   document.querySelectorAll('th').forEach(function(th){th.classList.remove('th-dragging','th-drag-left','th-drag-right');});
 }
 
@@ -2590,15 +2585,15 @@ function updateFilterBadge(){
   // #30: Inhoudsindicatie — bij 1 filter: veldnaam inline, bij >1: "(n)"
   if(active.length===0){
     badge.style.display='none';
-    btn.innerHTML='Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 4px;font-size:12px;margin-left:2px"> /* D.5: padding 5→4 */</span>';
+    btn.innerHTML='<span aria-hidden="true">⚡</span> Filter <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px"></span>';
   } else if(active.length===1){
     var cols=getCols();
     var col=cols.find(function(c){return c.key===active[0].field;});
     var label=col?col.label:active[0].field;
     var val=active[0].value?': '+active[0].value:'';
-    btn.innerHTML=escapeHtml(label)+escapeHtml(val)+' <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 4px;font-size:12px;margin-left:2px"> /* D.5: padding 5→4 */1</span>';
+    btn.innerHTML='<span aria-hidden="true">⚡</span> '+escapeHtml(label)+escapeHtml(val)+' <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px">1</span>';
   } else {
-    btn.innerHTML='Filteren <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 4px;font-size:12px;margin-left:2px"> /* D.5: padding 5→4 */'+active.length+'</span>';
+    btn.innerHTML='<span aria-hidden="true">⚡</span> Filteren <span id="filter-badge" style="display:inline;background:var(--accent);color:#fff;border-radius:10px;padding:0 5px;font-size:12px;margin-left:2px">'+active.length+'</span>';
   }
   btn.classList.toggle('active',active.length>0);
 }
@@ -2767,26 +2762,17 @@ function cycleRowHeight(){
 // 7. FREEZE COLUMN
 // ============================================================
 // Freeze via CSS class toggle
-/* BUG-017: freeze-active klasse gaat verloren na render().
-   Klasse wordt vóór render() gezet op .table-container, maar render() herbouwt mogelijk
-   de containerinhoud waardoor de klasse niet overleeft.
-   Fix: klasse NA render() opnieuw toepassen (zie BUGS.md), of render() zelf de klasse
-   laten zetten op basis van AppState.freezeCol. */
 function toggleFreeze(){
   AppState.freezeCol=!AppState.freezeCol;
   AppState.ui.freezeFirstDataColumn=AppState.freezeCol;
   document.getElementById('btn-freeze').classList.toggle('active',AppState.freezeCol);
-  // BUG-017 fix: render() eerst, daarna freeze-active class zetten zodat
-  // de herbouwde tbody-cellen (.cell-primary) de CSS-positie correct erven.
-  // Root cause: inline style="position:relative" op td overschreef position:sticky;
-  // opgelost door position:relative naar .cell-primary CSS te verplaatsen.
-  _invalidate(['header','body','widths']);
-  render();
-  // freeze-active NA render() zetten (defensief — class overleven render() is gegarandeerd,
-  // maar volgorde hier voorkomt edge-cases bij toekomstige render-refactors)
+  // Toggle class on all table containers
   document.querySelectorAll('.table-container').forEach(function(tc){
     tc.classList.toggle('freeze-active',AppState.freezeCol);
   });
+  // Forceer re-render zodat sticky kolommen correct worden weergegeven
+  _invalidate(['header','body','widths']);
+  render();
   toast(AppState.freezeCol?'Eerste kolom bevroren':'Bevriezen uitgeschakeld');
 }
 
@@ -2917,9 +2903,9 @@ function closeModal(e){
     // #18/#39: slide-out animatie
     var modal=document.querySelector('.modal');
     if(modal){
-      modal.classList.add('closing'); /* D.4: gebruikt .closing → popOut i.p.v. slideOut */
+      modal.style.animation='slideOut .2s ease forwards';
       modal.addEventListener('animationend',function(){
-        modal.classList.remove('closing');
+        modal.style.animation='';
         document.getElementById('modal-overlay').classList.remove('is-open');
       },{once:true});
     } else {
@@ -3657,14 +3643,14 @@ if (_checkBrowserSupport()) {
   max-width: 860px;
   box-shadow: 0 8px 32px rgba(0,0,0,.18);
   font-family: system-ui,-apple-system,sans-serif;
-  font-size: 12px; /* D.5: 13→12px */
+  font-size: 13px;
   overflow: hidden;
 }
 #dtr-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px; /* D.5: 14→16 */
+  padding: 14px 20px;
   background: #1a2b30;
   color: #fff;
 }
@@ -3672,10 +3658,10 @@ if (_checkBrowserSupport()) {
 #dtr-header small { color: #8da8b0; font-size: 11px; margin-left: 12px; }
 #dtr-controls { display: flex; gap: 8px; align-items: center; }
 #dtr-run  { background: #00811f; color: #fff; border: none; border-radius: 4px;
-            padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; } /* D.5: 6→8, 14→16 */
+            padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
 #dtr-run:hover { background: #006713; }
 #dtr-export { background: none; color: #8da8b0; border: 1px solid #3a5060; border-radius: 4px;
-              padding: 8px 12px; font-size: 12px; font-weight: 500; cursor: pointer; } /* D.5: 6→8 */
+              padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
 #dtr-export:not([disabled]):hover { background: #2a3d45; color: #fff; border-color: #5a8090; }
 #dtr-export[disabled] { opacity: .35; cursor: default; }
 #dtr-close { background: none; border: none; color: #8da8b0; font-size: 18px;
@@ -3687,10 +3673,10 @@ if (_checkBrowserSupport()) {
 .dtr-tab.dtr-active { color: #00811f; border-bottom-color: #00811f; background: #fff; font-weight: 600; }
 #dtr-body { padding: 16px 20px; max-height: 560px; overflow-y: auto; }
 #dtr-summary {
-  display: flex; gap: 16px; padding: 8px 20px; /* D.5: 10→8 */
+  display: flex; gap: 16px; padding: 10px 20px;
   background: #f5f7f8; border-bottom: 1px solid #e0e0e0; font-size: 12px;
 }
-.dtr-sum-item { display: flex; gap: 8px; align-items: center; } /* D.5: 6→8 */
+.dtr-sum-item { display: flex; gap: 6px; align-items: center; }
 .dtr-sum-pass { color: #00811f; font-weight: 700; }
 .dtr-sum-fail { color: #c8000a; font-weight: 700; }
 .dtr-sum-warn { color: #c46200; font-weight: 700; }
@@ -3701,11 +3687,11 @@ if (_checkBrowserSupport()) {
   border-bottom: 1px solid #eee;
 }
 .dtr-result {
-  display: flex; align-items: flex-start; gap: 8px; /* D.5: 10→8 */
-  padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 12px; /* D.5: 5→4, 3→4 */
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 5px 8px; border-radius: 4px; margin-bottom: 3px; font-size: 12px;
 }
 .dtr-result:hover { background: #f5f7f8; }
-.dtr-icon { font-size: 12px; line-height: 1.4; flex-shrink: 0; width: 16px; text-align: center; } /* D.5: 13→12px */
+.dtr-icon { font-size: 13px; line-height: 1.4; flex-shrink: 0; width: 16px; text-align: center; }
 .dtr-label { flex: 1; color: #1a2b30; line-height: 1.5; }
 .dtr-detail { color: #8a9ba1; font-size: 11px; margin-top: 1px; }
 .dtr-value { margin-left: auto; font-size: 11px; color: #5a6a70; white-space: nowrap; padding-left: 12px; }
@@ -4334,7 +4320,7 @@ function runAll() {
     var sp = 0, sf = 0, sw = 0, ss = 0;
 
     var header = document.createElement('div');
-    header.style.cssText = 'font-size:12px;font-weight:600;color:#1a2b30;padding:8px 0 4px;border-bottom:2px solid #1a2b30;margin:20px 0 8px'; /* D.5: 13→12px, 700→600, padding 10→8, 5→4, margin 10→8 */
+    header.style.cssText = 'font-size:13px;font-weight:700;color:#1a2b30;padding:10px 0 5px;border-bottom:2px solid #1a2b30;margin:20px 0 10px';
     header.textContent = label;
     body.appendChild(header);
 
