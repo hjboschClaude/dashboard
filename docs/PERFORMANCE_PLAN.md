@@ -1,4 +1,4 @@
-# Performance Implementatieplan — Dashboard Gemeente Rotterdam
+# Performance Implementatieplan — Dashboard Gemeente Rotterdam *(AFGEROND v0.25.1)*
 
 **Versie:** 0.14.0 → 0.15.0
 **Datum:** 2026-03-07

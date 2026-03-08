@@ -179,4 +179,32 @@ return '<td class="'+cls+'">'+cell+'</td>';
 
 ---
 
-*Gegenereerd op 07-03-2026 — Dashboard v0.34.0*
+---
+
+## BUG-018 — Unit test `getRowH: compact → 34` faalt
+
+| | |
+|---|---|
+| **ID** | `BUG-018` |
+| **Status** | Opgelost |
+| **Ernst** | Laag |
+| **Gemeld** | 08-03-2026 |
+| **Opgelost** | 08-03-2026 |
+| **Versie** | v0.36.0 |
+| **Component** | Suite A — `runTests()` → A-ROW |
+
+### Beschrijving
+
+De unit test `getRowH: compact → 34` faalt. De assert verwacht dat `getRowH()` retourneert `34` wanneer `AppState.rowHeight === 'compact'`, maar de werkelijke waarde is `32`. De compacte rijhoogte was eerder gewijzigd van 34 naar 32px zonder de test mee te updaten.
+
+### Oorzaak
+
+`getRowH()` retourneert `32` als default (niet-tall, niet-medium). De assert verwachtte nog de oude waarde `34`.
+
+### Toegepaste fix
+
+Assert aangepast: `getRowH()===34` → `getRowH()===32`.
+
+---
+
+*Laatst bijgewerkt: 08-03-2026 — Dashboard v0.36.0*

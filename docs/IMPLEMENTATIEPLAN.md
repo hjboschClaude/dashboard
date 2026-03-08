@@ -1,9 +1,12 @@
-# Implementatieplan — Dashboard Gemeente Rotterdam
+# Implementatieplan — Dashboard Gemeente Rotterdam *(AFGEROND v0.31.0 — 24/25 taken)*
 
-**Versie:** 0.14.0 → 0.16.0
-**Datum:** 2026-03-07
+**Versie:** 0.14.0 → 0.16.0 *(aangemaakt)* | **Bijgewerkt:** v0.31.0 — 2026-03-07
 **Basis:** TOETSINGSKADER.md — 64 bevindingen over 11 dimensies
-**Relatie:** Complementair aan PERFORMANCE_PLAN.md (performance-taken blijven daar)
+**Relatie:** Complementair aan PERFORMANCE_PLAN.md *(volledig afgerond in v0.25.1)*
+
+> **Status na v0.31.0:** PERFORMANCE_PLAN Sprint 1–5 én dit plan Sprint A–F volledig afgewerkt.
+> 24 van 25 taken afgerond. Enige uitzondering: E.5 (panel-render patroon centraliseren) —
+> bewust uitgesteld, geen functionele impact.
 
 ---
 
@@ -28,35 +31,37 @@
 
 ## 1. Overzicht & prioritering
 
-### Alle open taken
+### Alle taken — status v0.31.0
 
-| ID | Sprint | Ernst | Dimensie | Taak | Metriek |
-|---|---|---|---|---|---|
-| A.1 | A | 🔴 Kritiek | Correctheid | Fix `_searchStr` undefined crash | C-03 |
-| A.2 | A | 🔴 Kritiek | Beveiliging | Fix XSS in `mono` renderer via `col.suffix` | S-01, S-04 |
-| A.3 | A | 🔴 Kritiek | Beveiliging | Fix HTML-export onveilige `plainVal()` data | S-05 |
-| A.4 | A | 🟠 Hoog | Correctheid | Fix `tagFilter()` op.is → op.equals | C-05 |
-| A.5 | A | 🟠 Hoog | Correctheid | Dedupliceer `parseFloat` in `matchRule` | C-06 |
-| A.6 | A | 🟠 Hoog | Beveiliging | Voeg Content Security Policy meta-tag toe | S-06 |
-| B.1 | B | 🔴 Kritiek | Geheugen | Fix `_gvScrollBound` duplice scroll-listeners | M-04 |
-| B.2 | B | 🟠 Hoog | Geheugen | Begrens `_avatarCache` (LRU, max 150 entries) | M-05 |
-| B.3 | B | 🟠 Hoog | Koppeling | Reduceer AppState-mutaties in render-functies | K-02 |
-| B.4 | B | 🟡 Middel | Geheugen | Voeg size-check toe op `_uniqueValueCache` | M-06 |
-| C.1 | C | 🟠 Hoog | Toegankelijkheid | Kolom-filter-knop keyboard bereikbaar maken | A-02 |
-| C.2 | C | 🟠 Hoog | Toegankelijkheid | Header-checkbox ARIA-label dynamisch bijwerken | A-06 |
-| C.3 | C | 🟡 Middel | Toegankelijkheid | Kleurcontrast meten en vastleggen (WCAG AA) | A-05 |
-| C.4 | C | 🟡 Middel | Toegankelijkheid | Rij-Enter opent modal (keyboard-navigatie) | A-02 |
-| D.1 | D | 🟠 Hoog | Testbaarheid | Voeg 20 extra assertions toe aan `runTests()` | T-02, T-03 |
-| D.2 | D | 🟠 Hoog | Testbaarheid | Isoleer DOM-afhankelijkheden uit pure functies | T-05 |
-| D.3 | D | 🟡 Middel | Testbaarheid | Isoleer `Math.random()` in data-factory | T-06 |
-| E.1 | E | 🔴 Kritiek | Onderhoudbaarheid | Verplaats `categoricalKeys` e.a. naar config | O-07 |
-| E.2 | E | 🟠 Hoog | Onderhoudbaarheid | Vervang hardcoded domeinstrings door constanten | O-02 |
-| E.3 | E | 🟠 Hoog | Onderhoudbaarheid | Verwijder legacy `@deprecated` accessors | O-06 |
-| E.4 | E | 🟡 Middel | Herbruikbaarheid | Centraliseer sort-toggle logica | R-04 |
-| E.5 | E | 🟡 Middel | Herbruikbaarheid | Centraliseer panel-render patroon | R-03 |
-| F.1 | F | 🔴 Kritiek | Browsercompat | Documenteer minimale browser-vereisten (ES6) | B-01 |
-| F.2 | F | 🟠 Hoog | Browsercompat | Update XLSX CDN naar actuele versie + SRI hash | B-05 |
-| F.3 | F | 🟡 Middel | Browsercompat | `requestAnimationFrame` fallback of browsereis | B-03 |
+> Legenda: ✓ Afgerond &nbsp;·&nbsp; △ Deels (code gedeeltelijk aanwezig) &nbsp;·&nbsp; ○ Open
+
+| ID | Sprint | Ernst | Dimensie | Taak | Metriek | Status |
+|---|---|---|---|---|---|---|
+| A.1 | A | 🔴 Kritiek | Correctheid | Fix `_searchStr` undefined crash | C-03 | ✓ Afgerond — v0.26.0 |
+| A.2 | A | 🔴 Kritiek | Beveiliging | Fix XSS in `mono` renderer via `col.suffix` | S-01, S-04 | ✓ Afgerond — v0.26.0 |
+| A.3 | A | 🔴 Kritiek | Beveiliging | Fix HTML-export onveilige `plainVal()` data | S-05 | ✓ Afgerond — v0.26.0 |
+| A.4 | A | 🟠 Hoog | Correctheid | Fix `tagFilter()` op.is → op.equals | C-05 | ✓ Afgerond — v0.26.1 |
+| A.5 | A | 🟠 Hoog | Correctheid | Dedupliceer `parseFloat` in `matchRule` | C-06 | ✓ Afgerond — v0.26.1 |
+| A.6 | A | 🟠 Hoog | Beveiliging | Voeg Content Security Policy meta-tag toe | S-06 | ✓ Afgerond — v0.26.1 |
+| B.1 | B | 🔴 Kritiek | Geheugen | Fix `_gvScrollBound` duplice scroll-listeners | M-04 | ✓ Afgerond |
+| B.2 | B | 🟠 Hoog | Geheugen | Begrens `_avatarCache` (LRU, max 150 entries) | M-05 | ✓ Afgerond — v0.27.0 |
+| B.3 | B | 🟠 Hoog | Koppeling | Reduceer AppState-mutaties in render-functies | K-02 | ✓ Afgerond — v0.27.1 |
+| B.4 | B | 🟡 Middel | Geheugen | Voeg size-check toe op `_uniqueValueCache` | M-06 | ✓ Afgerond — v0.27.0 |
+| C.1 | C | 🟠 Hoog | Toegankelijkheid | Kolom-filter-knop keyboard bereikbaar maken | A-02 | ✓ Afgerond — v0.28.0 |
+| C.2 | C | 🟠 Hoog | Toegankelijkheid | Header-checkbox ARIA-label dynamisch bijwerken | A-06 | ✓ Afgerond |
+| C.3 | C | 🟡 Middel | Toegankelijkheid | Kleurcontrast meten en vastleggen (WCAG AA) | A-05 | ✓ Afgerond — v0.28.0 |
+| C.4 | C | 🟡 Middel | Toegankelijkheid | Rij-Enter opent modal (keyboard-navigatie) | A-02 | ✓ Afgerond — v0.28.0 |
+| D.1 | D | 🟠 Hoog | Testbaarheid | Voeg 20 extra assertions toe aan `runTests()` | T-02, T-03 | ✓ Afgerond |
+| D.2 | D | 🟠 Hoog | Testbaarheid | Isoleer DOM-afhankelijkheden uit pure functies | T-05 | ✓ Afgerond — v0.29.0 |
+| D.3 | D | 🟡 Middel | Testbaarheid | Isoleer `Math.random()` in data-factory | T-06 | ✓ Afgerond |
+| E.1 | E | 🔴 Kritiek | Onderhoudbaarheid | Verplaats `categoricalKeys` e.a. naar config | O-07 | ✓ Afgerond — v0.29.0 |
+| E.2 | E | 🟠 Hoog | Onderhoudbaarheid | Vervang hardcoded domeinstrings door constanten | O-02 | ✓ Afgerond — v0.29.1 |
+| E.3 | E | 🟠 Hoog | Onderhoudbaarheid | Verwijder legacy `@deprecated` accessors | O-06 | ✓ Afgerond — v0.31.0 |
+| E.4 | E | 🟡 Middel | Herbruikbaarheid | Centraliseer sort-toggle logica | R-04 | ✓ Afgerond — v0.29.0 |
+| E.5 | E | 🟡 Middel | Herbruikbaarheid | Centraliseer panel-render patroon | R-03 | ○ Uitgesteld |
+| F.1 | F | 🔴 Kritiek | Browsercompat | Documenteer minimale browser-vereisten (ES6) | B-01 | ✓ Afgerond — v0.30.0 |
+| F.2 | F | 🟠 Hoog | Browsercompat | Update XLSX CDN naar actuele versie + SRI hash | B-05 | ✓ Afgerond — v0.30.0 |
+| F.3 | F | 🟡 Middel | Browsercompat | `requestAnimationFrame` fallback of browsereis | B-03 | ✓ Afgerond — v0.30.0 |
 
 ### Prioriteitsmatrix
 
@@ -81,7 +86,7 @@ Ernst  ↑
 
 ### Taak A.1 — Fix `_searchStr` undefined crash bij lege dataset
 
-**Metriek:** C-03 | **Ernst:** 🔴 Kritiek
+**Metriek:** C-03 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — v0.26.0
 **Bestand:** `dashboard.html`, functie `computeFilteredData()` (regel ~1468)
 
 **Probleem:**
@@ -131,7 +136,7 @@ if (search) data = data.filter(function(r) {
 
 ### Taak A.2 — Fix XSS in `mono` renderer via `col.suffix`
 
-**Metriek:** S-01, S-04 | **Ernst:** 🔴 Kritiek
+**Metriek:** S-01, S-04 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — v0.26.0
 **Bestand:** `dashboard.html`, object `cellRenderers`, entry `mono` (regel ~1070)
 
 **Probleem:**
@@ -167,7 +172,7 @@ mono: function(v, col) {
 
 ### Taak A.3 — Fix HTML-export onveilige `plainVal()` data
 
-**Metriek:** S-05 | **Ernst:** 🔴 Kritiek
+**Metriek:** S-05 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — v0.26.0
 **Bestand:** `dashboard.html`, functie `exportHTML()` (regel ~2963)
 
 **Probleem:**
@@ -207,7 +212,7 @@ rows.forEach(function(r) {
 
 ### Taak A.4 — Fix `tagFilter()` operator `is` → `equals`
 
-**Metriek:** C-05 | **Ernst:** 🟠 Hoog
+**Metriek:** C-05 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.26.1
 **Bestand:** `dashboard.html`, functie `tagFilter()` (regel ~2488)
 
 **Probleem:**
@@ -254,7 +259,7 @@ function tagFilter(field, val) {
 
 ### Taak A.5 — Dedupliceer `parseFloat` in `matchRule` (gt/lt)
 
-**Metriek:** C-06 | **Ernst:** 🟠 Hoog
+**Metriek:** C-06 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.26.1
 **Bestand:** `dashboard.html`, functie `matchRule()` (regel ~1097–1101)
 
 **Probleem:**
@@ -296,7 +301,7 @@ case 'lt': {
 
 ### Taak A.6 — Voeg Content Security Policy meta-tag toe
 
-**Metriek:** S-06 | **Ernst:** 🟠 Hoog
+**Metriek:** S-06 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.26.1
 **Bestand:** `dashboard.html`, `<head>` sectie (na regel 7)
 
 **Probleem:**
@@ -340,7 +345,7 @@ omdat de browser geen externe script-bronnen blokkeert.
 
 ### Taak B.1 — Fix `_gvScrollBound` duplice scroll-listeners
 
-**Metriek:** M-04 | **Ernst:** 🔴 Kritiek
+**Metriek:** M-04 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — `_gvScrollBound` flag-check aanwezig, listener-deduplicatie werkt
 **Bestand:** `dashboard.html`, functie `renderGroupedBody()` (regel ~1999)
 
 **Probleem:**
@@ -410,7 +415,7 @@ function _cleanupGroupedScroll(tab) {
 
 ### Taak B.2 — Begrens `_avatarCache` (LRU, max 150 entries)
 
-**Metriek:** M-05 | **Ernst:** 🟠 Hoog
+**Metriek:** M-05 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.27.0
 **Bestand:** `dashboard.html`, functie `avatarCell()` (regel ~1039)
 
 **Probleem:**
@@ -451,7 +456,7 @@ function avatarCell(name, size) {
 
 ### Taak B.3 — Reduceer AppState-mutaties in render-functies
 
-**Metriek:** K-02 | **Ernst:** 🟠 Hoog
+**Metriek:** K-02 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.27.1
 **Bestand:** `dashboard.html`, alle render-functies
 
 **Probleem:**
@@ -510,7 +515,7 @@ function _onVirtualScroll(tab) {
 
 ### Taak B.4 — Voeg size-check toe aan `_uniqueValueCache`
 
-**Metriek:** M-06 | **Ernst:** 🟡 Middel
+**Metriek:** M-06 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — v0.27.0
 **Bestand:** `dashboard.html`, functie die `_uniqueValueCache` vult (regel ~1193)
 
 **Probleem:**
@@ -571,7 +576,7 @@ if (info.truncated) {
 
 ### Taak C.1 — Kolom-filter-knop (▼) keyboard bereikbaar maken
 
-**Metriek:** A-02 | **Ernst:** 🟠 Hoog
+**Metriek:** A-02 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.28.0
 **Bestand:** `dashboard.html`, functie `renderHeader()` (regel ~1720)
 
 **Probleem:**
@@ -609,7 +614,7 @@ Tab (als er een `tabindex="0"` is), maar Enter/Spatie doet niets.
 
 ### Taak C.2 — Header-checkbox ARIA-label dynamisch bijwerken
 
-**Metriek:** A-06 | **Ernst:** 🟠 Hoog
+**Metriek:** A-06 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — `aria-label` en `aria-checked` worden dynamisch bijgewerkt
 **Bestand:** `dashboard.html`, functie `updateHeaderCheckbox()` (regel ~2149)
 
 **Probleem:**
@@ -664,7 +669,7 @@ function updateHeaderCheckbox() {
 
 ### Taak C.3 — Kleurcontrast meten en vastleggen (WCAG AA)
 
-**Metriek:** A-05 | **Ernst:** 🟡 Middel
+**Metriek:** A-05 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — v0.28.0
 **Bestand:** `dashboard.html`, CSS-sectie (`--text`, `--bg`, `--accent`, etc.)
 
 **Aanpak:**
@@ -700,7 +705,7 @@ function updateHeaderCheckbox() {
 
 ### Taak C.4 — Rij-Enter opent modal (keyboard-navigatie)
 
-**Metriek:** A-02 | **Ernst:** 🟡 Middel
+**Metriek:** A-02 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — v0.28.0
 **Bestand:** `dashboard.html`, functie `rowHtml()` (regel ~1750)
 
 **Probleem:**
@@ -743,7 +748,7 @@ keyboard-handler. Toetsenbordgebruikers kunnen via Tab een rij bereiken
 
 ### Taak D.1 — Voeg 20 extra assertions toe aan `runTests()`
 
-**Metriek:** T-02, T-03 | **Ernst:** 🟠 Hoog
+**Metriek:** T-02, T-03 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — 128 assertions aanwezig (doel ≥ 80)
 **Bestand:** `dashboard.html`, functie `runTests()` (regel ~3101)
 
 **Toe te voegen assertions (compleet blok):**
@@ -849,7 +854,7 @@ keyboard-handler. Toetsenbordgebruikers kunnen via Tab een rij bereiken
 
 ### Taak D.2 — Isoleer DOM-afhankelijkheden uit pure functies
 
-**Metriek:** T-05 | **Ernst:** 🟠 Hoog
+**Metriek:** T-05 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.29.0
 **Bestand:** `dashboard.html`, diverse functies
 
 **Probleem:**
@@ -897,7 +902,7 @@ In tests kan de functie worden aangeroepen met een expliciete zoekterm.
 
 ### Taak D.3 — Isoleer `Math.random()` in data-factory
 
-**Metriek:** T-06 | **Ernst:** 🟡 Middel
+**Metriek:** T-06 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — `_randomFn`-variabele aanwezig, vervangbaar in tests
 **Bestand:** `dashboard.html`, functies `rnd()`, `rndInt()`, `rndDate()` (regel ~280)
 
 **Probleem:**
@@ -941,7 +946,7 @@ function rndDate(from, to) {
 
 ### Taak E.1 — Verplaats `categoricalKeys`, `_ordinalOrders`, `_valTagColors` naar config
 
-**Metriek:** O-07 | **Ernst:** 🔴 Kritiek
+**Metriek:** O-07 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — v0.29.0
 **Bestand:** `dashboard.html`, diverse locaties
 
 **Probleem:**
@@ -1010,7 +1015,7 @@ Vervang alle verwijzingen naar de losse variabelen door `dashboardConfig.*`.
 
 ### Taak E.2 — Vervang hardcoded domeinstrings door constanten
 
-**Metriek:** O-02 | **Ernst:** 🟠 Hoog
+**Metriek:** O-02 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.29.1
 **Bestand:** `dashboard.html`, verspreide locaties
 
 **Probleem:**
@@ -1055,7 +1060,7 @@ Vervang vervolgens alle inline string-literals door de constanten.
 
 ### Taak E.3 — Verwijder legacy `@deprecated` accessors
 
-**Metriek:** O-06 | **Ernst:** 🟠 Hoog
+**Metriek:** O-06 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.31.0
 **Bestand:** `dashboard.html`, regel ~916–929
 
 **Probleem:**
@@ -1093,7 +1098,7 @@ kan nieuwe code per ongeluk de deprecated API blijven gebruiken.
 
 ### Taak E.4 — Centraliseer sort-toggle logica
 
-**Metriek:** R-04 | **Ernst:** 🟡 Middel
+**Metriek:** R-04 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — v0.29.0
 **Bestand:** `dashboard.html`, regel 2055 en regel 2523
 
 **Probleem:**
@@ -1120,7 +1125,7 @@ Vervang beide inline-expressies door `_toggleSortDir(rules[idx].dir)`.
 
 ### Taak E.5 — Centraliseer panel-render patroon
 
-**Metriek:** R-03 | **Ernst:** 🟡 Middel
+**Metriek:** R-03 | **Ernst:** 🟡 Middel | **Status:** ○ Uitgesteld — bewust (geen functionele impact)
 **Bestand:** `dashboard.html`, functies `renderFilterPanel`, `renderSortPanel`, `renderGroupPanel`
 
 **Probleem:**
@@ -1177,7 +1182,7 @@ Refactor `renderFilterPanel`, `renderSortPanel` en `renderGroupPanel` om
 
 ### Taak F.1 — Documenteer minimale browser-vereisten
 
-**Metriek:** B-01 | **Ernst:** 🔴 Kritiek
+**Metriek:** B-01 | **Ernst:** 🔴 Kritiek | **Status:** ✓ Afgerond — v0.30.0
 **Bestand:** `dashboard.html`, `<head>` sectie + README/commentaar
 
 **Probleem:**
@@ -1242,7 +1247,7 @@ if (!_checkBrowserSupport()) return;
 
 ### Taak F.2 — Update XLSX CDN naar actuele versie + SRI hash
 
-**Metriek:** B-05 | **Ernst:** 🟠 Hoog
+**Metriek:** B-05 | **Ernst:** 🟠 Hoog | **Status:** ✓ Afgerond — v0.30.0
 **Bestand:** `dashboard.html`, lazy-load functie voor XLSX (regel ~2947)
 
 **Probleem:**
@@ -1279,7 +1284,7 @@ s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 ### Taak F.3 — `requestAnimationFrame` fallback of browsereis documenteren
 
-**Metriek:** B-03 | **Ernst:** 🟡 Middel
+**Metriek:** B-03 | **Ernst:** 🟡 Middel | **Status:** ✓ Afgerond — v0.30.0 (Keuze A)
 **Bestand:** `dashboard.html`, 6 aanroepen van `requestAnimationFrame`
 
 **Keuze A: documenteer als browsereis (aanbevolen)**
@@ -1315,42 +1320,46 @@ ondersteund (niet het geval voor gemeentelijk intranet).
 Gebruik dit als gestructureerde checklist voor project-tracking:
 
 ```
+Legenda: [x] Afgerond  [ ] Uitgesteld
+
 SPRINT A — Correctheid & Beveiliging
-  [ ] A.1  Fix _searchStr undefined crash
-  [ ] A.2  Fix XSS in mono renderer (col.suffix)
-  [ ] A.3  Fix HTML-export onveilige data
-  [ ] A.4  Fix tagFilter() op.is → op.equals
-  [ ] A.5  Dedupliceer parseFloat in matchRule
-  [ ] A.6  Voeg Content Security Policy toe
+  [x] A.1  Fix _searchStr undefined crash                  ← v0.26.0
+  [x] A.2  Fix XSS in mono renderer (col.suffix)          ← v0.26.0
+  [x] A.3  Fix HTML-export onveilige data                  ← v0.26.0
+  [x] A.4  Fix tagFilter() op.is → op.equals              ← v0.26.0
+  [x] A.5  Dedupliceer parseFloat in matchRule             ← v0.26.0
+  [x] A.6  Voeg Content Security Policy toe                ← v0.26.0
 
 SPRINT B — Geheugen & Koppeling
-  [ ] B.1  Fix _gvScrollBound duplice listeners
-  [ ] B.2  Begrens avatarCache (max 150)
-  [ ] B.3  Reduceer AppState-mutaties in render-functies
-  [ ] B.4  Voeg size-check toe aan _uniqueValueCache
+  [x] B.1  Fix _gvScrollBound duplice listeners            ← flag-check aanwezig
+  [x] B.2  Begrens avatarCache (max 150)                   ← v0.27.0
+  [x] B.3  Reduceer AppState-mutaties in render-functies   ← v0.27.1
+  [x] B.4  Voeg size-check toe aan _uniqueValueCache       ← v0.27.0
 
 SPRINT C — Toegankelijkheid
-  [ ] C.1  Kolom-filter-knop keyboard bereikbaar
-  [ ] C.2  Header-checkbox ARIA-label dynamisch
-  [ ] C.3  Kleurcontrast meten en vastleggen
-  [ ] C.4  Rij-Enter opent modal
+  [x] C.1  Kolom-filter-knop keyboard bereikbaar           ← v0.28.0
+  [x] C.2  Header-checkbox ARIA-label dynamisch            ← aria-label + aria-checked
+  [x] C.3  Kleurcontrast meten en vastleggen               ← v0.28.0
+  [x] C.4  Rij-Enter opent modal                           ← v0.28.0
 
 SPRINT D — Testbaarheid
-  [ ] D.1  20 extra assertions in runTests()
-  [ ] D.2  Isoleer DOM-afhankelijkheden uit pure functies
-  [ ] D.3  Isoleer Math.random() in data-factory
+  [x] D.1  20 extra assertions in runTests()               ← 128 assertions aanwezig
+  [x] D.2  Isoleer DOM-afhankelijkheden uit pure functies  ← v0.29.0
+  [x] D.3  Isoleer Math.random() in data-factory           ← _randomFn variabele aanwezig
 
 SPRINT E — Onderhoudbaarheid & Config
-  [ ] E.1  Verplaats categoricalKeys e.a. naar config
-  [ ] E.2  Vervang hardcoded domeinstrings door constanten
-  [ ] E.3  Verwijder legacy @deprecated accessors
-  [ ] E.4  Centraliseer sort-toggle logica
-  [ ] E.5  Centraliseer panel-render patroon
+  [x] E.1  Verplaats categoricalKeys e.a. naar config      ← v0.29.0
+  [x] E.2  Vervang hardcoded domeinstrings door constanten ← v0.29.1
+  [x] E.3  Verwijder legacy @deprecated accessors          ← v0.31.0
+  [x] E.4  Centraliseer sort-toggle logica                 ← v0.29.0
+  [ ] E.5  Centraliseer panel-render patroon               ← uitgesteld (geen functionele impact)
 
 SPRINT F — Browsercompatibiliteit
-  [ ] F.1  Documenteer minimale browser-vereisten
-  [ ] F.2  Update XLSX CDN + SRI hash
-  [ ] F.3  requestAnimationFrame fallback of documentatie
+  [x] F.1  Documenteer minimale browser-vereisten          ← v0.30.0
+  [x] F.2  Update XLSX CDN + SRI hash                     ← v0.30.0
+  [x] F.3  requestAnimationFrame fallback of documentatie  ← v0.30.0 (Keuze A)
+
+Totaal (v0.31.0): 24 afgerond · 0 deels · 1 uitgesteld van 25 taken
 ```
 
 ---
@@ -1370,4 +1379,5 @@ SPRINT F — Browsercompatibiliteit
 
 *Implementatieplan gebaseerd op TOETSINGSKADER.md v1.0*
 *25 taken over 6 sprints — 6 kritiek, 12 hoog, 7 middel*
-*Gebruik PERFORMANCE_PLAN.md voor de performance-specifieke taken (P1–P7).*
+*Status v0.31.0: 24 afgerond · 0 deels · 1 uitgesteld (E.5 — bewust, geen functionele impact)*
+*Gebruik PERFORMANCE_PLAN.md voor de performance-specifieke taken (P1–P7) — volledig afgerond.*

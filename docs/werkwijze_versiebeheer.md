@@ -59,6 +59,44 @@ aangepast om datawaarden te escapen voordat ze in innerHTML worden gezet.
 
 ---
 
+## 3b. Git commit-conventie
+
+Elke versie krijgt precies één git-commit. Het commit-bericht volgt dit formaat:
+
+```
+<type>(v<versie>): <korte samenvatting in het Nederlands>
+```
+
+### Types
+
+| Type | Wanneer |
+|------|---------|
+| `feat` | Nieuwe functionaliteit of tests |
+| `fix` | Bugfix |
+| `refactor` | Herstructurering zonder gedragswijziging |
+| `perf` | Performance-verbetering |
+| `test` | Alleen test-toevoegingen/wijzigingen |
+| `docs` | Alleen documentatie |
+
+### Voorbeelden
+
+```
+feat(v0.35.0): T+GATE samenvoegen tot Visual Contracts, scorecard toevoegen
+fix(v0.34.0): BUG-016 emoji-drag sorteerfix, BUG-017 freeze-sticky
+refactor(v0.31.0): legacy window-accessors verwijderd, migratie naar AppState
+test(v0.36.0): integratietests B-I1 t/m B-I12 toegevoegd
+docs(v0.35.1): INDEX.md en CLAUDE.md aangemaakt
+```
+
+### Regels
+
+- Eén commit per versienummer — niet meerdere versies in één commit.
+- Samenvatting in het Nederlands, verleden tijd.
+- Verwijs naar sprint-/taak-IDs waar relevant.
+- Co-Authored-By toevoegen als Claude heeft bijgedragen.
+
+---
+
 ## 4. Toetsen aan het beoordelingskader
 
 Het beoordelingskader codekwaliteit (10 domeinen, score 1–10) wordt periodiek toegepast om de voortgang meetbaar te maken. De resultaten worden vastgelegd in `toetshistorie_codekwaliteit.md`.
@@ -73,7 +111,7 @@ Er zijn drie toetsmomenten:
 
 ### Hoe toetsen?
 
-1. Open het beoordelingskader codekwaliteit en loop de beoordelingsvragen per domein door.
+1. Open `TOETSINGSKADER.md`, Deel B (secties 19–28) en loop de beoordelingsvragen per domein door.
 2. Scoor elk domein opnieuw op basis van de huidige code.
 3. Noteer per gewijzigde score een korte toelichting (wat is verbeterd, wat resteert).
 4. Bereken het nieuwe gewogen gemiddelde.
@@ -104,14 +142,30 @@ Maak geen kopie van het dashboard bij elke versie — de changelog en toetshisto
 
 ## 6. Overzicht bestanden
 
-| Bestand | Doel |
-|---|---|
-| `dashboard.html` | Het dashboard zelf, met versienummer in de code |
-| `CHANGELOG.md` | Chronologisch logboek van alle wijzigingen |
-| `beoordelingskader_codekwaliteit.md` | Toetsinstrument met 10 domeinen en scoremodel |
-| `toetshistorie_codekwaliteit.md` | Tijdlijn van toetsresultaten na sprints en milestones |
-| `werkwijze_versiebeheer.md` | Dit document — beschrijft het proces |
-| `technisch_implementatieplan_codekwaliteit_dashboard.md` | De inhoudelijke taken per sprint |
+| Bestand | Doel | Wanneer bijwerken |
+|---|---|---|
+| `dashboard.html` | Het dashboard zelf, met versienummer in de code | Elke versie |
+| `docs/CHANGELOG.md` | Chronologisch logboek van alle wijzigingen | Elke versie |
+| `docs/TOETSINGSKADER.md` | Gecombineerd kader: Deel A (metrieken & meetprocedures) + Deel B (beoordelingskader, 10 domeinen) | Per sprint herscoren |
+| `docs/TESTPLAN.md` | Testplan voor design-wijzigingen (tokens, typografie, kleur, spacing, performance) | Bij testwijziging |
+| `docs/TESTREGISTER.md` | Definitief automatisch testregister met 4 suites en 28 performance-budgetten | Bij suite-wijziging |
+| `docs/INDEX.md` | Kruisverwijzing alle plannen, sprint-IDs en documenten | Bij nieuw plan/document |
+| `docs/BUGS.md` | Actieve en opgeloste bugs | Bij nieuwe bug of fix |
+| `docs/IMPLEMENTATIEPLAN.md` | 25 taken over 6 sprints *(afgerond v0.31.0)* | Archief |
+| `docs/PERFORMANCE_PLAN.md` | 7 perf-taken over 5 sprints *(afgerond v0.25.1)* | Archief |
+| `docs/DESIGN_PLAN.md` | Visuele redesign *(afgerond v0.15.0)* | Archief |
+| `docs/WERKWIJZE_VERSIEBEHEER.md` | Dit document — beschrijft het proces | Bij proceswijziging |
+| `CLAUDE.md` | AI-assistentinstructies met conventies en workflow | Bij proceswijziging |
+
+### Naamconventies
+
+| Type | Conventie | Voorbeeld |
+|------|-----------|-----------|
+| Plannen, kaders, logs in `docs/` | `SCREAMING_CASE.md` | `TESTREGISTER.md` |
+| Testrapporten | `testrapport-v{X.Y.Z}-{YYYY-MM-DD}.md` | `testrapport-v0.35.0-2026-03-08.md` |
+| Snapshots | `dashboard-v{X.Y.Z}.html` | `dashboard-v0.35.0.html` |
+| Nooit spaties in bestandsnamen | — | — |
+| Alleen `dashboard.html` en `CLAUDE.md` in de root | — | — |
 
 ---
 

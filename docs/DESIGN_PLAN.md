@@ -1,4 +1,4 @@
-# Design Plan — Clean Minimalist Redesign
+# Design Plan — Clean Minimalist Redesign *(AFGEROND v0.15.0)*
 ## Dashboard Gemeente Rotterdam v0.14.0 → v0.15.0
 
 **Datum:** 2026-03-07

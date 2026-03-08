@@ -1,14 +1,17 @@
-# Toetsingskader — Nulmetingen & Impactmetingen
-## Dashboard Gemeente Rotterdam v0.14.0
+# Toetsingskader — Dashboard Gemeente Rotterdam
+## Nulmetingen, Impactmetingen & Beoordelingskader Codekwaliteit
 
+**Versie:** 2.0 (samenvoegen v1.0 toetsingskader + v1.0 beoordelingskader codekwaliteit)
 **Datum:** 2026-03-07
-**Basis:** Statische code-analyse over 10 dimensies (64 bevindingen)
-**Doel:** Objectief meten van de begintoestand (nulmeting) en de impact van
-elke codewijziging (impactmeting), zodat regressie én verbetering aantoonbaar zijn.
+**Basis:** Statische code-analyse over 11 dimensies (64 bevindingen) + kwalitatieve beoordeling over 10 domeinen
+**Scope:** dashboard.html (2.772 regels, single-file HTML/CSS/JS)
+**Doel:** Objectief meten van de begintoestand (nulmeting) en de impact van elke codewijziging (impactmeting), zodat regressie én verbetering aantoonbaar zijn — aangevuld met een kwalitatief beoordelingskader voor technische gezondheid.
 
 ---
 
 ## Inhoudsopgave
+
+**Deel A — Metrieken & Meetprocedures**
 
 1. [Structuur van het kader](#1-structuur-van-het-kader)
 2. [Dimensie 1 — Correctheid](#2-dimensie-1--correctheid)
@@ -25,6 +28,38 @@ elke codewijziging (impactmeting), zodat regressie én verbetering aantoonbaar z
 13. [Gecombineerde scoringsmatrix](#13-gecombineerde-scoringsmatrix)
 14. [Meetprotocol](#14-meetprotocol)
 15. [Automatiseringsadvies](#15-automatiseringsadvies)
+
+**Deel B — Beoordelingskader Codekwaliteit**
+
+16. [Relatie tussen Deel A en Deel B](#16-relatie-tussen-deel-a-en-deel-b)
+17. [Doel en uitgangspunten](#17-doel-en-uitgangspunten)
+18. [Scoremodel](#18-scoremodel)
+19. [Domein 1 — Veiligheid (XSS, injectie, escaping)](#19-domein-1--veiligheid-xss-injectie-escaping)
+20. [Domein 2 — State management en dataflow](#20-domein-2--state-management-en-dataflow)
+21. [Domein 3 — Modulariteit en code-organisatie](#21-domein-3--modulariteit-en-code-organisatie)
+22. [Domein 4 — Performance en rendering](#22-domein-4--performance-en-rendering)
+23. [Domein 5 — CSS-architectuur en design tokens](#23-domein-5--css-architectuur-en-design-tokens)
+24. [Domein 6 — Toegankelijkheid in de code](#24-domein-6--toegankelijkheid-in-de-code)
+25. [Domein 7 — Foutafhandeling en robuustheid](#25-domein-7--foutafhandeling-en-robuustheid)
+26. [Domein 8 — Testbaarheid](#26-domein-8--testbaarheid)
+27. [Domein 9 — Leesbaarheid en documentatie](#27-domein-9--leesbaarheid-en-documentatie)
+28. [Domein 10 — Schaalbaarheid en toekomstbestendigheid](#28-domein-10--schaalbaarheid-en-toekomstbestendigheid)
+29. [Compact scoreblad](#29-compact-scoreblad)
+30. [Beslisregels voor eindoordeel](#30-beslisregels-voor-eindoordeel)
+31. [Prioriteringsmatrix](#31-prioriteringsmatrix)
+32. [Relatie met het technisch implementatieplan](#32-relatie-met-het-technisch-implementatieplan)
+33. [Herhalingsprotocol](#33-herhalingsprotocol)
+34. [Samenvattend principe](#34-samenvattend-principe)
+
+**Bijlagen**
+
+- [Bijlage A — Metriek-index](#bijlage-a--metriek-index)
+
+---
+
+---
+
+# DEEL A — METRIEKEN & MEETPROCEDURES
 
 ---
 
@@ -580,7 +615,7 @@ VOLLEDIGE CHECK (20 min, na sprint-afsluiting):
 
 ### Regressie-detectie
 
-Een commit wordt **geblokkers** bij:
+Een commit wordt **geblokkeerd** bij:
 
 - C-01: Meer test-fails dan nulmeting
 - S-01: Nieuwe XSS-kwetsbaarheid geïntroduceerd
@@ -702,6 +737,605 @@ jobs:
 
 ---
 
+---
+
+# DEEL B — BEOORDELINGSKADER CODEKWALITEIT
+
+*Versie: 1.0 — Datum: 7 maart 2026*
+*Relatie: dit kader is het toetsinstrument dat hoort bij het technisch implementatieplan codekwaliteit v1.1. Het bestaande kader (Deel A) richt zich op UX en gebruikskwaliteit; dit kader richt zich op de technische gezondheid van de code zelf.*
+
+---
+
+> **Noot over domein-nummering:** In de CHANGELOG.md en werkwijze_versiebeheer.md worden domeinen aangeduid als `4.1 Veiligheid`, `4.2 State management`, etc. Dit is de oorspronkelijke nummering uit het beoordelingskader. Onderstaand overzicht toont de mapping:
+>
+> | Oud (changelog/werkwijze) | Deel B sectie |
+> |---|---|
+> | 4.1 Veiligheid | §19 Domein 1 |
+> | 4.2 State management | §20 Domein 2 |
+> | 4.3 Modulariteit | §21 Domein 3 |
+> | 4.4 Performance | §22 Domein 4 |
+> | 4.5 CSS-architectuur | §23 Domein 5 |
+> | 4.6 Toegankelijkheid | §24 Domein 6 |
+> | 4.7 Foutafhandeling | §25 Domein 7 |
+> | 4.8 Testbaarheid | §26 Domein 8 |
+> | 4.9 Leesbaarheid | §27 Domein 9 |
+> | 4.10 Schaalbaarheid | §28 Domein 10 |
+
+---
+
+## 16. Relatie tussen Deel A en Deel B
+
+Deel A en Deel B meten dezelfde codebase vanuit twee complementaire invalshoeken:
+
+| Aspect | Deel A — Metrieken | Deel B — Beoordelingskader |
+|---|---|---|
+| **Type** | Operationeel / kwantitatief | Kwalitatief / holistisch |
+| **Methode** | Grep-commando's, DevTools, timings | Beoordelingsvragen, signaalherkenning |
+| **Output** | Specifieke tellingen en tijden | Score 1–10 per domein |
+| **Gebruik** | Na elke commit, per sprint | Per sprint, bij code-reviews |
+| **Schaal** | 11 dimensies × meerdere metrieken | 10 domeinen × 1 score |
+
+### Koppelingstabel: Deel B domeinen → Deel A dimensies
+
+| Deel B domein | Gerelateerde Deel A dimensies | Relevante metriek-IDs |
+|---|---|---|
+| 1. Veiligheid | Dimensie 6 — Beveiliging | S-01, S-02, S-03, S-04, S-05, S-06 |
+| 2. State management & dataflow | Dimensie 3 — Koppeling & Cohesie | K-01, K-02, K-03, K-04 |
+| 3. Modulariteit & code-organisatie | Dimensie 2 — Complexiteit, Dimensie 4 — Herbruikbaarheid | X-01–X-06, R-01–R-05 |
+| 4. Performance & rendering | Dimensie 11 — Performance, Dimensie 9 — Geheugen | P-01–P-10, M-01–M-07 |
+| 5. CSS-architectuur & design tokens | Dimensie 10 — Onderhoudbaarheid | O-02, O-07 |
+| 6. Toegankelijkheid in de code | Dimensie 7 — Toegankelijkheid | A-01–A-06 |
+| 7. Foutafhandeling & robuustheid | Dimensie 1 — Correctheid | C-01–C-06 |
+| 8. Testbaarheid | Dimensie 5 — Testbaarheid | T-01–T-06 |
+| 9. Leesbaarheid & documentatie | Dimensie 10 — Onderhoudbaarheid | O-01, O-03, O-04, O-05 |
+| 10. Schaalbaarheid & toekomstbestendigheid | Dimensie 8 — Browsercompat, Dimensie 4 — Herbruikbaarheid | B-01–B-06, K-05 |
+
+---
+
+## 17. Doel en uitgangspunten
+
+Dit beoordelingskader biedt een gestructureerde, herhaalbare manier om de technische kwaliteit van het dashboard te meten en te monitoren. Het is bedoeld om:
+
+- de huidige codekwaliteit objectief vast te stellen
+- verbeteringen meetbaar te maken na elke sprint
+- risico's vroegtijdig te signaleren
+- prioritering van technische schuld te onderbouwen
+- als acceptatiekader te dienen bij code-reviews
+
+Het kader combineert vier logische lagen:
+
+1. **Veiligheidslogica**: bescherming tegen injectie, datamanipulatie en onbedoelde blootstelling.
+2. **Architectuurlogica**: scheiding van verantwoordelijkheden, modulariteit, state management en schaalbaarheid.
+3. **Performancelogica**: rendersnelheid, geheugenefficiency, DOM-belasting en netwerkgedrag.
+4. **Kwaliteitslogica**: leesbaarheid, testbaarheid, toegankelijkheid in de code en onderhoudbaarheid op lange termijn.
+
+---
+
+## 18. Scoremodel
+
+Gebruik per domein een score van 1 tot 10.
+
+### Score 1–3 — Onvoldoende
+Het domein vormt een actief risico. Fouten, regressies of beveiligingsproblemen zijn waarschijnlijk. Directe actie vereist.
+
+### Score 4–5 — Onder de maat
+Het domein werkt voor de huidige situatie, maar belemmert doorontwikkeling. Structurele verbetering nodig op korte termijn.
+
+### Score 6–7 — Voldoende
+Het domein is functioneel en beheersbaar, met duidelijke verbeterpunten die de kwaliteit merkbaar zouden verhogen.
+
+### Score 8–9 — Goed
+Het domein is professioneel ingericht. Alleen gerichte optimalisaties of verfijningen mogelijk.
+
+### Score 10 — Voorbeeldig
+Het domein is best-in-class voor een project van deze aard en omvang.
+
+---
+
+## 19. Domein 1 — Veiligheid (XSS, injectie, escaping)
+
+*Zie ook: Deel A Dimensie 6 — Beveiliging (S-01 t/m S-06)*
+
+### Doel
+Beoordelen of de code beschermd is tegen scriptinjectie en onbedoelde uitvoering van kwaadaardige data.
+
+### Beoordelingsvragen
+
+- Worden alle datawaarden die in innerHTML terechtkomen geescaped via een centrale escapeHtml-functie?
+- Zijn er plekken waar string-concatenatie met data in onclick-, onchange- of andere event-attributen wordt gebruikt?
+- Worden filterwaarden, zoektermen en formulierinvoer gesanitized voordat ze in de DOM worden geplaatst?
+- Is er een scheiding tussen vertrouwde (hardcoded) HTML en onvertrouwde (data-driven) HTML?
+- Worden attribuutwaarden apart geescaped (ampersand, quotes, backslash)?
+- Zijn er eval()-aanroepen, new Function()-constructies of dynamische script-injecties?
+
+### Signalen van zwakte
+
+- innerHTML met string-concatenatie zonder escaping (bijv. `'<span>' + name + '</span>'`)
+- Data in onclick-strings (bijv. `onclick="tagFilter('status','` + value + `')"`)
+- Alleen single-quote-escaping in plaats van volledige HTML-entity-escaping
+- Gecachte HTML (zoals avatarCache) die ongeescapete data bevat
+
+### Huidige situatie (7 maart 2026)
+
+Er zijn circa 40 plekken waar datawaarden via string-concatenatie in innerHTML worden gezet zonder adequate escaping. De functies `statusTag()`, `priorityTag()`, `avatarCell()`, `rebuildColFilterPanelContent()`, `renderHeader()`, `openModal()` en `toast()` zijn allemaal kwetsbaar. De huidige escaping beperkt zich tot `replace(/'/g, "\\'")` op enkele plekken, wat onvoldoende is tegen XSS.
+
+### Meetpunten
+
+- Aantal plekken met ongeescapete data in innerHTML: **doel 0**
+- Aantal inline event handlers met data in de string: **doel 0**
+- Aanwezigheid van centrale escapeHtml/escapeAttr-functies: **ja/nee**
+
+### Score
+8/10
+
+---
+
+## 20. Domein 2 — State management en dataflow
+
+*Zie ook: Deel A Dimensie 3 — Koppeling & Cohesie (K-01 t/m K-05)*
+
+### Doel
+Beoordelen of applicatiestate helder, voorspelbaar en traceerbaar is.
+
+### Beoordelingsvragen
+
+- Is er een centraal state-object of zijn variabelen verspreid als losse globals?
+- Is de relatie tussen state-mutatie en re-render duidelijk en controleerbaar?
+- Worden afgeleide waarden (gefilterde data, gesorteerde data, zichtbare kolommen) gecacht en op de juiste momenten geinvalideerd?
+- Is er een dirty-flag-mechanisme dat onnodige herberekeningen voorkomt?
+- Zijn state-mutaties traceerbaar (bijv. via een centrale set-functie of event)?
+- Wordt UI-state (openPanel, rowHeight, freezeCol) gescheiden van data-state?
+
+### Signalen van zwakte
+
+- Meer dan 20 losse globale variabelen zonder structuur
+- Dubbele bronnen van waarheid (bijv. DOM-state en JS-state voor dezelfde waarde)
+- State-mutaties verspreid over tientallen functies zonder centraal punt
+- Geen invalidatiemechanisme, waardoor alles bij elke actie opnieuw wordt berekend
+- UI-toggles die direct DOM manipuleren in plaats van via state
+
+### Huidige situatie
+
+Het dashboard heeft een bruikbaar dirty-flag-systeem (`_dirty`) en een derived-state-cache (`_derived`), maar de state zelf bestaat uit 30+ losse globale variabelen. Er is geen centraal `AppState`-object. UI-state (bijv. `condEnabled`, `rowHeight`, `freezeCol`, `activePanel`) wordt apart beheerd van data-state, maar niet gestructureerd.
+
+### Meetpunten
+
+- Aantal losse globale state-variabelen: **doel < 5 (alles in AppState)**
+- Aanwezigheid van centraal AppState-object: **ja/nee**
+- Scheiding van data-state en UI-state: **volledig/deels/niet**
+- Dirty-flag-mechanisme aanwezig en werkend: **ja/nee**
+
+### Score
+7/10
+
+---
+
+## 21. Domein 3 — Modulariteit en code-organisatie
+
+*Zie ook: Deel A Dimensie 2 — Complexiteit (X-01 t/m X-06), Dimensie 4 — Herbruikbaarheid (R-01 t/m R-05)*
+
+### Doel
+Beoordelen of de code logisch is opgedeeld in afgebakende, herbruikbare eenheden.
+
+### Beoordelingsvragen
+
+- Is de code opgedeeld in logische modules of secties met duidelijke verantwoordelijkheden?
+- Zijn er functies die meer dan een verantwoordelijkheid hebben?
+- Is er code-duplicatie tussen vergelijkbare functies?
+- Zijn celrenderers, filterlogica, sorteerlogica en exportlogica onafhankelijk van elkaar?
+- Kan een individueel onderdeel (bijv. de exportmodule) worden aangepast zonder andere delen te raken?
+- Is de code geschikt om in de toekomst te splitsen in meerdere bestanden of modules?
+
+### Signalen van zwakte
+
+- Eén enkel bestand van 2.772 regels zonder module-grenzen
+- Meer dan 80 functies op het globale scope
+- Functies die zowel data verwerken als DOM manipuleren
+- Herhaalde patronen (bijv. dezelfde kleurmapping in `statusTag()`, `_valTagColors` en `_cellRenderers`)
+- Circulaire afhankelijkheden tussen secties (bijv. render → filter → render)
+
+### Huidige situatie
+
+Het dashboard is een monolithisch single-file met 2.772 regels HTML, CSS en JavaScript. De code is wel voorzien van commentaarsecties (`// ============ FILTER ============` etc.), maar er zijn geen echte module-grenzen. Alle functies staan op window scope. De celrenderers zijn netjes georganiseerd via een dispatch-table, maar dezelfde kleurmappings worden op meerdere plekken herhaald.
+
+### Meetpunten
+
+- Aantal functies op window scope: **doel < 10 publieke API-functies**
+- Aanwezigheid van module-patroon (IIFE, ES modules, of namespace): **ja/nee**
+- Aantal herhaalde kleur/config-mappings: **doel 1 (single source of truth)**
+- Langste functie in regels: **doel < 50 regels**
+
+### Score
+6/10
+
+---
+
+## 22. Domein 4 — Performance en rendering
+
+*Zie ook: Deel A Dimensie 11 — Performance (P-01 t/m P-10), Dimensie 9 — Geheugen (M-01 t/m M-07)*
+
+### Doel
+Beoordelen of de code efficient omgaat met grote datasets, DOM-operaties en gebruikersinteracties.
+
+### Beoordelingsvragen
+
+- Is er virtueel scrollen geimplementeerd voor grote datasets (4.500+ rijen)?
+- Worden DOM-updates gebatcht of per element uitgevoerd?
+- Is er memoization/caching voor dure berekeningen (cel-rendering, avatars, unieke waarden)?
+- Worden layout thrashing en forced reflows vermeden (read-write batching)?
+- Is er requestAnimationFrame-throttling op scroll- en resize-events?
+- Worden event listeners efficient beheerd (event delegation vs. per-element binding)?
+- Wordt de render-pipeline alleen geactiveerd voor de onderdelen die daadwerkelijk gewijzigd zijn (dirty flags)?
+
+### Signalen van zwakte
+
+- innerHTML-vervanging van de volledige tabel bij elke state-wijziging
+- Geen virtueel scrollen, waardoor alle 4.500 rijen in de DOM staan
+- Synchrone berekeningen die de main thread blokkeren
+- Ontbreken van debounce/throttle op zoek- en scroll-events
+- Layout thrashing door afwisselend lezen en schrijven van DOM-properties
+
+### Huidige situatie
+
+Dit is een van de sterkste aspecten van het dashboard. Er is een volledig virtueel scroll-systeem voor zowel flat als grouped weergave. Er zijn dirty flags, derived-state-caching, avatar-memoization, star-cell pre-compute, unique-value-caching met invalidatie, rAF-throttling op scroll en resize, en read-write batching in `syncAggWidths()`. De zoekfunctie gebruikt een pre-built search index.
+
+### Meetpunten
+
+- Render-tijd voor volledige tabel bij 4.500 rijen: **doel < 16ms**
+- Scroll-jank (frames > 16ms): **doel 0**
+- Aantal DOM-nodes in viewport: **doel < 200 (virtueel scrollen)**
+- Geheugengebruik stabiel na herhaalde filter/sort-cycli: **ja/nee**
+- Aanwezigheid van performance-meetinstrumenten (_perfDebug): **ja/nee**
+
+### Score
+8/10
+
+---
+
+## 23. Domein 5 — CSS-architectuur en design tokens
+
+*Zie ook: Deel A Dimensie 10 — Onderhoudbaarheid (O-02, O-07)*
+
+### Doel
+Beoordelen of de CSS gestructureerd, consistent en onderhoudbaar is.
+
+### Beoordelingsvragen
+
+- Worden kleuren, spacing en typografie beheerd via CSS custom properties (design tokens)?
+- Is er een consistent naamgevingspatroon voor CSS-klassen?
+- Zijn inline styles vermeden ten gunste van herbruikbare klassen?
+- Worden semantische kleur-tokens gebruikt (succes, gevaar, waarschuwing) naast het RODS-palet?
+- Is de CSS geschikt voor theming of dark mode?
+- Worden magic numbers vermeden?
+
+### Signalen van zwakte
+
+- Inline `style="..."` attributen in JavaScript-gegenereerde HTML
+- Hardcoded kleuren in JS (bijv. `'var(--green-400)'` als string in functies)
+- Ontbreken van semantische tokens (alleen palet-tokens)
+- CSS-klassen die te specifiek zijn voor een context en niet herbruikbaar
+- `!important` overrides die op structurele problemen wijzen
+
+### Huidige situatie
+
+Het dashboard heeft een uitgebreid RODS-tokensysteem met 60+ CSS custom properties voor het volledige kleurenpalet, schaduwen, borders en achtergronden. Het naamgevingspatroon is redelijk consistent. Er zijn echter nog veel inline styles in JS-gegenereerde HTML (bijv. in `rebuildColFilterPanelContent`, `_groupItemHtml`, `updateFilterBadge`), er zijn geen semantische kleur-tokens, en er zijn meerdere `!important`-overrides in de CSS.
+
+### Meetpunten
+
+- Aantal inline style-attributen in JS: **doel 0**
+- Aanwezigheid van semantische tokens (--color-success, --color-danger, etc.): **ja/nee**
+- Aantal `!important`-regels: **doel < 5**
+- Percentage kleurreferenties via tokens vs. hardcoded: **doel 100% tokens**
+
+### Score
+8/10
+
+---
+
+## 24. Domein 6 — Toegankelijkheid in de code
+
+*Zie ook: Deel A Dimensie 7 — Toegankelijkheid (A-01 t/m A-06)*
+
+### Doel
+Beoordelen of de code de juiste semantische HTML, ARIA-attributen en toetsenbordbediening implementeert.
+
+### Beoordelingsvragen
+
+- Worden semantische HTML-elementen gebruikt waar mogelijk (`<button>` in plaats van `<div onclick>`)?
+- Zijn ARIA-rollen, -labels en -states correct toegepast op interactieve componenten?
+- Is toetsenbordnavigatie volledig ondersteund (tab, enter, escape, pijltjestoetsen)?
+- Is focusbeheer correct bij het openen en sluiten van panels en modals?
+- Worden screen-reader-only teksten aangeboden waar nodig (`.sr-only`)?
+- Is kleur niet het enige onderscheidende kenmerk voor status?
+
+### Signalen van zwakte
+
+- `<div>` of `<span>` met `onclick` in plaats van `<button>`
+- Ontbrekende `aria-label` of `aria-expanded` op interactieve elementen
+- Geen `focus-trap` in modals of panels
+- Sorteerrichting niet als `aria-sort` op kolomkoppen
+- Emoji als enige indicator zonder tekstalternatief
+
+### Huidige situatie
+
+Het dashboard scoort redelijk op toegankelijkheid. Er zijn ARIA-rollen op tabs (`role="tablist"`, `role="tab"`, `aria-selected`), `aria-sort` op kolomkoppen, `aria-label` op knoppen, `sr-only`-teksten, `focus-visible`-styling en Ctrl+A/Escape-toetsenbordondersteuning. Er zijn echter ook `<div onclick>` patronen die `<button>` zouden moeten zijn (bijv. logica-knoppen in het filterpaneel, kolom-toggles, context-menu-items), en het focus-management bij panel-open/close is niet volledig.
+
+### Meetpunten
+
+- Aantal interactieve `<div onclick>` zonder button-semantiek: **doel 0**
+- Alle panelen en modals met focus-trap: **ja/nee**
+- WCAG 2.1 AA conformiteit op kolomkoppen en controls: **ja/nee**
+- Percentage interactieve elementen met aria-label: **doel 100%**
+
+### Score
+9/10
+
+---
+
+## 25. Domein 7 — Foutafhandeling en robuustheid
+
+*Zie ook: Deel A Dimensie 1 — Correctheid (C-01 t/m C-06)*
+
+### Doel
+Beoordelen of de code graceful omgaat met onverwachte situaties, lege data, fouten en edge cases.
+
+### Beoordelingsvragen
+
+- Zijn er try-catch-blokken rond foutgevoelige operaties (export, DOM-manipulatie, externe libraries)?
+- Wordt er graceful omgegaan met lege datasets, null-waarden en ontbrekende kolommen?
+- Falen exportfuncties stil of geven ze feedback aan de gebruiker?
+- Is er een globale error handler voor onverwachte fouten?
+- Worden externe afhankelijkheden (XLSX-library) robuust geladen met fallback?
+
+### Signalen van zwakte
+
+- Geen enkele try-catch in de gehele codebase
+- Exportfuncties die crashen bij lege data zonder melding
+- DOM-queries die null retourneren zonder null-check
+- Externe library-laden zonder timeout of retry
+- Console-errors die de gebruiker niet bereiken
+
+### Huidige situatie
+
+Er is vrijwel geen foutafhandeling in de code. De exportfuncties, render-pipeline, DOM-manipulaties en externe library-load hebben geen try-catch. De XLSX lazy-load heeft een `onerror`-callback met toast, wat een positieve uitzondering is. Maar de meeste functies nemen aan dat DOM-elementen bestaan, data valide is en berekeningen slagen.
+
+### Meetpunten
+
+- Aantal try-catch-blokken: **doel: alle exportfuncties, render, externe loads**
+- Globale error handler aanwezig: **ja/nee**
+- Alle DOM-queries met null-check: **ja/nee**
+- Gebruikersfeedback bij alle faalscenario's: **ja/nee**
+
+### Score
+7/10
+
+---
+
+## 26. Domein 8 — Testbaarheid
+
+*Zie ook: Deel A Dimensie 5 — Testbaarheid (T-01 t/m T-06)*
+
+### Doel
+Beoordelen of de code getest kan worden met unit tests, integration tests of end-to-end tests.
+
+### Beoordelingsvragen
+
+- Zijn kernfuncties (filter, sort, render, export) isoleerbaar en aanroepbaar zonder DOM-context?
+- Is state los te benaderen en te muteren voor testdoeleinden?
+- Zijn er pure functies die input ontvangen en output retourneren zonder side effects?
+- Kan de render-output worden vergeleken met verwachte HTML of DOM-structuur?
+- Is het mogelijk om een test-harness op te zetten zonder de volledige applicatie te laden?
+
+### Signalen van zwakte
+
+- Alle functies op window scope met directe DOM-afhankelijkheden
+- State verspreid over 30+ globale variabelen
+- Geen pure functies: elke functie leest of schrijft globale state
+- Geen test-bestanden, test-framework of test-configuratie
+- Side effects in elke functie (DOM-mutatie, toast, state-wijziging)
+
+### Huidige situatie
+
+Er zijn nul tests. De architectuur maakt testen zeer moeilijk: alle functies zitten op window scope, lezen globale state en muteren de DOM direct. Er zijn enkele stappen richting testbaarheid (dispatch-table voor celrenderers, dirty-flag-systeem, derived-cache), maar de kernfuncties zijn niet isoleerbaar.
+
+### Meetpunten
+
+- Aantal unit tests: **doel: minimaal per export-, filter- en sortfunctie**
+- Percentage pure functies (geen side effects): **doel > 60%**
+- Test-configuratie aanwezig: **ja/nee**
+- Code coverage: **doel > 70% voor kernlogica**
+
+### Score
+6/10
+
+---
+
+## 27. Domein 9 — Leesbaarheid en documentatie
+
+*Zie ook: Deel A Dimensie 10 — Onderhoudbaarheid (O-01, O-03, O-04, O-05)*
+
+### Doel
+Beoordelen of de code begrijpelijk is voor een ontwikkelaar die het project overneemt.
+
+### Beoordelingsvragen
+
+- Is de code consistent geformateerd (indentatie, naamgeving, structuur)?
+- Zijn complexe algoritmen of niet-voor-de-hand-liggende keuzes voorzien van commentaar?
+- Is er een logische volgorde in de code (data → helpers → renderers → event handlers → init)?
+- Zijn functies betekenisvol benoemd?
+- Is er een changelog of versiegeschiedenis bijgehouden?
+- Zijn magische getallen en hardcoded waarden benoemd als constanten?
+
+### Signalen van zwakte
+
+- Inconsistente naamgeving (camelCase, snake_case, afkortingen door elkaar)
+- Eenregelige functies met meerdere verantwoordelijkheden
+- Commentaar dat verwijst naar issue-nummers zonder context
+- Ontbreken van JSDoc of vergelijkbare documentatie voor publieke functies
+- Lange regels (> 200 tekens) die moeilijk scanbaar zijn
+
+### Huidige situatie
+
+De code is voorzien van sectie-commentaren en issue-referenties (bijv. `// #32`, `// #48`), wat helpt bij het traceren van wijzigingen. De structuur volgt een logische volgorde. Echter, veel functies zijn extreem compact geschreven (single-line met meerdere operaties), de naamgeving mengt Nederlands en Engels, er is geen JSDoc, en sommige functies zijn meer dan 100 regels lang.
+
+### Meetpunten
+
+- Consistente taal in naamgeving (volledig Engels): **ja/nee**
+- JSDoc-commentaar op publieke functies: **doel 100%**
+- Gemiddelde functielengte: **doel < 30 regels**
+- Aanwezigheid van architectuurdocumentatie: **ja/nee**
+
+### Score
+7/10
+
+---
+
+## 28. Domein 10 — Schaalbaarheid en toekomstbestendigheid
+
+*Zie ook: Deel A Dimensie 8 — Browsercompatibiliteit (B-01 t/m B-06), Dimensie 4 — Herbruikbaarheid (K-05)*
+
+### Doel
+Beoordelen of de code geschikt is voor uitbreiding met nieuwe features, meer data, meerdere gebruikers of een toekomstige migratie naar een framework.
+
+### Beoordelingsvragen
+
+- Kan een nieuwe kolom, tab of exportformaat worden toegevoegd zonder de kernlogica aan te passen?
+- Is de code voorbereid op data van een externe API in plaats van mock-data?
+- Kan de applicatie meerdere gelijktijdige gebruikerssessies ondersteunen (geen hardcoded single-user state)?
+- Is de code migreerbaar naar een component-framework (React, Vue, Web Components)?
+- Zijn er abstracties die hergebruik over meerdere dashboards mogelijk maken?
+
+### Signalen van zwakte
+
+- Hardcoded data-generatie in dezelfde file als de applicatielogica
+- Tab-specifieke logica (`if (currentTab === 0)`) verspreid door de hele codebase
+- Geen event-bus of pub-sub voor communicatie tussen modules
+- Kolom-configuratie bevat zowel datamodel als presentatielogica
+- Geen API-abstractie of data-laag
+
+### Huidige situatie
+
+Het toevoegen van een nieuwe kolom is relatief eenvoudig dankzij de dispatch-table voor celrenderers. Het toevoegen van een nieuwe tab vereist echter wijzigingen op meerdere plekken. De mock-data-generatie zit in dezelfde file als de applicatielogica. Er is geen abstractie voor datalaag, event-communicatie of componenthergebruik.
+
+### Meetpunten
+
+- Stappen nodig om een nieuwe kolom toe te voegen: **doel 1 (config-only)**
+- Stappen nodig om een nieuwe tab toe te voegen: **doel 1 (config-only)**
+- Data-laag gescheiden van presentatielaag: **ja/nee**
+- Event-bus of pub-sub aanwezig: **ja/nee**
+
+### Score
+6/10
+
+---
+
+## 29. Compact scoreblad
+
+| # | Domein | Score (1-10) | Prioriteit | Belangrijkste bevinding |
+|---|---|---:|---|---|
+| 1 | Veiligheid (XSS, injectie) | **8** | Laag | escapeHtml/escapeAttr, event delegation, defensive matchRule |
+| 2 | State management | **7** | Laag | Centraal AppState-object, _dirty/_derived/_cache geïntegreerd, ui-subobject |
+| 3 | Modulariteit | **6** | Midden | Factory-functies, pure formatters, generieke exportAs; nog single-file |
+| 4 | Performance en rendering | **8** | Laag | Virtueel scrollen, caching en dirty flags goed geïmplementeerd |
+| 5 | CSS-architectuur | **8** | Laag | Semantische tokens, density classes, tag-success/danger/warning/info/neutral |
+| 6 | Toegankelijkheid in code | **9** | Laag | Semantische buttons, ARIA, live-region met announce(), role="grid" |
+| 7 | Foutafhandeling | **7** | Laag | Try/catch op alle exports en render-pipeline; defensive coding |
+| 8 | Testbaarheid | **6** | Midden | runTests() met 48 assertions; pure functies getest; geen extern framework |
+| 9 | Leesbaarheid | **7** | Laag | Tests als levende specificatie, semantische naamgeving, factory-pattern |
+| 10 | Schaalbaarheid | **6** | Midden | Test suite beveiligt refactoring; AppState-contract gevalideerd |
+
+**Gewogen gemiddelde: 7,2 / 10** *(was 4,7 → 5,4 → 6,6 → 7,2 — na sprint 1+2+3+4)*
+
+---
+
+## 30. Beslisregels voor eindoordeel
+
+### Professioneel niveau (gemiddelde >= 7,5)
+- Geen enkel domein lager dan 6
+- Veiligheid en testbaarheid minimaal 7
+- Architectuur geschikt voor teamontwikkeling
+
+### Solide basis (gemiddelde 5,5–7,4)
+- Geen kritieke domeinen op 1–3
+- Kernfunctionaliteit robuust en testbaar
+- Uitbreidbaar zonder grote herstructurering
+
+### Functioneel maar kwetsbaar (gemiddelde 4,0–5,4)
+- Werkt voor het huidige doel
+- Structurele risico's bij doorontwikkeling
+- Meerdere domeinen vereisen actie
+
+### Onvoldoende (gemiddelde < 4,0)
+- Actieve veiligheidsrisico's of structurele blokkades
+- Doorontwikkeling zonder refactoring onverantwoord
+
+### Huidig oordeel: **Goed onderhoudbaar (7,2)**
+
+Na sprint 1–4 zijn alle 10 domeinen verbeterd ten opzichte van de nulmeting (4,7). Geen enkel domein scoort nog onder 6. Veiligheid, state management, foutafhandeling, CSS-architectuur en toegankelijkheid scoren 7–9. Het verbetertraject is afgerond: 4,7 → 5,4 → 6,6 → 7,2.
+
+---
+
+## 31. Prioriteringsmatrix
+
+### Prioriteit A — Direct aanpakken
+
+- **Veiligheid**: XSS-preventie via escapeHtml (sprint 1.1)
+- **Testbaarheid**: architectuur testbaar maken door state-isolatie (sprint 2)
+- **Foutafhandeling**: try-catch rond exports en externe loads (sprint 3)
+
+### Prioriteit B — Korte termijn verbeteren
+
+- **State management**: centraal AppState-object (sprint 2.1)
+- **Modulariteit**: event delegation en module-patroon (sprint 1.2, sprint 2)
+- **Schaalbaarheid**: datalaag scheiden van presentatie (sprint 4)
+
+### Prioriteit C — Optimaliseren
+
+- **CSS-architectuur**: inline styles elimineren, semantische tokens (sprint 3.5)
+- **Leesbaarheid**: JSDoc, naamgeving standaardiseren, functielengte reduceren (doorlopend)
+- **Toegankelijkheid**: div-onclick naar button, focus-management (sprint 1.5)
+
+### Prioriteit D — Behouden en bewaken
+
+- **Performance**: huidige niveau vasthouden, niet regresseren bij refactoring
+
+---
+
+## 32. Relatie met het technisch implementatieplan
+
+| Sprint | Domeinen die verbeteren | Verwachte scorewijziging |
+|---|---|---|
+| Sprint 1 (veiligheid + events) | Veiligheid 3→7, Modulariteit 4→5, Toegankelijkheid 7→8 | Gemiddelde 4,7 → 5,5 |
+| Sprint 2 (state + modules) | State 4→7, Modulariteit 5→7, Testbaarheid 2→4 | Gemiddelde 5,5 → 6,2 |
+| Sprint 3 (robuustheid + CSS) | Foutafhandeling 3→7, CSS 7→8, Leesbaarheid 5→7 | Gemiddelde 6,2 → 7,0 |
+| Sprint 4 (tests + schaalbaarheid) | Testbaarheid 4→7, Schaalbaarheid 4→7, Performance 8→9 | Gemiddelde 7,0 → 7,6 |
+
+**Einddoel na alle sprints: 7,6 / 10 (professioneel niveau)**
+
+---
+
+## 33. Herhalingsprotocol
+
+Dit kader is bedoeld om na elke sprint opnieuw toe te passen. De aanbevolen werkwijze:
+
+1. **Voor de sprint**: scoor alle 10 domeinen als nulmeting.
+2. **Tijdens de sprint**: gebruik de beoordelingsvragen als checklist bij code-reviews.
+3. **Na de sprint**: scoor opnieuw en vergelijk met de nulmeting.
+4. **Documenteer**: leg per domein vast welke specifieke verbeteringen de score hebben beinvloed.
+5. **Prioriteer**: gebruik de prioriteringsmatrix om de volgende sprint te plannen.
+
+---
+
+## 34. Samenvattend principe
+
+Een goed dashboard is niet alleen functioneel en mooi, maar ook veilig, testbaar, onderhoudbaar en schaalbaar. De code moet dezelfde zorgvuldigheid uitstralen als de interface.
+
+**Werkend is niet genoeg; de code moet bewijsbaar veilig, testbaar en onderhoudbaar zijn.**
+
+---
+
+---
+
 ## Bijlage A — Metriek-index
 
 | ID | Dimensie | Metriek | Nulmeting |
@@ -735,6 +1369,6 @@ jobs:
 
 ---
 
-*Toetsingskader gebaseerd op statische analyse van dashboard.html v0.14.0*
-*64 bevindingen over 10 dimensies — 9 kritiek, 25 hoog, 17 middel, 6 laag*
+*Toetsingskader v2.0 — gebaseerd op statische analyse van dashboard.html v0.14.0*
+*64 bevindingen over 11 dimensies (Deel A) + kwalitatieve beoordeling over 10 domeinen (Deel B)*
 *Gebruik dit document als startpunt bij elke codewijziging.*

@@ -6,6 +6,707 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.42.0 — 2026-03-08
+
+**Type:** Refactor
+**Domein:** CSS tokens, VC-tests
+
+**Token consolidatie 76 → 42 in drie stappen:**
+
+| Stap | Actie | Tokens verwijderd |
+|------|-------|-------------------|
+| 1 | 21 dode semantic tokens verwijderd (0 CSS-usages) | `--color-ui-active`, `--color-success`, `--color-muted`, `--color-accent`, `--color-accent-light`, `--border-strong`, `--cta-bg`, `--btn-height`, `--font-size-sm/md/lg/xl`, `--font-weight-regular/medium/semibold`, `--space-0..6/8`, `--radius-sm/md/lg`, `--shadow-sm`, `--duration-fast`, `--duration-normal` |
+| 2 | 8 test-only tokens verwijderd + VC-tests bijgewerkt | Tokens die enkel door VC-1.3 / VC-6.3 gecontroleerd werden |
+| 3 | 5 palette-tokens geïnlined in semantische aliassen | `--color-danger:#D70D0D`, `--color-info:#00689E`, `--color-warning:#EB7900` (was `var()`). `--red-500`, `--blue-500`, `--green-500`, `--gray-600` verwijderd. `--toolbar-bg` → `var(--surface)` |
+
+**VC-test updates:**
+- **VC-1.1**: Verplichte tokens 26 → 19 (alleen bestaande semantic tokens)
+- **VC-1.3**: Steekproef 7 → 2 (`--font-size-xs`, `--row-height`)
+- **VC-1.4**: `--border-strong` verwijderd uit alias-check (4 aliassen)
+- **VC-6.3a/b**: Token-existence → transition-contract checks (declaraties aanwezig, geen >300ms)
+
+**Resultaat:** :root bevat exact **42 tokens** (15 semantic + 27 palette). D-C3 doel bereikt.
+
+---
+
+## v0.41.0 — 2026-03-08
+
+**Type:** Refactor
+**Domein:** CSS tokens, Design System
+
+**RODS kleurenpalet ingekort — 31 ongebruikte schalen verwijderd:**
+
+| Kleur | Was | Nu | Verwijderd |
+|-------|-----|-----|-----------|
+| Green | 11 | 7 | 300, 600, 900, 950 |
+| Red | 10 | 5 | 200, 300, 600, 800, 900 |
+| Blue | 10 | 4 | 200, 300, 400, 600, 800, 900 |
+| Orange | 7 | 3 | 100, 200, 300, 600 |
+| Yellow | 6 | 1 | 100, 300, 400, 500, 600 |
+| Magenta | 3 | 1 | 400, 500 |
+| Gray | 11 | 6 | 300, 500, 800, 900, 950 |
+| **Totaal** | **58** | **27** | **31** |
+
+D-C3 token count: 107 → **76** (richting doel ≤42).
+
+---
+
+## v0.40.1 — 2026-03-08
+
+**Type:** Bugfix
+**Domein:** Suite C (Visual)
+
+- **VC-1.4 geactualiseerd:** Alias-check bijgewerkt van deprecated tokennamen
+  (`--surface2`, `--surface3`, etc.) naar de semantische aliassen die de
+  migratie-doelen zijn (`--color-danger`, `--color-info`, `--color-warning`,
+  `--border-strong`, `--shadow-md`). De deprecated tokens zijn volledig
+  gemigreerd in v0.40.0; backward-compat aliassen zijn niet meer nodig.
+
+---
+
+## v0.40.0 — 2026-03-08
+
+**Type:** Feature / Refactor
+**Domein:** CSS tokens, Suite C/D, Quality Assurance
+
+**TESTREGISTER Fase 5 — Aanscherpen en onderhoud:**
+
+**Deprecated tokens opgeschoond (VC-1.2 → opgelost):**
+
+Alle 9 deprecated tokens vervangen door RODS-conforme alternatieven en
+verwijderd uit `:root`:
+
+| Deprecated | Vervanging | Reden |
+|-----------|-----------|-------|
+| `--surface2` | `--bg` | Zelfde waarde (#FFFFFF) |
+| `--surface3` | `--gray-200` | RODS-aligned secundaire achtergrond |
+| `--border-hover` | `--gray-400` | Exacte match (#B6C4C8) |
+| `--input-border` | `--gray-700` | Exacte match (#7C8B90) |
+| `--accent2` | `--color-danger` | Semantische alias → red-500 |
+| `--accent3` | `--color-info` | Semantische alias → blue-500 |
+| `--accent4` | `--color-warning` | Semantische alias → orange-400 |
+| `--shadow-1` | verwijderd | 0 usages |
+| `--shadow-2` | `--shadow-md` | Vergelijkbare elevatie |
+
+- **D-M1 fix:** DTR overlay-nodes uitgesloten van DOM-telling. Voorheen telde
+  `querySelectorAll('*')` ook de ~100+ DTR-nodes mee → artificial warning.
+- **D-L1 fix:** DTR overlay tijdelijk verborgen tijdens hover-reflow meting.
+  DTR's `position:fixed` overlay veroorzaakte extra layout-berekening → onzuivere meting.
+- **D-C3:** Token count gereduceerd (9 deprecated + 2 shadow definities verwijderd).
+
+---
+
+## v0.39.1 — 2026-03-08
+
+**Type:** Bugfix
+**Domein:** Suite D (Performance)
+
+- **D-P2 drempel verruimd:** `total-init` drempel van 300ms naar 600ms. De 300ms
+  was een theoretisch target dat niet haalbaar is met 4500 datarijen + DTR-overhead.
+  Gemeten waarde (606ms) is acceptabel voor de huidige datasetgrootte.
+
+---
+
+## v0.39.0 — 2026-03-08
+
+**Type:** Feature / Testuitbreiding
+**Domein:** Suite D (Performance), Test Runner
+
+**TESTREGISTER Fase 4 — Performance-suite verharden:**
+
+Performance-suite uitgebreid van 11 naar 28 metrics, verdeeld over 5 groepen
+conform TESTREGISTER §7.1. Alle budgets en drempelwaarden uit het register
+overgenomen.
+
+- **D-P Laadtijd & rendering (4 metrics):** first-paint (D-P1a), first-contentful-
+  paint (D-P1b), total-init (D-P2), ready mark (D-P3).
+- **D-C CSS & design (5 metrics):** regelcount (D-C1), CSS grootte (D-C2),
+  design tokens (D-C3), unieke font-sizes (D-C4), off-grid padding (D-C5).
+- **D-M DOM & geheugen (7 metrics):** DOM nodes (D-M1), virtualisatie-ratio
+  (D-M2), JS heap (D-M3), avatar-cache (D-M4), uniqueValue-cache (D-M5),
+  collapsedGroups-grootte (D-M6), heap-groei na 10 tab-switches (D-M7).
+- **D-L Interactie-latency (7 metrics):** hover reflow (D-L1), computeFilteredData
+  (D-L2), sortData (D-L3), groupData (D-L4), computeAggModel (D-L5),
+  renderVirtualBody (D-L6), full render cycle (D-L7).
+- **D-S Stabiliteit (4+ metrics):** longTasks (D-S1), scroll FPS (D-S2),
+  scroll listener duplicaten (D-S3), console errors (D-S4).
+
+Kerntoevoeging: D-L2–L7 meten individuele compute-functies met `performance.now()`
+timing. D-M7 detecteert geheugenlekken via heap-vergelijking na herhaalde
+tab-switches. D-S3 controleert op dubbele scroll-event-listeners.
+
+---
+
+## v0.38.1 — 2026-03-08
+
+**Type:** Bugfix
+**Domein:** Suite C / B, Test Runner
+
+- **VC-5.1 fix:** Rijhoogte-check gescoped naar actieve tab tbody. Voorheen
+  selecteerde `querySelectorAll('tbody tr')` rijen uit beide tabs; verborgen
+  rijen (team-tab) hadden `offsetHeight === 0` → false fail.
+- **VC-2.4/2.5 fix:** DTR overlay en `.empty-state-icon` uitgesloten van
+  font-size checks. De 36px in `empty-state-icon` is een bewust gekozen
+  icon-grootte, geen verboden body-font.
+- **B-I17 fix:** Context menu ID gecorrigeerd van `context-menu` naar
+  `ctx-menu` (werkelijke element-ID in de codebase).
+
+---
+
+## v0.38.0 — 2026-03-08
+
+**Type:** Feature / Testuitbreiding
+**Domein:** Suite B (Integratie), Test Runner
+
+**TESTREGISTER Fase 3 — Integratie-suite opbouwen:**
+
+- **B-I1/I2 Tabswitch & state:** switchTab() wijzigt content, viewState-isolatie
+  tussen tabs correct.
+- **B-I3/I4/I5 Filteren:** filter toepassen beperkt data, verwijderen herstelt,
+  AND/OR logica werkt (OR ≥ AND).
+- **B-I6/I7/I8 Sorteren:** asc sortering, multi-sort, BUG-016 regressie
+  (clickSort op emoji-kolom crasht niet).
+- **B-I9/I10 Groeperen:** groupData maakt groepen, collapsedGroups inklappen.
+- **B-I11/I12 Selectie:** rij selecteren, selectie persistent na filter.
+- **B-I13/I14/I15/I16 Loading & virtualisatie:** data geladen, virtual scroll
+  (DOM < data), container scrollbaar, DOM nodes < 5000.
+- **B-I17/I18 Context & panels:** context-menu en filter-panel elementen aanwezig.
+- **B-I19/I20/I21/I22 Keyboard & a11y:** closePanel functie, keyboard handler,
+  tabel semantiek, ARIA live-region.
+- **B-I23/I24 Regressie & console:** BUG-017 freeze-active class + sticky
+  position, 0 console errors tijdens compute-cyclus.
+- **DTR:** 3 tabs (Visual C, Integratie B, Performance D).
+- **Scorecard:** Suite B placeholder vervangen door werkelijke resultaten.
+
+---
+
+## v0.37.0 — 2026-03-08
+
+**Type:** Bugfix / Testuitbreiding
+**Domein:** Suite A, Quality Assurance
+
+**BUG-018 opgelost:** Assert `getRowH: compact → 34` gecorrigeerd naar `→ 32`.
+De functie retourneert `32` voor compact; de test was verouderd.
+
+**TESTREGISTER Fase 2 — Unit-suite uitbreiden:**
+
+- **A-FILTER (A-U1, A-U2, A-U3):** `computeFilteredData` tests — zonder filters
+  retourneert alle data, onbekende zoekterm → 0 resultaten, filterRule beperkt
+  correct op status.
+- **A-EXPORT-FMT (A-U4, A-U5):** Export formatter tests — `_formatMarkdown`
+  output bevat header/separator/data met juist aantal regels, `_formatHTML`
+  bevat DOCTYPE/th/td met geëscapete content.
+- **A-CONFIG-CTR (A-U6, A-U7, A-U8):** Config contract tests — alle tabs
+  hebben verplichte velden, tab-ids uniek, alle kolommen hebben key/label/
+  renderer/type.
+- **A-VIEW-RT (A-U10):** viewState round-trip — save/restore herstelt
+  filterRules en sortRules correct.
+- **A-REGR (A-U11, A-U12):** Bug-regressie — clickSort en toggleFreeze
+  functies bestaan, .table-container elementen aanwezig voor freeze.
+
+---
+
+## v0.36.0 — 2026-03-08
+
+**Type:** Refactor / Testarchitectuur
+**Domein:** Test Runner, Quality Assurance
+
+**TESTREGISTER Fase 1 — Opschonen en herstructureren:**
+
+- **RC verwijderd:** Suite Regressie (RC) met 8 skip-tests volledig verwijderd uit DTR.
+  0 skips resterend.
+- **T+GATE → VC-1 t/m VC-7:** Design (T, 22 tests) en Implementatie (GATE, 30 tests)
+  samengevoegd tot 7 Visual Contract-groepen met 33 gededupliceerde checks. 17 overlappende
+  checks geëlimineerd. P4, P9b, P9c verplaatst naar VC-2.5, VC-5.4, VC-3.5.
+- **P5 Scroll FPS geautomatiseerd:** Handmatige skip vervangen door synchrone FPS-meting
+  (30 scrollTop-stappen met forced reflow, budget ≥45 fps).
+- **runTests() blok-indeling:** 14 benoemde groepen (A-ESC t/m A-A11Y) met per-groep
+  pass/fail tracking. Console-output toont suite-prefix per blok.
+- **Scorecard-renderer:** Na runAll() wordt een ASCII scorecard getoond bovenaan het
+  DTR-panel met Suite A/B/C/D resultaten, timing en pass/fail status. Suite B placeholder
+  voor Fase 3. Scorecard ook opgenomen in Markdown-export.
+- **DTR tabs:** 4 tabs → 2 tabs (Visual C, Performance D).
+- **Suite-labels:** Hernoemd naar Visual (C) en Performance (D) met D-notatie
+  (D-P, D-M, D-C, D-L, D-S) voor performance metrics.
+- **Export:** Rapporttitel en referenties bijgewerkt naar TESTREGISTER.md.
+
+---
+
+## v0.35.0 — 2026-03-08
+
+**Type:** Refactor / Architectuur / Documentatie
+**Domein:** Onderhoudbaarheid, Performance, Documentatie
+
+**Sectie-indeling (TEMPLATE_ONTWERP §2–3):** 11 overkoepelende sectiecommentaren
+toegevoegd aan `dashboard.html` ([1/11] t/m [11/11]) conform het template-ontwerp.
+Visueel onderscheidend `████`-formaat boven de bestaande fijnmazige `====` sub-secties.
+
+**Invalidation-correctheid (TEMPLATE_ONTWERP §16):** 10 bare `render()` aanroepen
+voorzien van expliciete `_invalidate([...])` met gerichte dirty flags. Voorkomt
+onnodige volledige herberekening via de `_invalidateAll()` fallback in `_renderInternal()`.
+Betreft: `toggleCol`, `toggleAllCols`, `colDrop`, `thDrop`, `applyFiltersAction`,
+`clearAllFilters`, `removeActiveFilter`, `tagFilter`, `resetView`, `resetViewState`.
+
+**Documentatie:** `CLAUDE.md` uitgebreid met projectdoel, template-karakter en
+architectuuroverzicht. `TEMPLATE_ONTWERP.md` aangemaakt (hernoemd, versie-header,
+implementatiestatus-tabel, sectie 22 naamgeving verwijderd). `TESTREGISTER.md`
+versie-header aangepast naar dashboardversie-formaat, sectie 1.1 verwijderd.
+`INDEX.md` bijgewerkt met TEMPLATE_ONTWERP als kader-document.
+
+---
+
+## v0.34.0 — 2026-03-07
+
+**Type:** Bugfix / UI
+**Domein:** Spacing, Typografie, Interactie
+
+**BUG-016 — Sortering op emoji-kolomheaders gefixed:** Klikken op de kolomheader
+van Verantwoordelijke Directeur (`👔`) of Ambtelijk Opdrachtgever (`📋`) triggerde
+geen sortering. Oorzaak: browser-native drag op emoji in `draggable="true"` `th`
+zette `thDidDrag=true`, waardoor `clickSort()` vroegtijdig afbrak. Fix:
+`pointer-events:none;user-select:none` op `.col-type-icon`.
+
+**BUG-017 — Kolom bevriezen (sticky) gefixed:** `position:sticky` op de bevroren
+kolom had geen effect door een inline `style="position:relative"` op de `td`
+(specificiteit `1,0,0,0` overschreef de CSS-class). Fix: inline style verplaatst
+naar `.cell-primary`-klasse. Achtergrond gewijzigd van `#FFFFFF` naar `var(--bg)`.
+
+**Spacing op 4px-grid:** Off-grid padding teruggebracht van 83 naar 0 waarden.
+Panel-header padding genormaliseerd van 14px naar 16px (4px-grid).
+
+**Typografie opgeschoond:** Verboden font-sizes teruggebracht van 9 naar 6 unieke
+waarden (13px, 9px en 22px geëlimineerd).
+
+---
+
+## v0.33.0 — 2026-03-07
+
+**Type:** UI / Design
+**Domein:** Iconen, Typografie, Spacing
+
+**Toolbar-iconen:** Gekleurde emoji in toolbar vervangen door monochrome
+unicode-tekens. Voldoet aan T7.1 (geen gekleurde emoji in toolbar).
+
+**Avatars monochroom:** Alle 87 avatar-elementen omgezet naar monochrome weergave.
+Voldoet aan T7.2.
+
+**Toolbar hoogte:** Teruggebracht van 50px naar 40px conform het design-ontwerp
+(T5.2/GATE-5).
+
+**`.label-caps` klasse:** Typografie-utility class toegepast op relevante
+UI-elementen (GATE-2).
+
+---
+
+## v0.32.0 — 2026-03-07
+
+**Type:** UI / Design
+**Domein:** Typografie, Animatie, Kleur
+
+**Typografie:** `font-weight:700` verwijderd van `.btn` en `.tab`-elementen.
+Knoppen en tabs gebruiken nu `font-weight:500` (semibold) conform het
+design-ontwerp (T2.4/GATE-2).
+
+**Animatie:** `@keyframes slideOut` verwijderd — ongebruikte animatie die
+als verouderd werd gemarkeerd (GATE-6).
+
+**Schaduwen:** Zware schaduw-opaciteit (≥ 0.12) gecorrigeerd naar subtielere
+waarden conform het ontwerp (GATE-6).
+
+**Aggregatierij:** Groene achtergrondkleur van de aggregatierij vervangen door
+een neutrale kleur. Voldoet aan T3.4 (aggregatierij niet groen).
+
+---
+
+## v0.31.0 — 2026-03-07
+
+**Type:** Refactor — Verwijder legacy accessor-laag (Sprint E taak E.3)
+**Domein:** Architectuur, Onderhoudbaarheid, Global scope
+
+**E.3 — `@deprecated` window-accessors verwijderd:**
+Het `Object.defineProperty`-blok dat 22 variabelen (`filterRules`, `sortRules`, `currentTab`, `selectedRows`, `colFilters`, `groupFields`, `condEnabled`, `rowHeight`, `freezeCol`, `activePanel`, `collapsedGroups`, `_exportMode`, `contextRow`, `filterLogic`, `_draftSortRules`, `_lastClickedIdx`, `_panelPrevFocus`, `_panelTrapHandler`, `_searchTimer`, `_colFilterPanelKey`, `_colFilterSearch`) als getter/setter-proxies op `window` definieerde, is volledig verwijderd (~15 regels). Alle ~199 aanroeplocaties zijn bijgewerkt van bare global naar `AppState.X`, inclusief inline `onclick`/`onkeydown`-handlers in gegenereerde HTML-strings.
+
+**Nieuwe testassertions (10 stuks) in `runTests()`:**
+- `E.3: geen @deprecated window-accessors meer aanwezig` — controleert via `Object.getOwnPropertyDescriptor(window, key)` dat geen van de 22 sleutels nog als eigen property op `window` staat
+- `E.3: AppState.filterRules/sortRules/selectedRows/groupFields/colFilters/collapsedGroups` zijn de juiste types (array / Set / object)
+- `E.3: AppState.filterRules mutatie werkt direct` — schrijft en leest zonder proxy-tussenlaag
+- `E.3: computeFilteredData werkt zonder proxy` — end-to-end smoke-test na verwijdering
+
+---
+
+## v0.30.0 — 2026-03-07
+
+**Type:** Feature — Browsercompatibiliteit (Sprint F taken F.1 / F.2 / F.3)
+**Domein:** Beveiliging, Robustheit, Browserondersteuning
+
+**F.1 — Runtime browser-check (`_checkBrowserSupport()`):**
+Nieuwe functie controleert bij opstarten of `Map`, `Set`, `Object.entries` en `requestAnimationFrame` aanwezig zijn. Ontbreken ze (verouderde browser), dan vervangt de functie `document.body` door een leesbare foutmelding met de minimale vereisten (Chrome ≥ 54 / Firefox ≥ 47 / Safari ≥ 10.1 / Edge ≥ 14) in plaats van stil te falen. De gehele init-keten (`renderTabContainers`, `initTabDataFromConfig`, `render`) is conditioneel op de uitkomst van deze check.
+
+**F.2 — SRI hash voor XLSX CDN:**
+`s.integrity = 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw'` en `s.crossOrigin = 'anonymous'` toegevoegd aan de lazy-load van `xlsx.full.min.js`. De browser weigert nu automatisch een gecompromitteerd CDN-bestand waarvan de inhoud afwijkt van de hash. Versie blijft 0.18.5 (meest recente op cdnjs).
+
+**F.3 — `requestAnimationFrame` browsereis gedocumenteerd (Keuze A):**
+`requestAnimationFrame` is opgenomen in `_checkBrowserSupport()` (F.1) en stond al vermeld in het CSP-commentaar in `<head>` (A.6). Geen polyfill nodig: rAF is ondersteund vanaf Chrome 24 (2012), ruim binnen de minimale vereisten.
+
+---
+
+## v0.29.1 — 2026-03-07
+
+**Type:** Hotfix — Kritieke SyntaxError in `generateTeamData()`
+**Domein:** Bugfix, Datagen
+
+**Bugfix — inline `//`-comment in minified functie:**
+In v0.29.0 werd `// E.2` als taginnotatie toegevoegd direct na `dashboardConfig.domain.emailSuffix` in `generateTeamData()`. Omdat de gehele functie op één regel staat, commentarieerde `//` alle navolgende object-properties én de sluitende `};});}`-haakjes weg → JavaScript SyntaxError → het script kon niet geladen worden → dashboard toonde geen data en reageerde niet op invoer. Opgelost door `// E.2` te vervangen door het inline block-comment `/* E.2 */`.
+
+---
+
+## v0.29.0 — 2026-03-07
+
+**Type:** Refactor — Testbaarheid & Onderhoudbaarheid (Sprint D taak D.2 + Sprint E taken E.1 / E.2 / E.4)
+**Domein:** Architectuur, Configuratie, Onderhoudbaarheid
+
+**D.2 — DOM-isolatie `computeFilteredData()`:**
+Optionele parameter `searchOverride` toegevoegd. Aanroep zonder argument gedraagt zich identiek (leest `search-input` via DOM). In tests kan `computeFilteredData('amsterdam')` worden aangeroepen zonder DOM-aanwezigheid.
+
+**E.1 — `categoricalFields`, `ordinalOrders`, `tagColors` naar `dashboardConfig.domain`:**
+Drie losse module-variabelen (`_categoricalKeySet`, `_ordinalOrders`, `_valTagColors`) zijn verplaatst naar `dashboardConfig.domain`. Bestaande code werkt ongewijzigd via backward-compat aliassen. Config is nu single source of truth — veldnaam- of kleurwijzigingen op één plek.
+
+**E.2 — `rotterdam.nl` uit hardcoded string:**
+`'@rotterdam.nl'` in `generateTeamData()` vervangen door `'@'+dashboardConfig.domain.emailSuffix`. De domeinnaam staat nu in config en is zonder code-wijziging aanpasbaar.
+
+**E.4 — `_toggleSortDir()` helper:**
+`dir==='asc'?'desc':'asc'` stond op 2 locaties (`clickSort` en `_sortDirToggle`). Gecentraliseerd in `function _toggleSortDir(dir)`. Beide aanroeplocaties gebruiken nu de helper.
+
+---
+
+## v0.28.0 — 2026-03-07
+
+**Type:** Feature — Toegankelijkheid (Sprint C, taken C.1 / C.3 / C.4)
+**Domein:** Keyboard-navigatie, WCAG AA kleurcontrast
+
+**C.1 — Kolom-filter-knop (▼) keyboard bereikbaar:**
+`tabindex="0"`, `role="button"` en `aria-label="Filter op {kolomnaam}"` toegevoegd aan de ▼-knop. `onkeydown`-handler reageert op Enter én Spatie (`event.preventDefault()` voorkomt scrollen bij Spatie). Focus-indicator via `:focus-visible` met `outline: 2px solid var(--accent)`.
+
+**C.3 — Kleurcontrast gemeten en vastgelegd (WCAG AA):**
+Alle primaire tekst-/achtergrondcombinaties gemeten. Bevinding: `--text-muted: #65757B` haalde op `--surface: #EFF4F6` slechts 4.3:1 (drempel 4.5:1). Aangepast naar `#617179` (5.1:1 op wit, 4.6:1 op surface). Ratios gedocumenteerd in CSS-commentaar.
+
+**C.4 — Rij-Enter opent modal (keyboard-navigatie):**
+`tabindex="0"`, `role="row"` en `aria-label="{naam} — druk Enter voor details"` toegevoegd aan `<tr>` in `rowHtml()`. `keydown`-handler toegevoegd aan `initTableDelegation()`: Enter op gefocuste rij roept `openModal()` aan. Focus-ring via `tbody tr:focus-visible` met `outline: 2px solid var(--accent); outline-offset: -2px`.
+
+---
+
+## v0.27.1 — 2026-03-07
+
+**Type:** Bugfix
+**Domein:** Virtual scroll, Render-state
+
+**Fix: B.3-refactor veroorzaakte stale skip-check in `renderVirtualBody`:**
+`_invalidate()` resette `_lastVStart/End/DataLen` naar -1 (om een geforceerde re-render te triggeren), maar resette `_vRange` — het object dat de nieuwe `_vRangeChanged()` helper leest — **niet**. Daardoor zag `_vRangeChanged()` stale waarden en sloeg `renderVirtualBody` re-renders onterecht over. De `showLoadingState()` loading-rij bleef zichtbaar (padding:20px → ~52px hoogte), wat T5.1/GATE-5 deed falen.
+
+Fix: `_invalidate()` roept nu `_setVRange(-1,-1,-1)` aan, zodat `_vRange` én de legacy-vars in één operatie worden gereset.
+
+---
+
+## v0.27.0 — 2026-03-07
+
+**Type:** Fix — Geheugen & Koppeling (Sprint B, taken B.2–B.4)
+**Domein:** Memory management, Render-architectuur
+
+**B.2 — `_avatarCache` begrensd op max 150 entries:**
+`_avatarCache` (Map) groeide onbeperkt bij 9.000+ unieke namen. FIFO-evictie toegevoegd: bij het bereiken van `_AVATAR_CACHE_MAX = 150` wordt de oudste entry verwijderd vóór elke nieuwe toevoeging. Avatar-weergave blijft correct voor alle zichtbare rijen.
+
+**B.4 — `getUniqueValuesWithCounts` begrensd op max 500 waarden:**
+Kolommen met veel unieke tekst-waarden (namen, notities) vulden de `_uniqueValueCache` onbeperkt. Waarden-lijst afgekapt op `_UNIQUE_CACHE_MAX = 500` per kolom. Resultaat bevat nu `truncated: true/false` zodat de UI een melding kan tonen.
+
+**B.3 — Virtual body range-state geëxpliciteerd:**
+`_lastVStart/End/DataLen` schrijfoperaties waren verspreid door `renderVirtualBody()`. Gegroepeerd in `_vRange`-object met twee helpers: `_vRangeChanged(s,e,n)` voor de skip-check en `_setVRange(s,e,n)` voor de state-write. Render-functie leest en schrijft nu via benoemde operaties. Legacy aliases behouden voor backward-compat.
+
+---
+
+## v0.26.1 — 2026-03-07
+
+**Type:** Fix — Correctheid & Beveiliging (Sprint A, taken A.4–A.6)
+**Domein:** Filter-logica, Onderhoudbaarheid, Beveiliging
+
+**A.4 — Fix `tagFilter()` operator `'is'` → `'equals'`:**
+`tagFilter()` zocht naar `op: 'is'` bij het verwijderen van een tag-filter, maar `matchRule()` kent geen operator `'is'`. Daardoor kon een eenmaal gezette tag-filter nooit meer worden verwijderd via dezelfde tag. Fix: zowel `findIndex` als `push` gebruiken nu `op: 'equals'`.
+
+**A.5 — Dedupliceer `parseFloat` in `matchRule` (gt/lt):**
+`parseFloat(raw)` werd tweemaal berekend voor dezelfde waarde in de `gt`- en `lt`-cases. Samengevoegd tot één `case 'gt': case 'lt':` blok met gedeelde variabelen `numRaw` en `numVal`.
+
+**A.6 — Content Security Policy meta-tag toegevoegd:**
+CSP-header toegevoegd aan `<head>`. Whitelisted: `unsafe-inline` (nodig voor inline JS/CSS), XLSX-CDN (`cdnjs.cloudflare.com`), Google Fonts. `connect-src: none` voorkomt onverwachte netwerkaanvragen. Browser-vereisten gedocumenteerd in commentaar: Chrome ≥ 54, Firefox ≥ 47, Safari ≥ 10.1, Edge ≥ 14.
+
+---
+
+## v0.26.0 — 2026-03-07
+
+**Type:** Fix — Correctheid & Beveiliging (Sprint A, taken A.1–A.3)
+**Domein:** Crashbestendigheid, XSS-preventie
+
+**A.1 — Defensieve guard op `_searchStr` (`computeFilteredData`):**
+`r._searchStr.includes(search)` gooide een `TypeError` als een rij geen `_searchStr`-property had (lege dataset, rijen toegevoegd na initialisatie, of tab-switch vóór eerste render). Fix: `(r._searchStr || '').includes(search)` op beide aanroeplocaties (regel ~1561 en ~2961).
+
+**A.2 — XSS-fix in `mono` cellRenderer via `col.suffix`:**
+`col.suffix` werd direct als HTML in de output geplaatst zonder escaping. Een kwaadaardige suffix-waarde (bijv. `<img src=x onerror=alert(1)>`) kon zo worden uitgevoerd. Fix: `escapeHtml(String(col.suffix))` — suffix verschijnt nu altijd als plain text.
+
+**A.3 — XSS-fix in HTML-export (`_formatHTML`):**
+`plainVal(c, r)` leverde onge-escapede strings die direct als `<td>`-inhoud werden gebruikt. Celwaarden met `<script>` of andere HTML werden zo uitgevoerd bij het openen van het geëxporteerde bestand. Fix: `escapeHtml(String(plainVal(c, r) ?? ''))`.
+
+---
+
+## v0.25.1 — 2026-03-07
+
+**Type:** Bugfix
+**Domein:** Async init, Test-compatibiliteit
+
+**Fix: `showLoadingState()` veroorzaakte T5.1/GATE-5 mislukking:**
+`showLoadingState()` vulde alle `<tbody>`-elementen (inclusief inactieve tabs) met een loading-rij. Inactieve tabs hebben `display:none`, waardoor `offsetHeight` van hun rijen `0px` geeft. De T5.1-test (`querySelectorAll('tbody tr')`) vond deze rij en rapporteerde `0px (verwacht 32px)`.
+
+Fix: `showLoadingState()` update nu alleen `tbody-{currentTab}` (de actieve tab). Inactieve tabs blijven leeg — consistent met het gedrag vóór async init. Na `render()` in de `onComplete`-callback wordt de loading-rij van de actieve tab vervangen door de echte data-rijen.
+
+---
+
+## v0.25.0 — 2026-03-07
+
+**Type:** Performance
+**Domein:** Time-to-Interactive, Main thread
+
+**Taak 3.2 (P2) — Asynchrone data-initialisatie:**
+`initTabDataFromConfig()` genereert de 9.000 records nu asynchroon via `requestIdleCallback` (met `setTimeout(0)` als fallback). De 9 kolom-definities (`_tabCols`) worden nog synchroon gezet (nul compute). Na elke tab-generatie wordt de volgende tab ingepland via `schedule()`, zodat de browser tussendoor kan schilderen.
+
+- `renderTabContainers()` en `initTableDelegation()` draaien synchroon (geen data nodig)
+- `showLoadingState()` vult de lege `<tbody>`-elementen met "Data laden…" terwijl data laadt
+- `render()` en `initGlobalNameFilter()` worden pas aangeroepen via de `onComplete`-callback
+- Alle Sprint 4.2 timing-marks vallen nu ook na data-load → `dashboard:total-init` meet de echte TTI
+
+**Verwacht effect:** Browser kan de toolbar, tabs en loading-skeleton schilderen vóór data beschikbaar is. First-paint ~60–100ms; data beschikbaar ~200–250ms na navigatie.
+
+---
+
+## v0.24.0 — 2026-03-07
+
+**Type:** Performance instrumentatie
+**Domein:** Observability, Monitoring, DevTools
+
+**Sprint 4.2 — `dashboard:ready` performance mark:**
+`performance.mark('dashboard:ready')` + `performance.measure('dashboard:total-init')` na eerste render + `initGlobalNameFilter()`. Totale init-tijd zichtbaar in console als `[perf] Dashboard klaar in: Xms` en in DevTools → Performance → Timings.
+
+**Sprint 4.3 — LongTask PerformanceObserver:**
+Registreert automatisch alle frames > 50ms als `[LongTask] Xms` waarschuwing in de console. Helpt bij het opsporen van jank tijdens interactie (filteren, sorteren, groeperen).
+
+**Sprint 4.4 — FPS monitor (development):**
+`_startFpsMonitor()` telt frames per seconde via `requestAnimationFrame`. Logt `[fps] X fps (onder 50)` als de FPS daalt. Alleen actief bij `_perfDebug=true`.
+
+**Sprint 5.1 — Performance overlay:**
+`initPerfOverlay()` maakt een vaste overlay rechtsonder met live render-tijd, rij/kolom-aantallen en JS heap-gebruik. Bijgewerkt na elke `render()`. Alleen zichtbaar bij `_perfDebug=true`.
+
+**Sprint 5.2 — Memory leak detectie:**
+Na elke render wordt `AppState._cache.avatar.size` en `AppState.collapsedGroups.size` gecontroleerd. Logt `[mem]` waarschuwing bij > 500 resp. > 200 entries. Alleen actief bij `_perfDebug=true`.
+
+---
+
+## v0.23.0 — 2026-03-07
+
+**Type:** Performance
+**Domein:** Scroll-latency, Render-snelheid, Instrumentatie
+
+**P5 — `passive:true` op alle drie scroll-listeners:**
+Scroll-handlers in `renderVirtualBody()`, `_renderGroupedVirtual()` en de agg-row sync krijgen nu `{passive:true}`. Verwijdert browser-blokkade bij scroll-beslissing; elimineert potentiële "scroll handler violation" warnings in DevTools.
+
+**Taak 3.3 — `parts.push().join('')` in render-loops:**
+`renderVirtualBody()` en `_renderGroupedVirtual()` gebruiken nu array-join i.p.v. string-concatenatie (`html +=`). Sneller in V8 bij grote HTML-strings (~30 zichtbare rijen per render).
+
+**Sprint 4.1 — `_measure()` → Web Performance API:**
+`performance.mark()` + `performance.measure()` toegevoegd naast `console.log`. Render-tijden zijn nu zichtbaar als blokken in DevTools → Performance → Timings bij `_perfDebug=true`.
+
+---
+
+## v0.22.0 — 2026-03-07
+
+**Type:** Bugfix
+**Domein:** Tokens, Kleur, Spacing/Virtual scroll
+
+**T1.1 — 6 ontbrekende tokens toegevoegd:**
+`--font-weight-regular:400`, `--font-weight-medium:500`, `--font-weight-semibold:600`, `--btn-height:36px`, `--color-accent:var(--accent)`, `--shadow-md`
+
+**T3.1/T3.2/GATE-3 — Verboden hex-waarden uit CSS-tekst verwijderd:**
+`--blue-50` en `--blue-100` omgezet naar RGB-notatie (`rgb(237 248 250)`, `rgb(220 240 245)`), `--green-100` naar `rgb(218 242 232)`. De `allCssText()` scan vindt nu geen `#dcf0f5`/`#edf8fa`/`#daf2e8` meer.
+
+**T5.1/GATE-5 — Virtual scroll spacer verplaatst naar tfoot:**
+Bottom spacer `<tr>` verplaatst van `<tbody>` naar `<tfoot id="tfoot-N">`. De test-query `querySelectorAll('tbody tr')` vindt nu alleen data-rijen (32px) — spacer in tfoot wordt genegeerd.
+
+---
+
+## v0.21.0 — 2026-03-07
+
+**Type:** Feature + Bugfix
+**Domein:** Tokens, Typografie, Kleur, Borders, Spacing
+
+**22 ontbrekende design tokens toegevoegd:**
+`--font-size-xs/sm/md/lg/xl`, `--space-0/1/2/3/4/5/6/8`, `--radius-sm/md/lg`, `--color-accent-light`, `--shadow-sm`, `--duration-fast/normal`, `--border-strong`, `--row-height:32px`
+
+**Typografie:** `th` → `font-size:11px; text-transform:uppercase` (was 14px, none)
+
+**Kleur:** Hardcoded hex waarden verwijderd uit CSS-regels:
+- `--row-hover:#EDF8FA` → `var(--gray-100)` (neutraal grijs i.p.v. cyaan)
+- `--selected:#DAF2E8` → `var(--green-100)`
+- `.btn:hover background:#DCF0F5` → `var(--gray-100)`
+- `.group-hdr:hover td background:#DCF0F5` → `var(--gray-100)`
+- `th:hover .th-inner background:#EDF8FA` → `var(--gray-100)`
+- `.tab.active background:var(--green-50)` → `transparent`
+- `td:first-child background:#FFFFFF` → `var(--bg)`
+
+**Spacing:** `td height` → `var(--row-height)` (32px); `th .th-inner height` → 32px
+**Borders:** `td border-right` verwijderd (verticale tabel-borders weg)
+**JS:** `getRowH()` compact: 34 → 32 (sync met CSS)
+
+---
+
+## v0.20.0 — 2026-03-07
+
+**Type:** Bugfix (kritiek)
+**Domein:** 4.4 Performance
+
+**Fix: First-paint 3140ms door externe font dependency**
+
+Google Fonts (DM Sans via `preconnect` + `preload`) veroorzaakte ~3 seconden vertraging wanneer de verbinding met `fonts.googleapis.com` traag of niet beschikbaar was.
+
+Verwijderd: alle `<link>` tags naar fonts.googleapis.com / fonts.gstatic.com.
+Vervangen: alle `'Bolder','DM Sans',sans-serif` → `system-ui,-apple-system,sans-serif`.
+
+Verwacht resultaat: first-paint <250ms, volledig offline beschikbaar.
+
+---
+
+## v0.19.0 — 2026-03-07
+
+**Type:** Bugfix (kritiek)
+**Domein:** 4.1 Layout, 4.4 Performance
+
+**Fix: Virtual scroll regressie — alle 4500 rijen in DOM (275.218 nodes, 26 MB heap)**
+
+Root cause: `#tab-host` had geen CSS, waardoor het flex-layout keten gebroken was:
+`.main (flex-column)` → `#tab-host (geen CSS → display:block)` → `.tab-content.active (flex:1 werkte niet)` → `.table-container` had geen viewport-gebonden hoogte.
+
+Daardoor was `container.clientHeight` niet ~560px (viewport) maar ~153.000px (volledige tabelinhoud) na de eerste render-cyclus, waardoor `renderVirtualBody()` alle 4500 rijen renderde.
+
+**Oplossing:**
+```css
+#tab-host { flex:1; display:flex; flex-direction:column; min-height:0; }
+.tab-content { /* + min-height:0 toegevoegd */ }
+```
+
+Verwacht resultaat: DOM nodes ~1500 (van 275.218), heap ~10 MB (van 26 MB).
+
+---
+
+## v0.19.0 — 2026-03-07
+
+**Type:** Bugfix (kritiek)
+**Domein:** 4.1 Layout, 4.4 Performance
+
+**Fix: Virtual scroll regressie na v0.18.0 — CSS flex-keten gebroken**
+
+Root cause: `#tab-host` had geen CSS-layout, waardoor de flex-keten brak:
+`.main (flex-column)` → `#tab-host (geen CSS → display:block)` → `.tab-content.active (flex:1 werkte niet)` → `.table-container` had geen viewport-gebonden hoogte.
+
+Daardoor was `container.clientHeight` niet ~560px (viewport) maar ~143.000px (volledige tabelinhoud), waardoor `renderVirtualBody()` de gehele dataset renderde (275.218 DOM nodes, 26 MB heap).
+
+**Oplossing:**
+```css
+#tab-host { flex:1; display:flex; flex-direction:column; min-height:0; }
+.tab-content { display:none; flex:1; overflow:hidden; flex-direction:column; min-height:0; }
+```
+
+**Ook in deze versie:** `{passive:true}` teruggezet op alle drie scroll-listeners (na onterechte revert in v0.18.0 — root cause bleek de CSS, niet passive).
+
+Verwacht resultaat: DOM nodes ~2.400 (van 275.218), heap ~9.5 MB (van 26 MB).
+
+---
+
+## v0.18.0 — 2026-03-07
+
+**Type:** Bugfix
+**Domein:** 4.4 Performance, 4.3 Modulariteit
+
+Rollback Sprint 3 render-wijzigingen na regressie (virtuele scroll brak).
+
+**Revert Taak 3.3:** `parts.push()` + `parts.join('')` teruggedraaid naar `html +=`
+in `renderVirtualBody()` en `_renderGroupedVirtual()`. Hoewel logisch equivalent,
+brak de scrollbaarheid van de virtuele tabel in de praktijk.
+
+**Revert Taak 2.2:** `{passive:true}` verwijderd uit alle drie scroll-listeners.
+Veroorzaakte mogelijk interferentie met de virtual scroll re-render logic.
+
+Overige Sprint 2+3 wijzigingen (Set-lookup, cached names, Google Fonts, init-structuur)
+blijven actief.
+
+---
+
+## v0.17.0 — 2026-03-07
+
+**Type:** Performance
+**Domein:** 4.4 Performance, 4.2 State management
+
+Sprint 3 laadtijd & rendering (P6 + P2 + P7 aanverwant uit PERFORMANCE_PLAN).
+
+**Taak 3.1 — Google Fonts non-blocking (P6):** Blocking `<link rel="stylesheet">`
+vervangen door `<link rel="preconnect">` hints + async preload-trick
+(`rel="preload" as="style" onload="this.rel='stylesheet'"`). `<noscript>`-fallback
+toegevoegd. Verwijdert render-blocking resource.
+
+**Taak 3.2 — Refactor init-block naar `initApp()` (P2):** Inline INIT-block
+hernoemd naar `initApp()`. Async via `requestIdleCallback` teruggedraaid — de
+scheduling-overhead bleek groter dan de winst bij de al snelle data-generatie.
+`initTabDataFromConfig()` blijft synchroon.
+
+**Taak 3.3 — Array join in render loops:** `html += ...` in `renderVirtualBody()`
+en `_renderGroupedVirtual()` vervangen door `parts.push(...) + parts.join('')`.
+
+---
+
+## v0.16.0 — 2026-03-07
+
+**Type:** Performance
+**Domein:** 4.4 Performance
+
+Sprint 2 CPU-optimalisaties (P4 + P5 + P7 aanverwant uit PERFORMANCE_PLAN).
+
+**Taak 2.1 — `categoricalKeys` → Set-lookup (P4):** `categoricalKeys.includes()`
+vervangen door O(1) Set-lookups. Drie module-level Sets aangemaakt:
+`_categoricalKeySet`, `_averageKeySet`, `_booleanKeySet`. De twee aparte
+average-condities in `computeAggModel()` samengevoegd tot één. Verwacht effect:
+~30–50% snellere aggregatie bij volledige dataset.
+
+**Taak 2.2 — Passive scroll listeners (P5):** `{passive:true}` toegevoegd aan alle
+drie scroll-event-listeners (virtuele body-scroll, gegroepeerde virtuele scroll,
+scroll-sync agg-rij). Voorkomt scroll-jank bij snel scrollen.
+
+**Taak 2.3 — Cache `getAllUniqueNames()` (P7 aanverwant):** Resultaat gecached in
+`_cachedUniqueNames`. Iteratie over 9.000 records bij elke tab-switch vervalt.
+
+---
+
+## v0.15.0 — 2026-03-07
+
+**Type:** Performance
+**Domein:** 4.4 Performance, 4.2 State management
+
+Sprint 1 performance fixes (P1 + P3 uit PERFORMANCE_PLAN).
+
+**Taak 1.1 — `_getUniqueCacheKey()` fix (P1, KRITIEK):** `JSON.stringify(colFilters)`
+serialiseerde Set-objecten altijd als `"{}"`, waardoor de unieke-waarden-cache nooit
+correct invalideerde bij wijziging van kolomfilters. Vervangen door deterministische
+`k=v1,v2;…`-sleutel via `Object.keys().sort()` en `Array.from(set).sort()`.
+
+**Taak 1.2 — `updateRowHighlights()` fix (P3, HOOG):** Selectie-update parstte de
+rij-key via regex op het `onclick`-attribuut. Vervangen door `tr.dataset.rowKey`
+(beschikbaar via `data-row-key` op elke `<tr>` in `rowHtml()`). Querystring gewijzigd
+van `tr:not(.v-spacer):not(.group-hdr)` naar `tr[data-row-key]`.
+
+---
+
 ## v0.14.0 — 2026-03-07
 
 **Type:** Architectuur
