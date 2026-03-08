@@ -1,8 +1,9 @@
 # SCHEMA_CONTRACT_PLAN.md — Schema Contract & Feature Gating
 
-Versie: 1.0
+Versie: 1.2
 Datum: 2026-03-08
-Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 2 volgt
+Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 1½ volgt
+Bronnen: `advies stable row identity.md` (v1.1), `Performance_Roadmap_Dashboard_v052.md` (v1.2)
 
 ---
 
@@ -38,6 +39,26 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 
 `matchRule()`, `sortData()`, `groupData()`, `renderCell()`, `buildSearchIndex()` — gebruiken dynamische veldnamen.
 
+### 2.4 Row identity kwetsbaarheden
+
+De huidige row-identity is fragiel en hardcoded:
+
+| Locatie | Probleem | Risico |
+|---------|----------|--------|
+| `expandRow()` | `parseInt(el.id.split('-')[1])` — breekt bij string-keys (bijv. `"P-1042"`) | Crash / verkeerde rij |
+| `openModal()` | `x.id === id` — hardcoded veldnaam `id` | Niet-generiek |
+| `selectedRows` Set | Bevat `"tab-id"` strings — tab-index afhankelijk | Stale na tab-herordening |
+| `contextRow` / `showCtx()` | Wordt geparsed met `split('-')` — fragiel bij samengestelde keys | Verkeerde context |
+
+Oplossingsrichting: drielaags identity model (business key → engine row key → row reference), geïntegreerd in Fase 2 accessors.
+
+### 2.5 Items voor Layer 3 (buiten scope dit plan)
+
+De volgende items vallen buiten Fase 1–3 maar moeten bij Layer 3 (CSV-adapter) opgepakt worden:
+
+- **Stale selection reconciliation** — na CSV reload kunnen `selectedRowKeys` verwijzen naar verwijderde records; `reconcileSelectionForTab(tabId, newData)` functie nodig
+- **Cross-tab selection persistence** — bij tab-switch moeten selecties bewaard blijven via rowKey (niet index)
+
 ---
 
 ## 3. Werkpakketten
@@ -53,17 +74,26 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 | WP-S5 | _validateContractsOnInit() uitbreiden | ✅ |
 | WP-S6 | Unit tests A-CONTRACT suite (≥20 assertions) | ✅ |
 
+### Fase 1½ — Performance quickfixes (v0.56.1)
+
+Bron: `Performance_Roadmap_Dashboard_v052.md` — routes 1, 6 (prio 1/2, nul risico).
+
+| WP | Beschrijving | Status |
+|----|-------------|--------|
+| WP-P1 | `_perfDebug` guard: `performance.mark/measure` + `console.log` alleen als `_perfDebug=true`; standaard uit in productie (Route 1) | ○ |
+| WP-P2 | `computeVisibleCols()` cachen: dirty flag `_dirty.cols`, alleen herberekenen bij kolom-toggle/reorder (Route 6) | ○ |
+
 ### Fase 2 — Semantic accessors + dual mode (v0.57.0)
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
-| WP-S7 | Semantic accessor-functies (6 functies) | ○ |
-| WP-S8 | Refactor applyFiltersToData() — dual mode | ○ |
+| WP-S7 | Semantic accessor-functies (9 functies): 6 bestaand + `normalizeRecordId(value)`, `makeRowKey(tabId, recordId)`, `parseRowKey(rowKey)` | ○ |
+| WP-S8 | Refactor applyFiltersToData() — dual mode + single-pass filtering: 3 `.filter()` passes → 1 samengesteld predikaat (Perf Route 2, 20–40% winst op filter) | ○ |
 | WP-S9 | Refactor condClass() — dual mode | ○ |
-| WP-S10 | Refactor rowHtml() — dual mode | ○ |
-| WP-S11 | Refactor openModal() + expandRow() — dual mode | ○ |
+| WP-S10 | Refactor rowHtml() — dual mode + `data-row-key` attribuut op elke `<tr>` via `makeRowKey()` | ○ |
+| WP-S11 | Refactor openModal() + expandRow() — dual mode + `_tabIndexById` Map per tab voor O(1) lookup, `getRecordByRowKey()`, `showCtx()` bewaart full rowKey | ○ |
 | WP-S12 | Refactor getAllUniqueNames() — semantic | ○ |
-| WP-S13 | Tests A-SEMANTIC suite (≥16 assertions) | ○ |
+| WP-S13 | Tests A-SEMANTIC suite (≥24 assertions): 16 bestaand + identity tests (`normalizeRecordId`, `makeRowKey`/`parseRowKey` round-trip, `data-row-key` op `<tr>`) | ○ |
 
 ### Fase 3 — Feature gating actief (v0.58.0)
 
@@ -73,16 +103,17 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 | WP-S15 | UI reageert op resolved features | ○ |
 | WP-S16 | Declaratief conditional formatting | ○ |
 | WP-S17 | Tests A-FEATURE-GATE + A-DEGRADE suites | ○ |
-| WP-S18 | Legacy fallbacks verwijderen (optioneel) | ○ |
+| WP-S18 | Legacy fallbacks verwijderen (optioneel) + `selectedRows` → `selectedRowKeys` hernoemen, `contextRow` → `contextRowKey` hernoemen, duplicate-key validatie bij data-init | ○ |
 
 ---
 
 ## 4. Afhankelijkheden
 
 ```
-Fase 1:  S1+S2+S3 (parallel) → S4 → S5 → S6
-Fase 2:  S7 → S8+S9+S10+S12 (parallel) → S11 (na S10) → S13
-Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
+Fase 1:   S1+S2+S3 (parallel) → S4 → S5 → S6
+Fase 1½:  P1+P2 (parallel, onafhankelijk)
+Fase 2:   S7 → S8+S9+S10+S12 (parallel) → S11 (na S10) → S13
+Fase 3:   S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 ```
 
 ---
@@ -92,7 +123,8 @@ Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 | Versie | Fase | WPs | Impact |
 |--------|------|-----|--------|
 | v0.56.0 | 1 | S1–S6 | Nul runtime-impact, alleen diagnostiek |
-| v0.57.0 | 2 | S7–S13 | Identiek gedrag, generiekere code |
+| v0.56.1 | 1½ | P1–P2 | Performance quickfixes, nul functionele impact |
+| v0.57.0 | 2 | S7–S13 | Identiek gedrag, generiekere code + single-pass filter |
 | v0.58.0 | 3 | S14–S17 | Features schakelbaar, UI reageert |
 | v0.59.0 | (opt) | S18 | Cleanup, nul hardcoded veldnamen |
 
@@ -108,10 +140,18 @@ Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 - [ ] A-CONTRACT testsuite met ≥20 assertions
 - [ ] Alle bestaande tests groen, geen runtime-gedrag gewijzigd
 
+### Fase 1½ (v0.56.1)
+- [ ] `_perfDebug` guard: `performance.mark/measure` alleen bij `_perfDebug=true`
+- [ ] `computeVisibleCols()` gecached met dirty flag
+- [ ] Alle bestaande tests groen, geen functioneel verschil
+
 ### Fase 2 (v0.57.0)
-- [ ] 6 semantic accessor-functies beschikbaar
+- [ ] 9 semantic accessor-functies beschikbaar (incl. `normalizeRecordId()`, `makeRowKey()`, `parseRowKey()`)
 - [ ] 5 engine-functies gebruiken semantic pad met legacy fallback
-- [ ] A-SEMANTIC testsuite met ≥16 assertions
+- [ ] Alle `<tr>` elementen hebben `data-row-key` attribuut via `makeRowKey()`
+- [ ] `_tabIndexById` Map actief per tab, O(1) record lookup in `openModal()` / `expandRow()`
+- [ ] Event handlers lezen rowKey uit DOM i.p.v. index-parse
+- [ ] A-SEMANTIC testsuite met ≥24 assertions (incl. identity round-trip tests)
 - [ ] Gedrag identiek aan pre-contract versie
 
 ### Fase 3 (v0.58.0)
