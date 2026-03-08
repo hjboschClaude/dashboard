@@ -4368,23 +4368,22 @@ function runTests(){
 //   development → [1/11] t/m [11/11] (met DTR)
 //
 // Bootstrap-input (wat de assembler genereert):
-//   ```
-//   <!DOCTYPE html>
-//   <html lang="nl">
-//   <head>
-//     <style>:root { /* designTokens */ }</style>
-//     <style>/* component CSS */</style>
-//   </head>
-//   <body>
+//
+//   [DOCTYPE html]
+//   [html lang="nl"]
+//   [head]
+//     [style] :root { /* designTokens */ } [/style]
+//     [style] /* component CSS */ [/style]
+//   [/head]
+//   [body]
 //     <!-- document shell -->
-//     <script>
+//     [script]
 //       const dashboardSpec = { /* Layer 4 output */ };
 //       const datasetPayload = { /* Layer 3 output */ };
 //       /* engineCode */
-//     </script>
-//   </body>
-//   </html>
-//   ```
+//     [/script]
+//   [/body]
+//   [/html]
 // ═══════════════════════════════════════════════════════════════
 // ████████████████████████████████████████████████████████████████
 
