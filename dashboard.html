@@ -562,16 +562,46 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 <!-- #51: XLSX wordt lazy geladen bij eerste export, niet meer synchroon bij paginalaad -->
 <script>
 // ████████████████████████████████████████████████████████████████
+// ████████████████████████████████████████████████████████████████
 // [4/11] TEMPLATE CONFIG & DATA
 // Versie, veiligheid, sample-data, dashboardConfig, config-helpers
 // Noot: DATA staat vóór CONFIG omdat cols0/cols1 eerst gedefinieerd
 // moeten zijn voordat dashboardConfig ernaar kan verwijzen.
+//
+// ══ DATA SOURCE ABSTRACTIE ══════════════════════════════════
+// Contract:
+//   Elke tab in dashboardConfig.tabs[] declareert een dataSource:
+//     { type: 'embedded' }   — data uit _dataGenerators registry (huidige situatie)
+//     { type: 'dataset' }    — data via Layer 3 CSV-adapter (toekomstig)
+//
+// Laadproces:
+//   1. initTabDataFromConfig() leest tab.dataSource.type
+//   2. type 'embedded' → _dataGenerators[tab.id](tab.defaultRowCount)
+//   3. type 'dataset'  → (toekomstig) records + schema van Layer 3
+//   4. Resultaat → _tabData[idx], columns → _tabCols[idx]
+//   5. buildSearchIndex() voegt _searchStr toe per rij
+//
+// Accessors (engine-breed):
+//   getData(tabIdx)  → _tabData[idx]    — rij-array
+//   getCols(tabIdx)  → _tabCols[idx]    — kolom-definities
+//
+// Hardcoded veldnamen (TECH DEBT — Layer 4 dashboard-spec verantwoordelijkheid):
+//   applyFiltersToData()  — globalNameFilter: r.directeur/aog/pm (tab 0), r.name (tab 1)
+//   condClass()           — r.priority, r.status, r.actief, r.progress
+//   rowHtml()             — r.name voor aria-label
+//   modal                 — r.name, r.id voor titel
+//   Deze worden in Fase 2d (WP-J config extraction) naar dashboardConfig verplaatst.
+//
+// Backwards compatibility:
+//   window.data0 / data1 — legacy property accessors → _tabData[0] / [1]
+//   Vervallen wanneer Layer 3 adapter operationeel is.
+// ═══════════════════════════════════════════════════════════════
 // ████████████████████████████████████████████████████████████████
 
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.49.0';
+const DASHBOARD_VERSION = '0.50.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -658,7 +688,10 @@ function rndDate(y1,y2){return new Date(rndInt(y1,y2),rndInt(0,11),rndInt(1,28))
 function generateProjectData(count){return Array.from({length:count},function(_,i){var sl=assignSturingslijn();return {id:i+1,name:projectNames[i%projectNames.length]||'Project '+(i+1),status:rnd(statuses),priority:rnd(priorities),directeur:sl.directeur,aog:sl.aog,pm:sl.pm,deadline:rndDate(2025,2027),progress:rndInt(0,100),budget:rndInt(50,500)*1000,cluster:rnd(clusters),approved:Math.random()>.4,note:rnd(notes),fase:rnd(fases),risico:rnd(risicoNiveaus),startDatum:rndDate(2022,2026),regio:rnd(regios),type:rnd(projectTypes),fte:rndInt(1,20),kostenRealisatie:rndInt(10,400)*1000,oplevering:rndDate(2026,2029),stakeholders:rndInt(2,30),laatsteUpdate:rndDate(2025,2026),documentatie:rnd(docStatuses),programma:rnd(programmalijnen),milieu:rnd(milieuImpacts)};});}
 function generateTeamData(count){var emailSuffix=dashboardConfig.domain.emailSuffix;return Array.from({length:count},function(_,i){var nm=namen[i%namen.length]||(i<namen.length?namen[i]:'Lid '+(i+1));return {id:i+1,name:nm,functie:rnd(functies),afdeling:rnd(clusters),email:nm.toLowerCase().replace(/\s/g,'.').replace(/[àáâ]/g,'a')+(i>=namen.length?i:'')+'@'+emailSuffix, /* E.2 */inDienst:rndDate(2010,2024),status:rnd(teamStatuses),beoordeling:rndInt(1,5),locatie:rnd(locs),capaciteit:rndInt(20,100),actief:Math.random()>.2,telefoon:'06-'+rndInt(10000000,99999999),contract:rnd(contractTypes),uren:rnd([24,28,32,36,40]),team:rnd(teams),leidinggevende:rnd(namen),opleiding:rnd(opleidingen),startProject:rndDate(2024,2026),projecten:rndInt(1,8),salSchaal:rnd(salSchalen),skills:rnd(skillSets),beschikbaarheid:rndInt(40,100),reisafstand:rndInt(2,60),kantoorDagen:rndInt(1,5),certificeringen:rndInt(0,6),laatsteGesprek:rndDate(2025,2026)};});}
 
+// ══ DATA SOURCE: Generator Registry ══════════════════════════
 // WP-H: Data-generatoren registry — losgekoppeld van dashboardConfig
+// Elke key matcht een tab.id uit dashboardConfig.tabs[]
+// Vervalt wanneer dataSource.type 'dataset' beschikbaar is (Layer 3)
 const _dataGenerators = { projects: generateProjectData, team: generateTeamData };
 
 // G3: Pre-built zoekindex — één lowercase string per rij
@@ -928,6 +961,17 @@ function _validateContractsOnInit() {
 }
 
 
+// ══ DATA SOURCE: Loader ═══════════════════════════════════════
+// Contract: initTabDataFromConfig(onComplete)
+//   Input:  dashboardConfig.tabs[] met dataSource declaratie
+//   Output: _tabData[idx] gevuld, _tabCols[idx] gevuld
+//   Async:  requestIdleCallback per tab (voorkomt main-thread blokkade)
+//
+// Uitbreidingspunt voor nieuwe dataSource-types:
+//   Voeg case toe in de pending-filter:
+//     type 'dataset' → verwacht tab.dataSource.records + tab.dataSource.schema
+//     type 'remote'  → verwacht tab.dataSource.url + fetch + schema
+//   Na laden: buildSearchIndex() op resultaat toepassen
 function initTabDataFromConfig(onComplete) {
   dashboardConfig.tabs.forEach(function(tab, idx) {
     _tabCols[idx] = tab.columns;
@@ -2544,6 +2588,7 @@ function renderAgg(tab,cols,data){
 }
 
 // ████████████████████████████████████████████████████████████████
+// ████████████████████████████████████████████████████████████████
 // [8/11] EVENTS — ENGINE CORE: Controllers & Actions
 // Centrale event handling, panels, toolbar-acties, drag-drop,
 // context menu, modal, export, toast, reset
@@ -2559,6 +2604,77 @@ function renderAgg(tab,cols,data){
 //   tagFilter(field, value) — snelfilter via tag-klik
 //
 // Alle acties volgen het patroon: muteer state → _invalidate([...]) → render()
+//
+// ══ UX CONTROLLER HOOKS — Layer 1 → Layer 2 Mapping ════════
+// Elk UX-patroon uit Layer 1 (ux-reference.html) kan via drie
+// input-kanalen worden aangeroepen: muis, keyboard, paneel.
+// Onderstaande tabel mapt Layer 1 patronen → engine-functies.
+//
+// ┌─────────────────────┬────────────────────────────────────────┬──────────────────────────┐
+// │ UX-patroon (L1)     │ Engine-functie(s) (L2)                 │ Selector/State            │
+// ├─────────────────────┼────────────────────────────────────────┼──────────────────────────┤
+// │ Column drag (muis)  │ thDragStart/Over/Enter/Leave/Drop/End │ cols[].visible, col order │
+// │ Column drag (panel) │ colDragStart/Over/Enter/Leave/Drop/End│ renderColPanel()          │
+// │ Column panel        │ togglePanel('cols'), toggleCol(key),  │ getCols() + col.visible   │
+// │                     │ toggleAllCols(val)                    │                           │
+// │ Column keyboard     │ (toekomstig: moveColumn(key, dir))   │ getVisibleColumns() ¹     │
+// │ Hide column         │ toggleCol(key) met val=false          │ col.visible === false     │
+// │ Sort toggle         │ clickSort(key)                        │ AppState.sortRules        │
+// │ Sort panel          │ renderSortPanel(), applySortAction()  │ AppState.sortRules        │
+// │ Filter              │ applyFiltersAction(), clearAllFilters │ AppState.filterRules      │
+// │ Quick filter (tag)  │ tagFilter(field, value)               │ AppState.filterRules      │
+// │ Search              │ onSearchInput(), clearSearch()        │ #search-input.value       │
+// │ Group               │ applyGroupAction(), clearGroup()      │ AppState.groupFields      │
+// │ Group collapse      │ toggleGroupCollapse(path)             │ AppState.collapsedGroups  │
+// │ Tab switch          │ switchTab(tabIdOrIndex)               │ AppState.activeTabId      │
+// │ Density             │ setRowHeight(h)                       │ AppState.rowHeight        │
+// │ Cond. formatting    │ toggleCond()                          │ AppState.condEnabled      │
+// │ Freeze column       │ toggleFreeze()                        │ .freeze-active class      │
+// │ Select row          │ toggleRowSelect(key) ²                │ AppState.selectedRows     │
+// │ Select all          │ toggleSelectAll()                     │ getHeaderCheckboxState()  │
+// │ Context menu        │ showCtx(e, key), showCtxAt(e, key)   │ AppState.contextRow       │
+// │ Undo                │ (toekomstig: undo(), canUndo())      │ — ¹                       │
+// │ Announce            │ announce(message)                     │ #live-region              │
+// │ Reset               │ resetView(), resetViewState()         │ hasActiveSettings()       │
+// └─────────────────────┴────────────────────────────────────────┴──────────────────────────┘
+//
+// ¹ Gemarkeerd als toekomstig — worden in Fase 2d of 3 geïmplementeerd
+// ² Via event delegation op tbody (niet als losse functie)
+//
+// Input-kanalen:
+//   Muis:     Event delegation op table-container, thead, tbody, tab-bar
+//   Keyboard: document keydown handler (Ctrl+A, Escape, Enter)
+//   Paneel:   togglePanel() → renderXxxPanel() → applyXxxAction()
+//
+// ══ UX CONTROLLERS: Column Drag ════════════════════════════
+//   Muis (header):  thDragStart → thDragOver/Enter/Leave → thDrop → thDragEnd
+//   Muis (panel):   colDragStart → colDragOver/Enter/Leave → colDrop → colDragEnd
+//   Keyboard:       (toekomstig — moveColumn)
+//
+// ══ UX CONTROLLERS: Column Panel ═══════════════════════════
+//   renderColPanel(search)  — panel inhoud renderen
+//   toggleCol(key)          — enkele kolom tonen/verbergen
+//   toggleAllCols(val)      — alle kolommen tonen/verbergen
+//
+// ══ UX CONTROLLERS: Sort ═══════════════════════════════════
+//   clickSort(key)          — header-klik (single-sort toggle)
+//   renderSortPanel()       — multi-sort panel
+//   applySortAction()       — multi-sort toepassen
+//
+// ══ UX CONTROLLERS: Filter & Search ════════════════════════
+//   applyFiltersAction()    — filter panel toepassen
+//   clearAllFilters()       — alle filters wissen
+//   onSearchInput()         — zoekterm verwerken (debounced)
+//   tagFilter(field, value) — snelfilter via tag-klik
+//
+// ══ UX CONTROLLERS: Group ══════════════════════════════════
+//   applyGroupAction()      — groepering toepassen
+//   clearGroup()            — groepering opheffen
+//   toggleGroupCollapse()   — enkele groep in/uitklappen
+//
+// ══ UX CONTROLLERS: Accessibility ══════════════════════════
+//   announce(message)       — screenreader-aankondiging via live-region
+//   ARIA-attributen worden door render-adapters toegevoegd (role, aria-sort, etc.)
 // ████████████████████████████████████████████████████████████████
 
 // ══ EVENTS: Sort (header click) ═══════════════════════════════

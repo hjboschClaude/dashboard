@@ -443,7 +443,7 @@ Fase 2d (Build-ready):
 
 ---
 
-### WP-I — Data source abstractie
+### WP-I — Data source abstractie ✅ v0.50.0
 
 **Doel:** Layer 2 losmaken van embedded data.
 
@@ -466,18 +466,25 @@ Fase 2d (Build-ready):
 5. Zorg dat Layer 2 alleen met gestandaardiseerde dataset-input werkt
 
 **Acceptatiecriteria:**
-- Nieuwe databronnen kunnen worden aangesloten zonder renderlogica te wijzigen
-- Bestaande embedded data werkt nog (backwards compatible)
+- ✅ Nieuwe databronnen kunnen worden aangesloten zonder renderlogica te wijzigen
+- ✅ Bestaande embedded data werkt nog (backwards compatible)
+
+**Huidige staat (v0.50.0):**
+- DATA SOURCE ABSTRACTIE contract in [4/11] header: 3 dataSource-types (embedded/dataset/remote), laadproces, accessors
+- DATA SOURCE: Loader bij initTabDataFromConfig(): uitbreidingspunt gedocumenteerd voor nieuwe types
+- DATA SOURCE: Generator Registry bij _dataGenerators: lifecycle en vervaldatum vastgelegd
+- 6 hardcoded veldnaam-locaties geïnventariseerd en gemarkeerd als Fase 2d WP-J verantwoordelijkheid
+- Backwards compatibility: data0/data1 legacy accessors behouden tot Layer 3 operationeel is
 
 ---
 
-### WP-G — UX controller hooks voor Layer 1
+### WP-G — UX controller hooks voor Layer 1 ✅ v0.50.0
 
 **Doel:** Layer 2 structureren zodat UX-patterns uit Layer 1 gecontroleerd kunnen landen.
 
 **Fase:** 2c
 
-**Vereiste:** Layer 1 P1 (WP1–WP3 + WP6 + WP10) moet afgerond zijn.
+**Vereiste:** Layer 1 P1 (WP1–WP3 + WP6 + WP10) moet afgerond zijn. ✅
 
 **Taken:**
 1. Definieer engine-acties op basis van Layer 1 porting-mapping (Layer 1 WP6):
@@ -505,8 +512,15 @@ Fase 2d (Build-ready):
 4. Ontwerp overlay-hooks voor drag preview en drop corridor
 
 **Acceptatiecriteria:**
-- Layer 1 kan worden aangesloten zonder duplicatie van businesslogica
-- Dezelfde actie is bereikbaar via drie input-kanalen (muis, keyboard, paneel)
+- ✅ Layer 1 kan worden aangesloten zonder duplicatie van businesslogica
+- ✅ Dezelfde actie is bereikbaar via drie input-kanalen (muis, keyboard, paneel)
+
+**Huidige staat (v0.50.0):**
+- UX CONTROLLER HOOKS mapping tabel in [8/11] header: 20 UX-patronen → engine-functies met state/selectors
+- 6 UX CONTROLLERS sectie-comments: Column Drag, Column Panel, Sort, Filter & Search, Group, Accessibility
+- Input-kanalen: muis (event delegation), keyboard (document keydown), paneel (togglePanel → renderXxxPanel → applyXxxAction)
+- Toekomstige hooks geïdentificeerd: moveColumn() (keyboard reorder), undo()/canUndo() (history)
+- Overlay-hooks: thDrag*/colDrag* functies beschikbaar als aanknooppunt voor Layer 1 drag preview/corridor
 
 ---
 

@@ -6,6 +6,27 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.50.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: data source abstractie en UX controller hooks — Fase 2c afgerond.
+
+**Layer 2 WP-I — Data source abstractie (dashboard.html):**
+- DATA SOURCE ABSTRACTIE blok in [4/11] header: dataSource contract (embedded/dataset/remote), laadproces, accessors, tech debt lijst
+- DATA SOURCE: Loader comment bij initTabDataFromConfig(): uitbreidingspunt voor nieuwe dataSource-types
+- DATA SOURCE: Generator Registry comment bij _dataGenerators: lifecycle en vervaldatum
+- Hardcoded veldnamen geïnventariseerd (6 locaties) en gemarkeerd als Layer 4 verantwoordelijkheid (Fase 2d WP-J)
+
+**Layer 2 WP-G — UX controller hooks (dashboard.html):**
+- UX CONTROLLER HOOKS mapping tabel in [8/11] header: 20 UX-patronen → engine-functies + state/selectors
+- 6 UX CONTROLLERS sectie-comments: Column Drag, Column Panel, Sort, Filter & Search, Group, Accessibility
+- Input-kanalen architectuur gedocumenteerd: muis, keyboard, paneel — alle drie routes naar dezelfde engine-actie
+- Toekomstige hooks gemarkeerd: moveColumn() (keyboard reorder) en undo()/canUndo() (Fase 2d/3)
+
+---
+
 ## v0.49.0 — 2026-03-08
 
 **Type:** Architectuur
