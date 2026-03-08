@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════
+     UX REFERENCE LAYER — CSV Dashboard Template Platform
+     Versie: 1.4 | Datum: 2026-03-08
+
+     Dit bestand is de bron van waarheid voor UX-patronen:
+     hintbar, drag preview, drop corridor, kolommenpaneel,
+     undo-toast, keyboard patterns, screenreader announce.
+
+     Het is GEEN production engine. De schaalbare runtime staat
+     in dashboard.html (Layer 2). Zie docs/LAYER1_PLAN.md en
+     docs/LAYER2_PLAN.md voor de volledige architectuur.
+
+     Patronen gemarkeerd met PORT THIS zijn normatief.
+     Patronen gemarkeerd met DEMO ONLY zijn alleen voor deze demo.
+
+     STRUCTUUR
+     ─────────
+     CSS:  Tokens → Base → Toolbar → Undo-toast → Hintbar →
+           Table & Header → Drag & Drop states → Overlay patterns →
+           Drag preview → Column panel → Accessibility → Responsive
+     JS:   Demo data → State & history → DOM refs & utilities →
+           Interaction patterns (drag, keyboard, panel, search, undo) →
+           Demo engine (render, formatters, shuffle, reset) → Init
+     ═══════════════════════════════════════════════════════════════════ -->
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard UX Reference — CSV Dashboard Template Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    /* ══ DESIGN TOKENS ══
+     * Token-alignment met RODS (Rotterdam Design System) — zie dashboard.html :root
+     * Gedeeld = identiek aan Layer 2 (RODS); L1-only = UX Reference specifiek
+     *
+     * ┌─────────────────────┬───────────────┬─────────────────────────────────────┐
+     * │ Token               │ Gedeeld/L1    │ Toelichting                         │
+     * ├─────────────────────┼───────────────┼─────────────────────────────────────┤
+     * │ --bg                │ Gedeeld       │ Pagina-achtergrond                  │
+     * │ --surface           │ Gedeeld       │ Kaart/toolbar achtergrond           │
+     * │ --surface-2         │ L1-only       │ Diepere surface (progress-bar)      │
+     * │ --border            │ Gedeeld       │ Primaire rand                       │
+     * │ --border-light      │ L1-only       │ Subtiele rand (cellen, hintbar)     │
+     * │ --text              │ Gedeeld       │ Body-tekst                          │
+     * │ --text-muted        │ Gedeeld (RODS)│ Secundaire tekst (was: --muted)     │
+     * │ --accent            │ Gedeeld       │ Primaire accentkleur (groen)        │
+     * │ --accent-light      │ L1-only       │ Lichte accent-achtergrond           │
+     * │ --accent-subtle     │ L1-only       │ Hover-achtergrond (transparant)     │
+     * │ --color-danger      │ Gedeeld (RODS)│ Foutkleur (was: --danger)           │
+     * │ --color-danger-light│ L1-only       │ Lichte fout-achtergrond             │
+     * │ --color-warning     │ Gedeeld (RODS)│ Waarschuwingskleur (was: --warning) │
+     * │ --color-warning-light│ L1-only      │ Lichte waarschuwing-achtergrond     │
+     * │ --color-success     │ L1-only       │ Succeskleur (was: --success)        │
+     * │ --color-success-light│ L1-only      │ Lichte succes-achtergrond           │
+     * │ --shadow-sm         │ L1-only       │ Kaart-schaduw (subtiel)             │
+     * │ --shadow-md         │ Gedeeld       │ Standaard schaduw                   │
+     * │ --shadow-lg         │ L1-only       │ Paneel-schaduw                      │
+     * │ --shadow-xl         │ L1-only       │ Toast/preview-schaduw               │
+     * │ --radius            │ L1-only       │ Standaard border-radius             │
+     * │ --radius-lg         │ L1-only       │ Grote border-radius (kaart/preview) │
+     * │ --header-h          │ L1-only       │ Hoogte thead th                     │
+     * │ --row-height        │ Gedeeld (RODS)│ Rijhoogte tbody (was: --row-h)      │
+     * │ --drop-gap          │ L1-only       │ Breedte drop-corridor               │
+     * │ --transition-fast   │ L1-only       │ Snelle UI-transitie (100ms)         │
+     * │ --transition-med    │ L1-only       │ Normale UI-transitie (180ms)        │
+     * │ --panel-w           │ L1-only       │ Breedte kolommenpaneel              │
+     * └─────────────────────┴───────────────┴─────────────────────────────────────┘
+     */
+    :root{
+      /* Gedeelde tokens — identiek aan RODS (dashboard.html) */
+      --bg:#FFFFFF;
+      --surface:#F5F7F8;
+      --border:#CAD6DA;
+      --accent:#00811F;
+      --text:#404B4F;
+      --text-muted:#617179;
+      --shadow-md:0 4px 12px rgba(0,0,0,.10);
+      --row-height:32px;
+      --color-warning:#EB7900;
+      --color-danger:#D70D0D;
+      /* L1-only tokens — UX Reference specifiek */
+      --surface-2:#eaeff1;
+      --border-light:#e4eaec;
+      --accent-light:#e6f5ed;
+      --accent-subtle:rgba(0,128,62,.07);
+      --color-danger-light:#fef0f0;
+      --color-warning-light:#fff6e8;
+      --color-success:#0d7a2e;
+      --color-success-light:#e8f6ec;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+      --shadow-xl:0 24px 48px rgba(0,0,0,.16);
+      --radius:10px;
+      --radius-lg:14px;
+      --header-h:44px;
+      --drop-gap:24px;
+      --transition-fast:100ms ease;
+      --transition-med:180ms ease;
+      --panel-w:320px
+    }
+
+    /* ══ BASE STYLES ══ */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#f0f3f4;color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .page{max-width:1320px;margin:0 auto;padding:28px 24px}
+    .hero{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:20px}
+    .hero h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px}
+    .hero p{font-size:14px;color:var(--text-muted);max-width:640px}
+    .chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:var(--accent-light);color:var(--accent);font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0}
+    .chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.6}
+    button{height:34px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);cursor:pointer;font:inherit;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all var(--transition-fast);white-space:nowrap}
+    button:hover{background:var(--surface);border-color:#b8c5ca}button:active{transform:scale(.97)}button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed;transform:none}button svg{flex-shrink:0}
+    button.primary{background:var(--accent);border-color:var(--accent);color:#fff}button.primary:hover{background:#006e35}
+    button.ghost{border-color:transparent;background:transparent}button.ghost:hover{background:var(--surface)}
+    button.sm{height:28px;padding:0 10px;font-size:12px;border-radius:6px}
+    .card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+    .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--text-muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
+
+    /* ══ TOOLBAR PATTERNS ══ — PORT THIS: layout en spacing van toolbar-container, zoekbox, separators
+     * Reference-patronen: search-box, result-count, kolommen-btn, undo-btn
+     * Demo-only: shuffle-btn, reset-btn (in <details class="demo-tools"> blok)
+     * PORTING NOTE: zoekbox → engine setSearchTerm(); result-count → getFilteredCount(); CSS layout overnemen */
+    .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border-light)}
+    .toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+    .toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .toolbar-sep{width:1px;height:22px;background:var(--border);margin:0 2px}
+    .search-box{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:var(--surface);border:1px solid transparent;border-radius:8px;min-width:0;max-width:240px;flex:1;transition:all var(--transition-fast)}
+    .search-box:focus-within{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(0,128,62,.08)}
+    .search-box svg{flex-shrink:0;color:var(--text-muted)}.search-box input{border:none;background:transparent;outline:none;font:inherit;font-size:13px;color:var(--text);width:100%;min-width:0}.search-box input::placeholder{color:var(--border)}
+    .result-count{font-size:12px;color:var(--text-muted);white-space:nowrap;padding:0 4px}
+
+    /* ══ DEMO TOOLS ══ — DEMO ONLY: visueel ondergeschikt aan reference-patronen */
+    .demo-tools{position:relative}
+    .demo-tools-toggle{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 12px;border:1px dashed var(--border);border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer;font:inherit;font-size:12px;font-weight:500;list-style:none;white-space:nowrap;transition:all var(--transition-fast)}
+    .demo-tools-toggle:hover{background:var(--surface);border-color:#b8c5ca;color:var(--text)}
+    .demo-tools-toggle::-webkit-details-marker{display:none}
+    .demo-tools-toggle::before{content:'⚙';font-size:13px}
+    .demo-tools-panel{position:absolute;right:0;top:calc(100% + 4px);display:flex;gap:4px;padding:6px;background:#fff;border:1px solid var(--border-light);border-radius:8px;box-shadow:var(--shadow-md);z-index:10;white-space:nowrap}
+
+    /* ══ UNDO-TOAST ══ — PORT THIS: fixed-bottom feedback-toast met undo-knop, slide-in animatie */
+    /* PORTING NOTE: toast wordt getriggerd via engine undo-callback, niet via directe DOM-mutatie; timing (4s) en animatie zijn normatief */
+    .undo-toast{position:fixed;bottom:24px;left:50%;z-index:10000;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px 0 16px;border-radius:12px;background:var(--text);color:#fff;font-size:13px;font-weight:500;box-shadow:var(--shadow-xl);transform:translateX(-50%) translateY(80px);opacity:0;transition:all 280ms cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+    .undo-toast.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+    .undo-toast button{height:28px;padding:0 10px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;font-size:12px;font-weight:700}.undo-toast button:hover{background:rgba(255,255,255,.28)}
+
+    /* ══ HINTBAR ══ — PORT THIS: keyboard-shortcut hints onder toolbar, kbd-styling */
+    /* PORTING NOTE: statische hints; tekst aanpassen per dashboard via dashboard-spec; geen engine hook nodig */
+    .hintbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);font-size:13px;color:var(--text-muted)}
+    .hintbar .hint-item{display:flex;align-items:center;gap:6px}
+    .hintbar .hint-icon{width:20px;height:20px;border-radius:5px;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
+    .hintbar kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font:inherit;font-size:11px;font-weight:600;color:var(--text);box-shadow:0 1px 0 var(--border)}
+
+    /* ══ TABLE & HEADER STYLES ══ — PORT THIS: sticky thead, drag-handle, sort-btn, hide-col-btn, td-layout */
+    /* PORTING NOTE: thead via engine renderHeader(); drag-handle → beginColumnDrag(); sort-btn → toggleSort(); hide-col-btn → hideColumn(); td via renderVirtualBody() */
+    .table-wrap{overflow:auto;position:relative;scroll-behavior:smooth;max-height:480px}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed}
+    thead th{position:sticky;top:0;z-index:3;height:var(--header-h);padding:0;text-align:left;vertical-align:middle;background:#fff;border-bottom:2px solid var(--border);border-right:1px solid var(--border-light);user-select:none;white-space:nowrap;transition:opacity var(--transition-med),transform var(--transition-med),background-color var(--transition-med)}
+    thead th:last-child{border-right:none}
+    .th-inner{display:flex;align-items:center;gap:6px;height:100%;padding:0 10px;min-width:0;cursor:grab}.th-inner:active{cursor:grabbing}
+    .drag-handle{width:14px;height:14px;display:grid;place-items:center;color:var(--border);flex:0 0 auto;transition:color var(--transition-fast)}
+    thead th:hover .drag-handle{color:var(--text-muted)}.drag-handle svg{display:block}
+    .th-title{font-size:13px;font-weight:600;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis}
+    .sort-btn{height:22px;width:22px;padding:0;border:none;background:transparent;border-radius:4px;display:grid;place-items:center;color:var(--border);cursor:pointer;flex-shrink:0;transition:all var(--transition-fast)}
+    .sort-btn:hover{background:var(--surface);color:var(--text-muted)}.sort-btn.active{color:var(--accent);background:var(--accent-subtle)}.sort-btn svg{display:block}
+    .hide-col-btn{height:20px;width:20px;padding:0;border:none;background:transparent;border-radius:4px;display:grid;place-items:center;color:transparent;cursor:pointer;flex-shrink:0;transition:all var(--transition-fast);margin-left:auto}
+    thead th:hover .hide-col-btn{color:var(--border)}.hide-col-btn:hover{color:var(--color-danger)!important;background:var(--color-danger-light)}.hide-col-btn svg{display:block}
+    tbody td{height:var(--row-height);padding:0 10px;border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light);background:#fff;white-space:nowrap;font-size:14px;transition:transform var(--transition-med),opacity var(--transition-med),background-color var(--transition-med)}
+    tbody td:last-child{border-right:none}tbody tr:nth-child(even) td{background:#fafcfc}tbody tr:hover td{background:var(--accent-subtle)}
+    .status-chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:6px;font-size:12px;font-weight:600}.status-chip::before{content:'';width:5px;height:5px;border-radius:50%}
+    .status-chip.success{background:var(--color-success-light);color:var(--color-success)}.status-chip.success::before{background:var(--color-success)}.status-chip.warning{background:var(--color-warning-light);color:var(--color-warning)}.status-chip.warning::before{background:var(--color-warning)}.status-chip.danger{background:var(--color-danger-light);color:var(--color-danger)}.status-chip.danger::before{background:var(--color-danger)}
+    .progress-cell{display:flex;align-items:center;gap:8px}.progress-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:40px;max-width:80px}.progress-bar-fill{height:100%;border-radius:3px;transition:width 300ms ease}.progress-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.budget-val{font-variant-numeric:tabular-nums;font-weight:500}
+
+    /* ══ DRAG & DROP STATES ══ — PORT THIS: source-opacity, shift-left/right animaties, focus/flash states */
+    /* PORTING NOTE: classes gezet door engine drag controller via getColumnGeometry(); alleen op viewport-zichtbare rijen, niet op gehele tbody */
+    th.th-drag-source{opacity:.35;background:var(--surface)!important}th.th-drag-source .th-title,th.th-drag-source .sort-btn,th.th-drag-source .hide-col-btn{visibility:hidden}th.th-drag-source .drag-handle{opacity:.15}
+    td.col-drag-source{opacity:.3;background:var(--surface)!important}td.col-drag-source>*{visibility:hidden!important}
+    thead th:focus{background:var(--surface);z-index:4}thead th:focus .drag-handle{color:var(--text-muted)}thead th:focus .th-title{color:var(--accent)}
+    thead th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-light)}thead th:focus-visible .th-title{color:var(--accent)}
+    @keyframes col-flash{0%{background:var(--accent-light)}100%{background:transparent}}th.col-just-moved{animation:col-flash 500ms ease both}
+    .shift-left{transform:translateX(calc(var(--drop-gap)*-.5))}.shift-right{transform:translateX(calc(var(--drop-gap)*.5))}
+
+    /* ══ OVERLAY PATTERNS ══ — PORT THIS: drop overlay + drop corridor */
+    /* PORTING NOTE: corridor-positie berekend door engine drag controller via getColumnGeometry(); overlay zit buiten virtual scroll DOM */
+    .drop-overlay{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 90ms ease}.drop-overlay.active{opacity:1}
+    .drop-corridor{position:absolute;top:0;width:var(--drop-gap);transform:translateX(-50%);transition:left 100ms ease}.drop-corridor::before{content:'';position:absolute;inset:0;border-left:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.18;border-radius:2px}.drop-corridor::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--accent);border-radius:1px;opacity:.5}
+
+    /* ══ DRAG PREVIEW ══ — PORT THIS: floating column card */
+    /* PORTING NOTE: preview-content via engine cellRenderers; positie via pointer events; preview is overlay, geen body-clone */
+    .drag-preview{position:fixed;left:0;top:0;transform:translate(-9999px,-9999px);width:200px;border:1px solid var(--border);border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-xl);pointer-events:none;z-index:9999;color:var(--text);opacity:0;transition:opacity 90ms ease;overflow:hidden}.drag-preview.visible{opacity:.92}
+    .drag-preview-header{display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;font-weight:700}.drag-preview-header .mini-handle{color:var(--border);display:grid;place-items:center;flex:0 0 auto}.drag-preview-header .preview-badge{margin-left:auto;font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}.drag-preview-body{background:#fff}
+    .drag-preview-cell{display:flex;align-items:center;height:34px;padding:0 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.drag-preview-cell:nth-child(even){background:#fafcfc}.drag-preview-cell:last-child{border-bottom:none}
+
+    /* ══ COLUMN PANEL PATTERNS ══ — PORT THIS: slide-in paneel rechts, toggle-switch, drag-reorder in lijst */
+    /* PORTING NOTE: paneel leest engine getPanelItems(); schrijft via setColumnOrder()/setHiddenColumns()/setAllColumnsVisible() */
+    .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease}.panel-overlay.open{opacity:1;pointer-events:auto}
+    .col-panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);max-width:90vw;background:#fff;z-index:101;box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform 250ms cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}.col-panel.open{transform:translateX(0)}
+    .panel-header{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border-light);flex-shrink:0}.panel-header h2{font-size:16px;font-weight:700;flex:1}
+    .panel-close{width:32px;height:32px;padding:0;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted);transition:all var(--transition-fast)}.panel-close:hover{background:var(--surface);color:var(--text)}
+    .panel-toolbar{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--border-light);flex-shrink:0}
+    .panel-search{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;background:var(--surface);border:1px solid transparent;border-radius:8px;flex:1;transition:all var(--transition-fast)}.panel-search:focus-within{border-color:var(--accent);background:#fff}.panel-search svg{flex-shrink:0;color:var(--text-muted)}.panel-search input{border:none;background:transparent;outline:none;font:inherit;font-size:13px;color:var(--text);width:100%}.panel-search input::placeholder{color:var(--border)}
+    .panel-actions{display:flex;gap:4px;padding:8px 16px;flex-shrink:0}
+    .panel-list{flex:1;overflow-y:auto;padding:4px 0}
+    .panel-item{display:flex;align-items:center;gap:8px;padding:8px 16px;transition:background var(--transition-fast);cursor:default}.panel-item:hover{background:var(--surface)}.panel-item.hidden-col .pi-label{opacity:.45}
+    .panel-item .pi-handle{width:16px;height:16px;display:grid;place-items:center;color:var(--border);cursor:grab;flex-shrink:0}.panel-item:hover .pi-handle{color:var(--text-muted)}.panel-item .pi-handle svg{display:block}
+    .panel-item .pi-label{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .toggle{position:relative;width:36px;height:20px;flex-shrink:0}.toggle input{position:absolute;opacity:0;width:0;height:0}
+    .toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:10px;cursor:pointer;transition:background 200ms ease}.toggle .slider::before{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform 200ms ease}
+    .toggle input:checked+.slider{background:var(--accent)}.toggle input:checked+.slider::before{transform:translateX(16px)}.toggle input:focus-visible+.slider{box-shadow:0 0 0 3px rgba(0,128,62,.2)}
+    .panel-item.pi-dragging{opacity:.4;background:var(--surface)}.panel-item.pi-dragover{box-shadow:inset 0 2px 0 var(--accent)}
+
+    /* ══ ACCESSIBILITY ══ — PORT THIS: reduced-motion, focus-visible, sr-only
+     * Normatieve ARIA-rollen (zie ook HTML):
+     *   role="grid"          → #demoTable (tabel met navigeerbare headers)
+     *   role="columnheader"  → thead th (gegenereerd door render())
+     *   role="dialog"        → #colPanel (modaal kolommenpaneel)
+     *   role="status"        → #undoToast (aria-live="polite") + #srAnnounce (aria-live="assertive")
+     *   aria-sort             → thead th (ascending/descending/none, gezet door render())
+     *   aria-hidden="true"   → #dropOverlay, .drag-preview (decoratief)
+     *
+     * Keyboard-contract (normatief):
+     *   ←→           Navigeer focus tussen kolomheaders
+     *   Shift+←→     Verplaats gefocuste kolom links/rechts
+     *   Enter/Space  Toggle sortering op gefocuste kolom
+     *   H            Verberg gefocuste kolom
+     *   Escape       Sluit kolommenpaneel (focus terug naar trigger)
+     *   Ctrl+Z       Undo laatste actie
+     *   Tab          Navigeer binnen panel (focus trap actief)
+     *
+     * Focus management (normatief):
+     *   - Na kolom-verplaatsing: focus op verplaatste kolom + flash-animatie
+     *   - Na panel sluiten: focus terug naar panel-trigger knop
+     *   - Panel open: focus trap (Tab cycled binnen paneel)
+     *   - Na kolom verbergen: focus op volgende zichtbare kolom
+     *
+     * PORTING NOTE: alle a11y-patronen zijn engine-verantwoordelijkheid;
+     * Layer 1 definieert het contract, Layer 2 implementeert het in de runtime
+     */
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:640px){.page{padding:16px 12px}.hero{flex-direction:column;gap:8px}.hero h1{font-size:20px}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero"><div><h1>Dashboard UX Reference</h1><p>Normatieve referentie voor dashboard-interactiepatronen. Sleep kolomheaders om te herschikken, of gebruik het toetsenbord: <strong>Shift+←→</strong> verplaatst, <strong>Enter</strong> sorteert, <strong>H</strong> verbergt.</p></div><div class="chip">UX Reference Layer</div></div>
+    <div class="card">
+      <div class="toolbar"><div class="toolbar-left"><div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Zoeken…" aria-label="Zoek in tabel"></div><span class="result-count" id="resultCount"></span></div>
+      <div class="toolbar-right"><!-- Reference patterns: kolommen + undo --><button id="colPanelBtn" title="Kolommen beheren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Kolommen</button><button id="undoBtn" class="ghost" disabled>Undo</button><div class="toolbar-sep"></div><!-- DEMO ONLY: shuffle en reset zijn demo-acties, niet opnemen in productie --><details class="demo-tools"><summary class="demo-tools-toggle">Demo tools</summary><div class="demo-tools-panel"><button id="shuffleBtn" class="sm">Shuffle</button><button id="resetBtn" class="sm primary">Reset</button></div></details></div></div>
+      <div class="hintbar"><span class="hint-item"><span class="hint-icon"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.4" fill="currentColor"/><circle cx="10" cy="3" r="1.4" fill="currentColor"/><circle cx="4" cy="7" r="1.4" fill="currentColor"/><circle cx="10" cy="7" r="1.4" fill="currentColor"/><circle cx="4" cy="11" r="1.4" fill="currentColor"/><circle cx="10" cy="11" r="1.4" fill="currentColor"/></svg></span>Sleep headers om te herschikken</span><span class="hint-item"><kbd>←</kbd><kbd>→</kbd> navigeer · <kbd>Shift</kbd><kbd>←</kbd><kbd>→</kbd> verplaats · <kbd>Enter</kbd> sorteer · <kbd>H</kbd> verberg</span></div>
+      <div class="table-wrap" id="tableWrap"><table id="demoTable" role="grid"></table><div class="drop-overlay" id="dropOverlay" aria-hidden="true"><div class="drop-corridor" id="dropCorridor"></div></div></div>
+      <div class="footer-bar"><span><span class="col-count" id="colCount">6</span> kolommen · <span id="rowCount">12</span> rijen</span><span id="sortIndicator"></span></div>
+    </div>
+  </div>
+  <div class="panel-overlay" id="panelOverlay"></div>
+  <div class="col-panel" id="colPanel" role="dialog" aria-label="Kolommen beheren">
+    <div class="panel-header"><h2>Kolommen</h2><button class="panel-close" id="panelClose" aria-label="Sluit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="panel-toolbar"><div class="panel-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="panelSearchInput" placeholder="Zoek kolom…"></div></div>
+    <div class="panel-actions"><button class="sm ghost" id="panelShowAll">Alles tonen</button><button class="sm ghost" id="panelHideAll">Alles verbergen</button></div>
+    <div class="panel-list" id="panelList"></div>
+  </div>
+  <div class="undo-toast" id="undoToast" role="status" aria-live="polite"><span id="undoToastMsg"></span><button id="undoToastBtn">Undo</button></div>
+  <div class="drag-preview" id="dragPreview" aria-hidden="true"><div class="drag-preview-header"><span class="mini-handle"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span id="dragPreviewLabel">Kolom</span><span class="preview-badge">verplaats</span></div><div class="drag-preview-body" id="dragPreviewBody"></div></div>
+  <div id="srAnnounce" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
+<script>
+// ── DEMO DATA (DEMO ONLY) ─────────────────────────────────────────
+// Illustratief, niet normatief — deze data dient alleen om de UX-patronen
+// werkend te demonstreren. In productie komt data via Layer 3 CSV-adapter.
+// De kolomtypes (tekst, status-chip, numeriek, voortgangsbalk, datum)
+// dekken de belangrijkste celrenderer-varianten af.
+// Data-inhoud is voorbeeldmatig; elk CSV-dashboard krijgt eigen data.
+const defaultColumns=[{key:'project',label:'Project',width:190},{key:'status',label:'Status',width:130},{key:'owner',label:'Eigenaar',width:160},{key:'budget',label:'Budget',width:140,align:'right'},{key:'progress',label:'Voortgang',width:150},{key:'updated',label:'Bijgewerkt',width:170}];
+const defaultRows=[
+  {project:'Warmtenet Noord',status:'Op schema',owner:'A. de Boer',budget:4200000,progress:73,updated:'2026-03-08 09:12'},
+  {project:'Kadeherstel Oost',status:'Aandacht',owner:'M. Jansen',budget:1800000,progress:41,updated:'2026-03-07 16:48'},
+  {project:'Stadspark Zuid',status:'Op schema',owner:'P. Visser',budget:950000,progress:58,updated:'2026-03-08 08:03'},
+  {project:'Brugrenovatie West',status:'Risico',owner:'L. Bakker',budget:6100000,progress:26,updated:'2026-03-06 14:21'},
+  {project:'Woonprogramma Rivier',status:'Op schema',owner:'S. Kaya',budget:3500000,progress:67,updated:'2026-03-08 10:34'},
+  {project:'Mobiliteitshub Centrum',status:'Aandacht',owner:'R. Smit',budget:2750000,progress:52,updated:'2026-03-07 11:09'},
+  {project:'Energietransitie Haven',status:'Op schema',owner:'J. de Wit',budget:8900000,progress:34,updated:'2026-03-05 15:22'},
+  {project:'Circulair Depot',status:'Risico',owner:'N. Tahiri',budget:1200000,progress:12,updated:'2026-03-04 10:45'},
+  {project:'Wijkvernieuwing Oost',status:'Aandacht',owner:'A. de Boer',budget:5400000,progress:61,updated:'2026-03-08 07:30'},
+  {project:'Fietsroute Binnenstad',status:'Op schema',owner:'P. Visser',budget:780000,progress:89,updated:'2026-03-07 14:15'},
+  {project:'Digitaal Loket 2.0',status:'Op schema',owner:'S. Kaya',budget:420000,progress:95,updated:'2026-03-08 11:00'},
+  {project:'Waterberging Polder',status:'Aandacht',owner:'L. Bakker',budget:3100000,progress:38,updated:'2026-03-06 09:55'}];
+
+// ── STATE & HISTORY (DEMO ONLY) ───────────────────────────────────
+// Directe state-mutatie; in productie loopt state via engine AppState + dirty flags
+let columns=structuredClone(defaultColumns),rows=structuredClone(defaultRows),sortState={key:null,dir:null},searchTerm='',hiddenColumns=new Set();
+const history=[],MAX_HISTORY=20; // DEMO ONLY: snapshot-array — in engine via action replay
+const dragState={active:false,sourceKey:null,targetKey:null,placement:null,pointerX:0,pointerY:0,markerX:0,previewAnchorX:100,previewAnchorY:18,previewWidth:200}; // PORT THIS: dragState-structuur is normatief
+
+// ── DOM REFERENCES & UTILITY FUNCTIONS ────────────────────────────
+const $=id=>document.getElementById(id);
+const table=$('demoTable'),tableWrap=$('tableWrap'),preview=$('dragPreview'),previewLabel=$('dragPreviewLabel'),previewBody=$('dragPreviewBody'),dropOverlay=$('dropOverlay'),dropCorridor=$('dropCorridor'),undoBtn=$('undoBtn'),undoToast=$('undoToast'),undoToastMsg=$('undoToastMsg'),undoToastBtn=$('undoToastBtn'),srAnnounce=$('srAnnounce'),searchInput=$('searchInput'),resultCount=$('resultCount'),panelOverlay=$('panelOverlay'),colPanel=$('colPanel'),panelList=$('panelList'),panelSearchInput=$('panelSearchInput');
+const euroFmt=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function getColumnIndex(k){return columns.findIndex(c=>c.key===k)}
+function getVisibleColumns(){return columns.filter(c=>!hiddenColumns.has(c.key))}
+function getFilteredRows(){if(!searchTerm)return rows;const t=searchTerm.toLowerCase();return rows.filter(r=>columns.some(c=>{const v=r[c.key];return(typeof v==='number'?euroFmt.format(v):String(v)).toLowerCase().includes(t)}))}
+function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRows().length} van ${rows.length}`:''}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  REFERENCE INTERACTIONS — PORT THIS                         ║
+// ║  Normatieve UX-patronen voor dashboard-interactie.          ║
+// ║  Elk patroon definieert een contract voor:                  ║
+// ║    - Trigger (muis / keyboard / programmatisch)              ║
+// ║    - Zichtbare state-wijziging                              ║
+// ║    - Screenreader-aankondiging                              ║
+// ║    - Engine-hook (Layer 2 mapping — zie PORTING MAP onder)  ║
+// ╚══════════════════════════════════════════════════════════════╝
+//
+// ══ INTERACTION PATTERN CATALOG ══════════════════════════════════
+// 12 normatieve patronen — contract tussen Layer 1 (UX) en Layer 2 (Engine)
+// Elk patroon hieronder definieert WAT er moet gebeuren; de HOW staat in Layer 2.
+//
+// ┌────┬──────────────────────┬───────────────────────────────────────┐
+// │ #  │ Patroon              │ Samenvatting                          │
+// ├────┼──────────────────────┼───────────────────────────────────────┤
+// │  1 │ Column drag start    │ Gebruiker pakt kolomheader op         │
+// │  2 │ Column drag move     │ Gebruiker sleept over andere headers  │
+// │  3 │ Column drag commit   │ Gebruiker laat los op doelpositie     │
+// │  4 │ Column drag cancel   │ Drag wordt afgebroken                 │
+// │  5 │ Drop corridor        │ Visuele indicator waar kolom landt    │
+// │  6 │ Header shift         │ Buurkolommen schuiven opzij           │
+// │  7 │ Column panel         │ Slide-in paneel voor kolombeheer      │
+// │  8 │ Show all / hide all  │ Bulk-toggle kolom-zichtbaarheid       │
+// │  9 │ Keyboard reorder     │ Kolom verplaatsen via toetsenbord     │
+// │ 10 │ Hide column          │ Enkele kolom verbergen                │
+// │ 11 │ Undo feedback        │ Toast met ongedaan-maken optie        │
+// │ 12 │ Screen reader announce│ Statusmelding voor screenreaders     │
+// └────┴──────────────────────┴───────────────────────────────────────┘
+//
+// ── PATROON 1: Column drag start ────────────────────────────────
+//   Doel:       Kolomheader oppakken om te herschikken
+//   Trigger:    mousedown / dragstart op thead th
+//   State:      source-kolom krijgt opacity 35%, drag-preview verschijnt
+//               bij cursor, grab → grabbing cursor
+//   A11y:       Geen announce (visueel voldoende); preview heeft
+//               aria-hidden="true"
+//   Engine-hook: beginColumnDrag(key) → zet dragState.active=true
+//
+// ── PATROON 2: Column drag move ─────────────────────────────────
+//   Doel:       Visuele feedback geven tijdens slepen
+//   Trigger:    dragover op thead th (continu bij muisbeweging)
+//   State:      Target-detectie (before/after op 42%/58% grens),
+//               preview volgt cursor, corridor verplaatst,
+//               buurkolommen krijgen shift-animatie
+//   A11y:       Geen announce tijdens movement (te frequent)
+//   Engine-hook: updateColumnDrag(targetKey, placement) → update
+//               dragState + getColumnGeometry() voor corridor-positie
+//
+// ── PATROON 3: Column drag commit ───────────────────────────────
+//   Doel:       Kolom definitief verplaatsen naar doelpositie
+//   Trigger:    drop op thead th
+//   State:      Kolom springt naar nieuwe positie, alle drag-states
+//               worden opgeruimd, undo-toast verschijnt
+//   A11y:       announce("Kolom {label} verplaatst"), toast met
+//               undo-knop (role="status", aria-live="polite")
+//   Engine-hook: commitColumnMove(sourceKey, targetKey, placement)
+//               → muteert columnOrder via _tabCols
+//
+// ── PATROON 4: Column drag cancel ───────────────────────────────
+//   Doel:       Drag afbreken zonder state-wijziging
+//   Trigger:    dragend event / Escape-toets tijdens drag
+//   State:      Alle drag-classes verwijderd, preview verborgen,
+//               corridor verborgen, kolommen terug op originele positie
+//   A11y:       Geen announce (geen state-wijziging)
+//   Engine-hook: cancelColumnDrag() → reset dragState, cleanup classes
+//
+// ── PATROON 5: Drop corridor ────────────────────────────────────
+//   Doel:       Visueel tonen waar de kolom zal landen
+//   Trigger:    Automatisch tijdens drag, bij th boundary
+//   State:      Verticale lijn (accent-kleur) op grens tussen kolommen,
+//               volledige hoogte van tabel, vloeiende transitie (100ms)
+//   A11y:       aria-hidden="true" op overlay (decoratief element)
+//   Engine-hook: Render adapter: getColumnGeometry() levert left/right
+//               posities; engine berekent corridorpositie
+//
+// ── PATROON 6: Header shift ─────────────────────────────────────
+//   Doel:       Buurkolommen visueel laten opschuiven tijdens drag
+//   Trigger:    Automatisch wanneer drag-target verandert
+//   State:      Linker buurkolom krijgt shift-left (translateX -½ gap),
+//               rechter buurkolom krijgt shift-right (translateX +½ gap)
+//   A11y:       Puur visueel, geen announce
+//   Engine-hook: CSS classes via render adapter; getBoundaryColumns()
+//               bepaalt welke kolommen verschuiven
+//
+// ── PATROON 7: Column panel open/close ──────────────────────────
+//   Doel:       Kolommenpaneel openen voor beheer (toggle, reorder, zoek)
+//   Trigger:    Klik op "Kolommen"-knop / Escape-toets / klik op overlay
+//   State:      Paneel schuift in van rechts (250ms cubic-bezier),
+//               overlay verschijnt (25% zwart), focus naar zoekvel
+//   A11y:       role="dialog", focus trap actief (Tab cycled),
+//               Escape sluit, focus return naar trigger-knop
+//   Engine-hook: togglePanel('columns') → getActivePanel(); panel leest
+//               getPanelItems(), schrijft via setColumnOrder()/
+//               setHiddenColumns()
+//
+// ── PATROON 8: Show all / hide all ──────────────────────────────
+//   Doel:       Alle kolommen in één keer tonen of verbergen
+//   Trigger:    Klik op "Alles tonen" / "Alles verbergen" in panel
+//   State:      Alle toggles in panel veranderen, tabel re-rendert,
+//               eerste kolom blijft altijd zichtbaar (bij hide all)
+//   A11y:       announce via undo-toast (role="status")
+//   Engine-hook: setAllColumnsVisible(bool) → bulk-update col.visible
+//               flags; invalidates header/body/meta
+//
+// ── PATROON 9: Keyboard reorder ─────────────────────────────────
+//   Doel:       Kolom verplaatsen zonder muis, volledig via toetsenbord
+//   Trigger:    Shift+←/→ op gefocuste thead th
+//   State:      Kolom verplaatst één positie, focus volgt mee,
+//               flash-animatie (500ms) op verplaatste kolom
+//   A11y:       announce("Kolom {label} verplaatst"),
+//               focus op verplaatste kolom behouden na re-render
+//   Engine-hook: moveColumn(key, direction) → commitColumnMove();
+//               render adapter behoudt data-col-key voor focus-restore
+//
+// ── PATROON 10: Hide column ─────────────────────────────────────
+//   Doel:       Enkele kolom verbergen uit de tabelweergave
+//   Trigger:    H-toets op gefocuste th / klik hide-col-btn in header
+//   State:      Kolom verdwijnt uit tabel, panel-toggle wordt uit,
+//               minimaal 1 kolom blijft altijd zichtbaar
+//   A11y:       announce("Kolom {label} verborgen"), undo-toast,
+//               focus verplaatst naar volgende zichtbare kolom
+//   Engine-hook: hideColumn(key) → zet col.visible=false; invalidates
+//               header/body/meta; getHiddenColumns() als selector
+//
+// ── PATROON 11: Undo feedback ───────────────────────────────────
+//   Doel:       Gebruiker informeren over destructieve actie + undo bieden
+//   Trigger:    Na elke mutatie (move, hide, sort, show/hide all)
+//   State:      Toast verschijnt onderaan (slide-in 280ms cubic-bezier),
+//               verdwijnt na 4s, bevat bericht + undo-knop
+//   A11y:       role="status" aria-live="polite" op toast,
+//               Ctrl/Cmd+Z als global shortcut, undo-knop focusbaar
+//   Engine-hook: undo() via action replay; canUndo() als guard;
+//               toast getriggerd door engine actie-callback
+//
+// ── PATROON 12: Screen reader announce ──────────────────────────
+//   Doel:       Statuswijzigingen communiceren aan screenreader-gebruikers
+//   Trigger:    Programmatisch na elke interactie-afhandeling
+//   State:      Onzichtbaar element (aria-live="assertive") krijgt
+//               nieuwe tekst, screenreader leest voor
+//   A11y:       aria-live="assertive" + aria-atomic="true";
+//               tekst wordt eerst leeggemaakt (rAF) om herlezing
+//               te forceren bij dezelfde melding
+//   Engine-hook: announce(message) als engine utility; elke engine-actie
+//               roept announce() aan als laatste stap
+//
+// ═════════════════════════════════════════════════════════════════
+
+// ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
+// Contract: elke state-wijziging die de gebruiker niet visueel kan volgen, wordt aangekondigd via aria-live region
+// PORTING NOTE: announce() wordt een engine utility; elke engine-actie roept announce() aan als laatste stap
+function announce(m){srAnnounce.textContent='';requestAnimationFrame(()=>{srAnnounce.textContent=m})}
+
+// ── REFERENCE INTERACTION: Undo & Feedback ── PORT THIS ───────────
+// Contract: destructieve acties tonen een toast met undo-optie (4s timeout), screenreader melding bij undo
+// PORTING NOTE: toast hangt aan engine undo-callback, niet aan DOM-mutaties; engine biedt canUndo() selector en undo() actie
+let undoToastTimer=null;
+function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)} // PORT THIS: toast-timing en animatie
+function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false} // DEMO ONLY: snapshot-based undo — vervangen door engine action replay
+function undo(){if(!history.length)return;const s=history.pop();columns=s.columns;rows=s.rows;sortState=s.sort;hiddenColumns=s.hidden;undoBtn.disabled=history.length===0;render();renderPanel();announce('Ongedaan gemaakt: '+s.label)} // DEMO ONLY: restore snapshot — in engine via action replay
+
+// ── REFERENCE INTERACTION: Sort ── PORT THIS ──────────────────────
+// Contract: klik op sort-btn toggled asc→desc, indicator in footer, screenreader melding
+// PORTING NOTE: engine toggleSort(key) muteert sortRules + invalidates sort/group/agg/body/meta; selector: getSortState()
+function toggleSort(k){pushHistory('sortering');if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir='asc'}applySortToRows();render();updateSortIndicator()} // PORT THIS: toggle-logica en indicator
+function applySortToRows(){if(!sortState.key||!sortState.dir)return;const k=sortState.key,d=sortState.dir==='asc'?1:-1;rows.sort((a,b)=>{let va=a[k],vb=b[k];if(typeof va==='number'&&typeof vb==='number')return(va-vb)*d;va=String(va).toLowerCase();vb=String(vb).toLowerCase();return va<vb?-d:va>vb?d:0})} // DEMO ONLY: directe array-mutatie — in engine via sortData()
+function updateSortIndicator(){const el=$('sortIndicator');if(!sortState.key){el.textContent='';return}const c=columns.find(x=>x.key===sortState.key);el.textContent=`Gesorteerd: ${c?c.label:sortState.key} ${sortState.dir==='asc'?'↑':'↓'}`} // PORT THIS: footer-indicator patroon
+
+// ── REFERENCE INTERACTION: Column Visibility ── PORT THIS ─────────
+// Contract: verberg kolom met undo-toast + announce, minimaal 1 kolom blijft zichtbaar
+// PORTING NOTE: engine hideColumn(key) schrijft col.visible=false + invalidates header/body/meta; selector: getHiddenColumns()
+function hideColumn(k){if(hiddenColumns.size>=columns.length-1)return;pushHistory(`kolom verborgen`);hiddenColumns.add(k);render();renderPanel();showUndoToast('Kolom verborgen');announce(`Kolom ${columns.find(c=>c.key===k)?.label} verborgen`)}
+
+// ── REFERENCE INTERACTION: Column Move ── PORT THIS ───────────────
+// Contract: verplaats kolom met before/after placement, undo-toast + announce, return boolean succes
+// PORTING NOTE: engine commitColumnMove() muteert columnOrder via _tabCols; geen directe splice op columns array
+function moveColumn(s,t,p){if(!s||!t||s===t)return false;const si=getColumnIndex(s),ti=getColumnIndex(t);if(si<0||ti<0)return false;const c=columns.find(x=>x.key===s);pushHistory(`"${c?.label}" verplaatst`);const[m]=columns.splice(si,1);let ii=getColumnIndex(t);if(p==='after')ii++;columns.splice(ii,0,m);showUndoToast(`"${c?.label}" verplaatst`);announce(`Kolom ${c?.label} verplaatst`);return true} // DEMO ONLY: directe splice — in engine via columnOrder mutatie
+
+// ── REFERENCE INTERACTION: Drag & Drop ── PORT THIS ───────────────
+// Contract: column drag met corridor-indicator, shift-animatie op buren, preview-kaart bij cursor
+// PORTING NOTE: engine biedt beginColumnDrag/updateColumnDrag/commitColumnMove/cancelColumnDrag; drag classes alleen op viewport-zichtbare cellen
+function clearDropClasses(){table.querySelectorAll('th,td').forEach(e=>e.classList.remove('th-drag-source','col-drag-source','shift-left','shift-right'))} // PORT THIS: visuele state cleanup
+function getBoundaryColumns(){if(!dragState.active||!dragState.targetKey||!dragState.placement)return{leftKey:null,rightKey:null};const ti=getColumnIndex(dragState.targetKey);if(ti<0)return{leftKey:null,rightKey:null};return dragState.placement==='before'?{leftKey:columns[ti-1]?.key||null,rightKey:columns[ti]?.key||null}:{leftKey:columns[ti]?.key||null,rightKey:columns[ti+1]?.key||null}} // PORT THIS: boundary-berekening voor shift
+function applyColumnShift(k,d){if(!k||!d)return;const c=d==='left'?'shift-left':'shift-right',i=getColumnIndex(k)+1;if(i<=0)return;table.querySelectorAll(`thead th:nth-child(${i}),tbody td:nth-child(${i})`).forEach(e=>e.classList.add(c))} // PORT THIS: shift-class op buurkolommen
+function applyDragClasses(){clearDropClasses();if(!dragState.active||!dragState.sourceKey)return;const si=getColumnIndex(dragState.sourceKey)+1;if(si>0){const th=table.querySelector(`thead th:nth-child(${si})`);if(th)th.classList.add('th-drag-source');table.querySelectorAll(`tbody td:nth-child(${si})`).forEach(t=>t.classList.add('col-drag-source'))}const b=getBoundaryColumns();applyColumnShift(b.leftKey,'left');applyColumnShift(b.rightKey,'right')} // DEMO ONLY: querySelectorAll op alle td's — in engine via virtual scroll column index
+function updatePreview(){if(!dragState.active||!dragState.sourceKey){preview.classList.remove('visible');preview.style.transform='translate(-9999px,-9999px)';return}const c=columns.find(x=>x.key===dragState.sourceKey);previewLabel.textContent=c?c.label:'Kolom';previewBody.innerHTML=rows.slice(0,5).map(r=>`<div class="drag-preview-cell" style="justify-content:${c?.align==='right'?'flex-end':'flex-start'}">${escapeHTML(formatCellPlain(r[dragState.sourceKey],dragState.sourceKey))}</div>`).join('');preview.classList.add('visible');preview.style.transform=`translate(${dragState.pointerX-dragState.previewAnchorX}px,${dragState.pointerY-dragState.previewAnchorY}px)`}
+function syncOverlay(){if(!dragState.active||!dragState.targetKey||!dragState.placement){dropOverlay.classList.remove('active');return}const th=table.querySelector(`th[data-col-key="${dragState.targetKey}"]`);if(!th){dropOverlay.classList.remove('active');return}const wr=tableWrap.getBoundingClientRect(),tr=th.getBoundingClientRect(),mx=(dragState.placement==='before'?tr.left:tr.right)-wr.left+tableWrap.scrollLeft,oh=tableWrap.scrollHeight;dropOverlay.style.width=`${table.scrollWidth}px`;dropOverlay.style.height=`${oh}px`;dropCorridor.style.left=`${mx}px`;dropCorridor.style.height=`${oh}px`;dropCorridor.style.top='0';dropOverlay.classList.add('active')}
+function handleDragStart(e){const th=e.target.closest('th[data-col-key]');if(!th)return;dragState.active=true;dragState.sourceKey=th.dataset.colKey;dragState.targetKey=null;dragState.placement=null;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;const r=th.getBoundingClientRect();dragState.previewAnchorX=Math.max(20,Math.min(180,e.clientX-r.left));dragState.previewAnchorY=Math.max(12,Math.min(28,e.clientY-r.top));if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragState.sourceKey);const img=new Image();img.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';e.dataTransfer.setDragImage(img,0,0)}updatePreview();applyDragClasses();syncOverlay()}
+function handleDragOver(e){const th=e.target.closest('th[data-col-key]');if(!dragState.active||!th)return;e.preventDefault();const r=th.getBoundingClientRect(),rx=(e.clientX-r.left)/r.width;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;dragState.targetKey=th.dataset.colKey;if(rx<=.42)dragState.placement='before';else if(rx>=.58)dragState.placement='after';else if(!dragState.placement)dragState.placement=rx<.5?'before':'after';updatePreview();applyDragClasses();syncOverlay()}
+function handleDrop(e){const th=e.target.closest('th[data-col-key]');if(!dragState.active||!th)return;e.preventDefault();if(moveColumn(dragState.sourceKey,th.dataset.colKey,dragState.placement||'before')){endDrag();render()}else endDrag()}
+function endDrag(){dragState.active=false;dragState.sourceKey=null;dragState.targetKey=null;dragState.placement=null;clearDropClasses();dropOverlay.classList.remove('active');updatePreview()}
+table.addEventListener('dragstart',handleDragStart);table.addEventListener('dragover',handleDragOver);table.addEventListener('drop',handleDrop);table.addEventListener('dragend',()=>endDrag());
+document.addEventListener('dragover',e=>{if(!dragState.active)return;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;updatePreview()});
+tableWrap.addEventListener('scroll',()=>{if(dragState.active)syncOverlay()});window.addEventListener('resize',()=>{if(dragState.active)syncOverlay()});
+
+// ── REFERENCE INTERACTION: Focus Management ── PORT THIS ──────────
+// Contract: na kolom-verplaatsing blijft focus op verplaatste kolom, flash-animatie als bevestiging
+// PORTING NOTE: focus return via render adapter; engine renderHeader() behoudt data-col-key voor focus-restore
+let lastFocusedColKey=null;
+table.addEventListener('focusin',e=>{const th=e.target.closest('th[data-col-key]');if(th)lastFocusedColKey=th.dataset.colKey});
+function focusCol(k){if(!k)return;const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.focus();el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});lastFocusedColKey=k}
+function flashCol(k){const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.classList.remove('col-just-moved');void el.offsetWidth;el.classList.add('col-just-moved')}
+function resolveColKey(e){let th=e.target.closest('th[data-col-key]');if(th)return th.dataset.colKey;const a=document.activeElement;if(a&&table.contains(a)){th=a.closest('th[data-col-key]');if(th)return th.dataset.colKey}return lastFocusedColKey||null}
+
+// ── REFERENCE INTERACTION: Keyboard ── PORT THIS ──────────────────
+// Contract: Shift+←→ verplaatst kolom, Enter/Space sorteert, H verbergt, ←→ navigeert focus
+// PORTING NOTE: keyboard controller roept dezelfde engine-acties aan als muis/panel (moveColumn, toggleSort, hideColumn)
+table.addEventListener('keydown',e=>{
+  const key=resolveColKey(e);if(!key)return;
+  const idx=getColumnIndex(key),vc=getVisibleColumns(),vi=vc.findIndex(c=>c.key===key);
+  if(e.shiftKey&&e.key==='ArrowLeft'){e.preventDefault();if(idx<=0)return;moveColumn(key,columns[idx-1].key,'before');render();focusCol(key);flashCol(key);return}
+  if(e.shiftKey&&e.key==='ArrowRight'){e.preventDefault();if(idx>=columns.length-1)return;moveColumn(key,columns[idx+1].key,'after');render();focusCol(key);flashCol(key);return}
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSort(key);focusCol(key);return}
+  if(e.key==='h'||e.key==='H'){e.preventDefault();hideColumn(key);const nv=getVisibleColumns();if(nv.length)focusCol(nv[Math.min(vi,nv.length-1)].key);return}
+  if(e.key==='ArrowLeft'&&!e.shiftKey&&vi>0){e.preventDefault();focusCol(vc[vi-1].key);return}
+  if(e.key==='ArrowRight'&&!e.shiftKey&&vi<vc.length-1){e.preventDefault();focusCol(vc[vi+1].key);return}
+});
+
+// ── REFERENCE INTERACTION: Column Panel ── PORT THIS ──────────────
+// Contract: slide-in paneel met zoek, toggle-visibility, drag-reorder, Escape sluit
+// PORTING NOTE: panel-acties schrijven alleen naar columnOrder/hiddenColumns state; engine biedt togglePanel(), getPanelItems(), setColumnOrder()
+let panelSearchTerm='',_panelTrigger=null; // PORT THIS: focus return naar trigger bij panel sluiten
+function openPanel(){_panelTrigger=document.activeElement;colPanel.classList.add('open');panelOverlay.classList.add('open');renderPanel();panelSearchInput.focus()}
+function closePanel(){colPanel.classList.remove('open');panelOverlay.classList.remove('open');if(_panelTrigger&&_panelTrigger.focus){_panelTrigger.focus();_panelTrigger=null}} // PORT THIS: focus-return
+function renderPanel(){
+  const t=panelSearchTerm.toLowerCase(),items=columns.filter(c=>!t||c.label.toLowerCase().includes(t));
+  panelList.innerHTML=items.map(c=>{const h=hiddenColumns.has(c.key);return`<div class="panel-item ${h?'hidden-col':''}" draggable="true" data-panel-key="${c.key}"><span class="pi-handle"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span class="pi-label">${escapeHTML(c.label)}</span><label class="toggle"><input type="checkbox" ${h?'':'checked'} data-toggle-key="${c.key}"><span class="slider"></span></label></div>`}).join('');
+  panelList.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{const k=cb.dataset.toggleKey;if(cb.checked)hiddenColumns.delete(k);else{if(hiddenColumns.size>=columns.length-1){cb.checked=true;return}hiddenColumns.add(k)}pushHistory(cb.checked?'kolom getoond':'kolom verborgen');render();renderPanel()}));
+  let dk=null;
+  panelList.querySelectorAll('.panel-item').forEach(item=>{
+    item.addEventListener('dragstart',e=>{dk=item.dataset.panelKey;item.classList.add('pi-dragging');e.dataTransfer.effectAllowed='move'});
+    item.addEventListener('dragend',()=>{dk=null;panelList.querySelectorAll('.panel-item').forEach(el=>el.classList.remove('pi-dragging','pi-dragover'))});
+    item.addEventListener('dragover',e=>{e.preventDefault();if(!dk||dk===item.dataset.panelKey)return;panelList.querySelectorAll('.panel-item').forEach(el=>el.classList.remove('pi-dragover'));item.classList.add('pi-dragover')});
+    item.addEventListener('drop',e=>{e.preventDefault();if(!dk)return;const s=dk,t=item.dataset.panelKey;if(s!==t){pushHistory('kolomvolgorde');const si=getColumnIndex(s),[m]=columns.splice(si,1);const ti=getColumnIndex(t);columns.splice(ti,0,m);render();renderPanel()}});
+  });
+}
+$('colPanelBtn').addEventListener('click',()=>openPanel());
+$('panelClose').addEventListener('click',()=>closePanel());
+panelOverlay.addEventListener('click',()=>closePanel());
+panelSearchInput.addEventListener('input',()=>{panelSearchTerm=panelSearchInput.value.trim();renderPanel()});
+$('panelShowAll').addEventListener('click',()=>{pushHistory('alles getoond');hiddenColumns.clear();render();renderPanel()});
+$('panelHideAll').addEventListener('click',()=>{pushHistory('alles verborgen');columns.forEach((c,i)=>{if(i>0)hiddenColumns.add(c.key)});render();renderPanel()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&colPanel.classList.contains('open')){e.preventDefault();closePanel();return}
+  // PORT THIS: focus trap — Tab cycled binnen panel wanneer open
+  if(e.key==='Tab'&&colPanel.classList.contains('open')){
+    const focusable=colPanel.querySelectorAll('button,input,[tabindex]:not([tabindex="-1"])');
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey){if(document.activeElement===first){e.preventDefault();last.focus()}}
+    else{if(document.activeElement===last){e.preventDefault();first.focus()}}
+  }
+});
+
+// ── REFERENCE INTERACTION: Search ── PORT THIS ────────────────────
+// Contract: live-filter op invoer, resultaatteller in toolbar, lege zoekterm = alle rijen
+// PORTING NOTE: engine setSearchTerm(term) invalidates data/sort/group/agg/body/meta; debounced via debouncedRender()
+searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();render()});
+
+// ── REFERENCE INTERACTION: Global Undo Shortcut ── PORT THIS ──────
+// Contract: Ctrl/Cmd+Z triggert undo op documentniveau, ongeacht focus
+// PORTING NOTE: engine undo() via action replay (niet snapshot); canUndo() als guard; keyboard handler op document-niveau
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
+undoBtn.addEventListener('click',()=>undo());
+undoToastBtn.addEventListener('click',()=>{undo();undoToast.classList.remove('visible')});
+
+// ══════════════════════════════════════════════════════════════
+// DEMO ENGINE (DEMO ONLY)
+// Onderstaande code is een minimale implementatie om de
+// UX-patronen hierboven werkend te demonstreren.
+// Niet overnemen in productie — gebruik de Dashboard Engine
+// Layer (dashboard.html) als runtime-implementatie.
+//
+// Vervanging per functie:
+//   formatCell()      → engine cellRenderers registry
+//   formatCellPlain() → engine cellRenderers registry (plain variant)
+//   render()          → engine renderVirtualBody() + renderHeader()
+//   shuffle/reset     → geen equivalent in productie
+// ══════════════════════════════════════════════════════════════
+
+// ── DEMO ENGINE: Cell Formatters (DEMO ONLY) ──────────────────────
+// Vereenvoudigde renderers; in productie vervangen door engine cellRenderers object
+function formatCell(v,k){
+  if(k==='budget')return`<span class="budget-val">${euroFmt.format(v)}</span>`;
+  if(k==='status'){const c=v==='Op schema'?'success':v==='Aandacht'?'warning':'danger';return`<span class="status-chip ${c}">${escapeHTML(v)}</span>`}
+  if(k==='progress'){const p=typeof v==='number'?v:parseInt(v);const c=p>=60?'var(--color-success)':p>=40?'var(--color-warning)':'var(--color-danger)';return`<span class="progress-cell"><span class="progress-bar"><span class="progress-bar-fill" style="width:${p}%;background:${c}"></span></span><span class="progress-val">${p}%</span></span>`}
+  if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}
+  return escapeHTML(String(v));
+}
+function formatCellPlain(v,k){if(k==='budget')return euroFmt.format(v);if(k==='progress')return(typeof v==='number'?v:parseInt(v))+'%';if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}return String(v)}
+
+// ── DEMO ENGINE: Table Render (DEMO ONLY) ─────────────────────────
+// Volledige innerHTML-rerender; in productie vervangen door engine renderVirtualBody()
+function render(){
+  const vc=getVisibleColumns(),fr=getFilteredRows();
+  const sa=k=>{const a=sortState.key===k,c=a?'sort-btn active':'sort-btn',i=a&&sortState.dir==='desc'?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>';return`<button class="${c}" data-sort-key="${k}" tabindex="-1" title="Sorteer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${i}</svg></button>`};
+  const hb=k=>`<button class="hide-col-btn" data-hide-key="${k}" tabindex="-1" title="Verberg kolom"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
+  const ariaSort=k=>sortState.key===k?(sortState.dir==='asc'?'ascending':'descending'):'none'; // PORT THIS: aria-sort op gesorteerde kolom
+  const thead=`<thead><tr>${vc.map(c=>`<th draggable="true" data-col-key="${c.key}" style="width:${c.width}px" role="columnheader" tabindex="0" aria-label="${escapeHTML(c.label)}" aria-sort="${ariaSort(c.key)}"><div class="th-inner" ${c.align==='right'?'style="justify-content:flex-end"':''}><span class="drag-handle" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span class="th-title">${escapeHTML(c.label)}</span>${sa(c.key)}${hb(c.key)}</div></th>`).join('')}</tr></thead>`;
+  const tbody=`<tbody>${fr.map(r=>`<tr>${vc.map(c=>`<td style="text-align:${c.align==='right'?'right':'left'}">${formatCell(r[c.key],c.key)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  table.innerHTML=thead+tbody;
+  applyDragClasses();syncOverlay();updateSortIndicator();updateResultCount();
+  $('colCount').textContent=vc.length;$('rowCount').textContent=fr.length;
+  table.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toggleSort(b.dataset.sortKey);focusCol(b.closest('th')?.dataset.colKey)}));
+  table.querySelectorAll('.hide-col-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();hideColumn(b.dataset.hideKey)}));
+}
+
+// ── DEMO ENGINE: Shuffle & Reset (DEMO ONLY) ─────────────────────
+// Demo-acties om state-herstel en re-render te testen; geen equivalent in productie
+$('resetBtn').addEventListener('click',()=>{pushHistory('reset');columns=structuredClone(defaultColumns);rows=structuredClone(defaultRows);sortState={key:null,dir:null};searchTerm='';searchInput.value='';hiddenColumns.clear();render();renderPanel();announce('Gereset')});
+$('shuffleBtn').addEventListener('click',()=>{pushHistory('shuffle');rows=[...rows].sort(()=>Math.random()-.5);sortState={key:null,dir:null};render();announce('Geschud')});
+
+// ── INIT ──────────────────────────────────────────────────────────
+render();
+
+// ══════════════════════════════════════════════════════════════
+// PORTING MAP — Layer 1 → Layer 2 (Dashboard Engine)
+// Deze tabel is de input voor Layer 2 WP-G (UX controller hooks)
+// ══════════════════════════════════════════════════════════════
+//
+// ┌──────────────────────────┬──────────────────────────────────────────┬──────────────────────────┐
+// │ Layer 1 element          │ Engine actie (Layer 2)                   │ Engine selector          │
+// ├──────────────────────────┼──────────────────────────────────────────┼──────────────────────────┤
+// │ drag-preview (floating)  │ beginColumnDrag(), updateColumnDrag()    │ getColumnGeometry()      │
+// │ drop-corridor (overlay)  │ updateColumnDrag() → corridor positie   │ getColumnGeometry()      │
+// │ shift-left / shift-right │ updateColumnDrag() → CSS classes        │ getBoundaryColumns()     │
+// │ column drop / commit     │ commitColumnMove(src, target, placement) │ —                        │
+// │ drag cancel              │ cancelColumnDrag()                       │ —                        │
+// │ col-panel open/close     │ togglePanel('columns')                   │ getActivePanel()         │
+// │ panel toggle visibility  │ setHiddenColumns(keys)                   │ getHiddenColumns()       │
+// │ panel reorder            │ setColumnOrder(orderedKeys)              │ getPanelItems()          │
+// │ panel show all / hide    │ setAllColumnsVisible(bool)               │ getVisibleColumns()      │
+// │ keyboard Shift+←→       │ moveColumn(key, direction)               │ getVisibleColumns()      │
+// │ keyboard Enter/Space     │ toggleSort(key)                          │ getSortState()           │
+// │ keyboard H               │ hideColumn(key)                          │ getHiddenColumns()       │
+// │ keyboard ←→ navigeer    │ — (focus management, geen engine-actie)  │ getVisibleColumns()      │
+// │ sort-btn klik            │ toggleSort(key)                          │ getSortState()           │
+// │ hide-col-btn klik        │ hideColumn(key)                          │ getHiddenColumns()       │
+// │ search input             │ setSearchTerm(term)                      │ getFilteredCount()       │
+// │ undo-toast / Ctrl+Z      │ undo()                                   │ canUndo()                │
+// │ srAnnounce               │ announce(message)                        │ —                        │
+// │ sort-indicator (footer)  │ — (render adapter leest sortState)       │ getSortState()           │
+// │ focus return na move     │ — (render adapter behoudt data-col-key)  │ —                        │
+// │ flash animatie           │ — (CSS class via render adapter)          │ —                        │
+// └──────────────────────────┴──────────────────────────────────────────┴──────────────────────────┘
+//
+// Vervangingen bij porting:
+// - render()             → engine renderVirtualBody() + renderHeader()
+// - formatCell()         → engine cellRenderers registry
+// - pushHistory()        → engine action replay (geen snapshot)
+// - columns[].splice()   → engine columnOrder via _tabCols
+// - rows[].sort()        → engine sortData() via _derived.sortedData
+// - hiddenColumns Set    → engine col.visible flag per kolom
+// - searchTerm variabele → engine globalNameFilter + debouncedRender
+// - Tokens               → align met RODS-tokenset (zie LAYER1_PLAN WP4)
+//
+// ══════════════════════════════════════════════════════════════
+// ASSEMBLER BUILD NOTES — Layer 1 als bronlaag voor Layer 5
+// Hoe de assembler (Layer 5) dit bestand consumeert
+// ══════════════════════════════════════════════════════════════
+//
+// De assembler bouwt single-file HTML-dashboards door componenten uit
+// Layer 1 (UX), Layer 2 (Engine), Layer 3 (Data) en Layer 4 (Spec)
+// samen te voegen. Dit bestand levert de volgende componenten:
+//
+// ┌─────────────────────────────┬──────────────┬─────────────────────────────────────────┐
+// │ Component                   │ Sectie       │ Wat de assembler overneemt              │
+// ├─────────────────────────────┼──────────────┼─────────────────────────────────────────┤
+// │ Design tokens               │ :root {}     │ Gedeelde tokens (--bg, --surface, etc.) │
+// │                             │              │ L1-only tokens als UX-defaults          │
+// │ Toolbar CSS                 │ TOOLBAR      │ Layout, search-box, separator styling   │
+// │ Undo-toast CSS              │ UNDO-TOAST   │ Fixed-bottom toast, animatie, knop      │
+// │ Hintbar CSS                 │ HINTBAR      │ Keyboard hints, kbd styling             │
+// │ Table & header CSS          │ TABLE/HEADER │ Sticky thead, drag-handle, sort-btn     │
+// │ Drag & drop CSS             │ DRAG & DROP  │ Source-opacity, shift-animaties, flash  │
+// │ Overlay CSS                 │ OVERLAY      │ Drop corridor, overlay container        │
+// │ Drag preview CSS            │ DRAG PREVIEW │ Floating column card                    │
+// │ Column panel CSS            │ COL PANEL    │ Slide-in panel, toggle, drag-reorder    │
+// │ Accessibility CSS           │ ACCESSIBILITY│ Reduced-motion, focus-visible, sr-only  │
+// │ Responsive CSS              │ RESPONSIVE   │ Breakpoints, mobiel layout              │
+// │ Hintbar HTML                │ <body>       │ Keyboard hints structuur                │
+// │ Panel HTML                  │ <body>       │ Panel container, search, toggle lijst   │
+// │ Toast HTML                  │ <body>       │ Undo-toast container                    │
+// │ Preview HTML                │ <body>       │ Drag preview container                  │
+// │ SR announce HTML            │ <body>       │ aria-live region                        │
+// │ Keyboard contracts (JS)     │ INTERACTION  │ Toetscombinaties als specificatie       │
+// │ Accessibility contracts (JS)│ INTERACTION  │ ARIA-attributen, focus management       │
+// └─────────────────────────────┴──────────────┴─────────────────────────────────────────┘
+//
+// NIET naar builds (assembler negeert deze):
+// ┌─────────────────────────────┬──────────────────────────────────────────────────────────┐
+// │ Demo data                   │ defaultColumns[], defaultRows[] — vervangen door L3 data │
+// │ Demo state                  │ columns, rows, sortState, history[] — via Engine AppState │
+// │ Demo history                │ pushHistory(), undo() snapshot — via Engine action replay │
+// │ Demo actions                │ shuffle, reset — geen equivalent in productie             │
+// │ Demo render                 │ render(), formatCell() — via Engine renderVirtualBody()   │
+// │ Demo tools UI               │ <details class="demo-tools"> — niet in productie         │
+// │ Google Fonts CDN            │ DM Sans link — productie gebruikt system-ui/RODS fonts   │
+// └─────────────────────────────┴──────────────────────────────────────────────────────────┘
+//
+// Consumptieproces:
+// 1. Assembler leest ux-reference.html als bron
+// 2. Extraheert :root {} tokens → voegt samen met L4 spec overrides
+// 3. Extraheert PORT THIS CSS secties → plaatst in [1/11] style block
+// 4. Extraheert PORT THIS HTML structuren → plaatst in [3/11] body
+// 5. Interaction contracts → geïmplementeerd door Engine (L2), niet gekopieerd
+// 6. DEMO ONLY secties worden genegeerd
+// 7. Resultaat: single-file HTML met UX-patterns + Engine + Data + Spec
+//
+// Zie ook: dashboard.html [10/11] ASSEMBLER: Interface naar Layer 5
+</script>
+</body>
+</html>

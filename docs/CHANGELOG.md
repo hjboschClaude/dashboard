@@ -6,6 +6,318 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.55.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P3 afgerond: taal generieker, assembler-koppeling, review en validatie. **LAYER1_PLAN volledig afgerond (12/12 WPs).**
+
+**Layer 1 WP7 — Taal en inhoud generieker maken (ux-reference.html):**
+- DEMO DATA comment uitgebreid: "Illustratief, niet normatief — data dient alleen om UX-patronen te demonstreren"
+- Kolomtype-dekking bevestigd (tekst, status-chip, numeriek, voortgangsbalk, datum)
+- Toevoeging: "Data-inhoud is voorbeeldmatig; elk CSV-dashboard krijgt eigen data"
+
+**Layer 1 WP11 — Koppeling naar single-file build (ux-reference.html):**
+- ASSEMBLER BUILD NOTES commentblok: 16 componenten die assembler overneemt
+- "NIET naar builds" tabel: 7 demo-only onderdelen expliciet uitgesloten
+- 7-stappen consumptieproces beschreven (lezen → extraheren → samenvoegen)
+- Kruisverwijzing naar dashboard.html [10/11] ASSEMBLER: Interface
+
+**Layer 1 WP12 — Review en validatie:**
+- 7/7 review-vragen beantwoord met JA
+- Token-tabel header verduidelijkt: "Gedeeld = identiek aan Layer 2 (RODS)"
+- Geen blokkerende bevindingen; Layer 1 geschikt als UX Reference
+- Definition of Done: 10/10 criteria voldaan
+
+**Status LAYER1_PLAN:** ✅ Compleet (12/12 WPs, v0.43.0–v0.55.0)
+
+---
+
+## v0.54.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P2 afgerond: interaction pattern catalog en toolbar rationalisatie.
+
+**Layer 1 WP5 — Interaction pattern catalog (ux-reference.html):**
+- Volledige INTERACTION PATTERN CATALOG met 12 normatieve patronen
+- Elk patroon gedocumenteerd met 5 velden: Doel, Trigger, Zichtbare state, A11y-verwachting, Engine-hook
+- Overzichtstabel + gedetailleerde per-patroon commentblokken in REFERENCE INTERACTIONS sectie
+- Patronen: drag start/move/commit/cancel, drop corridor, header shift, column panel, show/hide all, keyboard reorder, hide column, undo feedback, screen reader announce
+
+**Layer 1 WP9 — Toolbar en paneel rationaliseren (ux-reference.html):**
+- Shuffle en Reset verplaatst naar `<details class="demo-tools">` dropdown
+- Demo-tools visueel ondergeschikt: dashed border, ⚙ icoon, "Demo tools" label
+- Reference-patronen (search, kolommen, undo) behouden op prominente positie in toolbar
+- Kolommenpaneel volledig behouden als reference-patroon
+- TOOLBAR PATTERNS CSS-comment uitgebreid met reference/demo-only classificatie
+- Nieuwe CSS: `.demo-tools`, `.demo-tools-toggle`, `.demo-tools-panel`
+
+**Status Layer 1 P2:** ✅ Compleet (4/4 WPs: WP4, WP5, WP8, WP9)
+
+---
+
+## v0.53.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P2 gestart: design tokens aligned met RODS en accessibility reference verdiept.
+
+**Layer 1 WP4 — Design tokens isoleren en alignen (ux-reference.html):**
+- Token-mapping documentatie: 28 tokens gecategoriseerd als Gedeeld of L1-only
+- 7 tokens hernoemd naar RODS-naamgeving: --muted→--text-muted, --danger→--color-danger, --warning→--color-warning, --success→--color-success, --danger-light→--color-danger-light, --warning-light→--color-warning-light, --row-h→--row-height
+- Gedeelde tokenwaarden aligned met RODS: --bg, --surface, --border, --accent, --text, --shadow-md
+- :root herformateerd van single-line naar leesbare multi-line met gedeeld/L1-only secties
+- Alle CSS var()-verwijzingen bijgewerkt naar nieuwe tokennamen
+
+**Layer 1 WP8 — Accessibility reference verdiepen (ux-reference.html):**
+- ACCESSIBILITY sectie-comment uitgebreid: normatieve ARIA-rollen, keyboard-contract (8 toetsen), focus management contract
+- aria-sort="ascending/descending/none" toegevoegd op thead th (dynamisch per sorteerstate)
+- Focus return bij panel sluiten: _panelTrigger opgeslagen bij openPanel(), hersteld bij closePanel()
+- Focus trap in kolommenpaneel: Tab/Shift+Tab cycled binnen panel wanneer open
+- Keyboard-contract volledig gedocumenteerd: ←→, Shift+←→, Enter/Space, H, Escape, Ctrl+Z, Tab
+
+---
+
+## v0.52.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Laatste twee werkpakketten van Layer 2: teststrategie formaliseren en assembler-interface voorbereiden. Hiermee is het volledige LAYER2_PLAN (13 werkpakketten, 4 fasen) afgerond.
+
+**Layer 2 WP-L — Teststrategie formaliseren (dashboard.html):**
+- TESTING: Strategie blok in [9/11] header met volledige mapping van engine-onderdelen naar testsuites
+- 4 suites × 30+ testgroepen in overzichtstabel: core state, config, view state, helpers, filter/sort/group, renderers, export, a11y, integratie, visual contracts, performance
+- Regressiebeleid: elke bug krijgt permanente test, grote tabellen (4500+) gedekt door B-I13/14 + D-M2/D-L7
+- Uitbreidingsrichtlijnen: welke suite bij welk type wijziging
+
+**Layer 2 WP-M — Assembler-interface voorbereiden (dashboard.html):**
+- ASSEMBLER: Interface blok in [10/11] header met injectie-contract voor Layer 5
+- 4 injectie-inputs: designTokens (L1→CSS), dashboardSpec (L4→config), datasetPayload (L3→data), engineCode (L2→JS)
+- Runtime-afhankelijkheden geïnventariseerd: alles inline, enige externe dep = XLSX lazy-load
+- Sectiegrenskaart: alle 11 secties gemapped naar assembler-extractie
+- Build-modi: production (zonder tests) vs development (met DTR)
+- Bootstrap-input template: hoe het eindproduct eruitziet
+
+**Layer 2 PLAN volledig afgerond:** Fase 2a (WP-A,H,C) + Fase 2b (WP-B,D,E,F) + Fase 2c (WP-I,G) + Fase 2d (WP-J,K,L,M) = 13/13 werkpakketten ✅
+
+---
+
+## v0.51.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: export standaardiseren en accessibility contract.
+
+**Layer 2 WP-J — Export standaardiseren (dashboard.html):**
+- EXPORT: Contract blok met data-resolutie (selection/cached/fallback), formatter-overzicht, type-conversie, feature flags
+- 6 EXPORT sectie-comments: CSV (RFC 4180), JSON (raw values), XLSX (lazy-loaded, typed cells), Markdown (pipe-escaped), HTML (standalone doc), PNG (canvas)
+- Idempotentie per formatter gedocumenteerd
+- Export respecteert dezelfde kolom- en filterlogica als de engineweergave
+
+**Layer 2 WP-K — Accessibility en interaction parity (dashboard.html):**
+- ACCESSIBILITY: Contract blok met 15-rij overzicht: live region, focus management, focus trap, keyboard nav, ARIA-attributen per element
+- Screenreader announcements per actie geëxpliciteerd: 7 actie-types die toast → announce triggeren
+- Focus-herstel matrix: closePanel, Escape, modal sluiten
+- Keyboard-interactie parity: elke muis-interactie bereikbaar via keyboard
+- Tests gelinkt: A-A11Y, B-I22, B-I20
+
+---
+
+## v0.50.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: data source abstractie en UX controller hooks — Fase 2c afgerond.
+
+**Layer 2 WP-I — Data source abstractie (dashboard.html):**
+- DATA SOURCE ABSTRACTIE blok in [4/11] header: dataSource contract (embedded/dataset/remote), laadproces, accessors, tech debt lijst
+- DATA SOURCE: Loader comment bij initTabDataFromConfig(): uitbreidingspunt voor nieuwe dataSource-types
+- DATA SOURCE: Generator Registry comment bij _dataGenerators: lifecycle en vervaldatum
+- Hardcoded veldnamen geïnventariseerd (6 locaties) en gemarkeerd als Layer 4 verantwoordelijkheid (Fase 2d WP-J)
+
+**Layer 2 WP-G — UX controller hooks (dashboard.html):**
+- UX CONTROLLER HOOKS mapping tabel in [8/11] header: 20 UX-patronen → engine-functies + state/selectors
+- 6 UX CONTROLLERS sectie-comments: Column Drag, Column Panel, Sort, Filter & Search, Group, Accessibility
+- Input-kanalen architectuur gedocumenteerd: muis, keyboard, paneel — alle drie routes naar dezelfde engine-actie
+- Toekomstige hooks gemarkeerd: moveColumn() (keyboard reorder) en undo()/canUndo() (Fase 2d/3)
+
+---
+
+## v0.49.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Werkpakket WP-F: render adapters scheiden — Fase 2b afgerond.
+
+**Layer 2 WP-F — Render adapters scheiden (dashboard.html):**
+- 7 render-adapters gecategoriseerd met sectie-comments: Cell Renderers, Orchestration, Header, Virtual Body, Grouped Virtual Body, Aggregation, Meta & Footer, Tab Bar
+- Idempotentie per adapter gedocumenteerd: alle 7 adapters zijn idempotent (zelfde input → zelfde output)
+- DOM-ownership per adapter geëxpliciteerd: welke DOM-elementen elke adapter bezit en schrijft
+- Dirty-flag mapping gedocumenteerd bij Orchestration: 8 flags → bijbehorende adapter(s)
+- Vervangbaarheid: cellRenderers uitbreidbaar met 1 regel; body/header/agg adapters vervangbaar zonder engine-core wijziging
+- Trigger-documentatie: welke dirty flag elke adapter activeert
+
+---
+
+## v0.48.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Werkpakket WP-E: virtualisatie en performance verstevigen.
+
+**Layer 2 WP-E — Virtualisatie en performance verstevigen (dashboard.html):**
+- VIRTUALIZATION: Viewport & Row Window sectie-comment toegevoegd met volledig model: viewport-berekening, buffer, spacers, scroll-afhandeling, skip-optimalisatie, row height, DOM-budget
+- Performance-kritische paden tabel toegevoegd bij Performance Instrumentation: 8 paden met FAIL-drempel, target en meetmethode (D-L1 t/m D-L7, D-P1/P2, D-M1/M2, D-S2)
+- TESTREGISTER.md §7.1 referenties gelinkt: D-L6 (renderVirtualBody < 30ms), D-S2 (scroll FPS ≥ 45), D-M2 (< 200 viewport rijen)
+- Viewport-only DOM regel gedocumenteerd in [7/11] header: 5 gevolgen voor UX-uitbreidingen (event-delegation, rij-selectie, inline editing, animaties, DOM-metingen)
+- Handhaving via D-M1 (< 3000 DOM nodes) en D-M2 (< 200 viewport rijen) geëxpliciteerd
+
+---
+
+## v0.47.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: derive-pipeline contracten en demo-engine minimalisatie.
+
+**Layer 2 WP-D — Derive layer structureren (dashboard.html):**
+- Derive-pipeline contracttabel toegevoegd in [6/11] header: 5 stappen + 4 helpers met cache-slot, dirty flag en cascade per stap
+- Elk DERIVE-sectiecomment uitgebreid met formeel contract: Input, Output, Cache, Cascade, Test
+- Filtering contract: getData + search + filters → _derived.filteredData, cascade → sort/group/agg
+- Sorting contract: data[] + sortRules → sortedRows[] (puur, geen side effects)
+- Grouping contract: data[] + groupFields → nested tree | null (puur)
+- Conditional Formatting contract: row + condEnabled → CSS class (inline, geen cache)
+- Row Height contract: rowHeight → pixels (puur lookup)
+- Compute Functions header: caching wrappers beschreven met aanroepvolgorde
+- Aggregation Model contract: 4 accumulator-types gedocumenteerd (categorical, average, boolean, none)
+- Testbaarheidsnotitie: alle functies puur of near-pure, aanroepbaar via Suite A
+
+**Layer 1 WP10 — Demo-engine minimaliseren (ux-reference.html v1.4):**
+- REFERENCE INTERACTIONS blokheader toegevoegd: groepeert alle PORT THIS patronen met contract-beschrijving
+- DEMO ENGINE blokheader toegevoegd met expliciete waarschuwing: niet overnemen in productie
+- Per-functie vervangingstabel: formatCell→cellRenderers, render→renderVirtualBody+renderHeader, etc.
+- Versie bijgewerkt naar 1.4
+
+---
+
+## v0.46.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: porting notes naar engine en engine core explicitering. Start Fase 2b.
+
+**Layer 1 WP6 — Porting notes naar engine (ux-reference.html v1.3):**
+- Elke PORT THIS sectie (8 CSS, 11 JS) voorzien van PORTING NOTE met engine-mapping
+- CSS porting notes: zoekbox→setSearchTerm, toast→undo-callback, corridor→getColumnGeometry, etc.
+- JS porting notes: announce→engine utility, sort→toggleSort(key)+getSortState(), panel→setColumnOrder(), etc.
+- Bestaand porting notes blok vervangen door volledige PORTING MAP tabel (21 rijen):
+  Layer 1 element → Engine actie (Layer 2) → Engine selector
+- 8 vervangingen bij porting gedocumenteerd (render→renderVirtualBody, formatCell→cellRenderers, etc.)
+
+**Layer 2 WP-B — Engine Core expliciteren (dashboard.html):**
+- AppState gecategoriseerd in 9 state-categorieën: Dashboard, Selection, Filter, Sort, Group, Display, Panel, Export, Search
+- Architectuuroverzicht toegevoegd in [5/11] header: AppState, _dirty, _derived, tabs relaties
+- Dirty-flag systeem gedocumenteerd met invalidatie-mapping: welke actie → welke flags
+- Derive-pipeline volgorde gedocumenteerd: data→sort→group→agg→visibleCols
+- 16 ENGINE CORE sectie-comments toegevoegd (State, Computed Properties, ViewState, Sort Actions, Performance, Dirty Flags, Derived Cache)
+- 8 DERIVE sectie-comments: Filtering, Sorting, Grouping, Conditional Formatting, Row Height, Compute Functions, Aggregation
+- 5 RENDER sectie-comments: Orchestration, Header, Virtual Body, Grouped Virtual Body, Cell Renderers
+- 2 EVENTS sectie-comments: Sort, Tab Switch — met acties-overzicht in [8/11] header
+- DOM-ownership gedocumenteerd: renderers vs. UX overlays
+- Bootstrap-sequentie gedocumenteerd in [10/11] header (9 stappen)
+- `DASHBOARD_VERSION` → 0.46.0
+- Fase 2b gestart: WP-B ✅
+
+---
+
+## v0.45.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: PORT THIS/DEMO ONLY labeling en formele contracts.
+
+**Layer 1 WP3 — Must-port vs. demo-only labelen (ux-reference.html v1.2):**
+- Elke PORT THIS sectie voorzien van 1-regelig UX-contract (bijv. "Contract: elke state-wijziging wordt aangekondigd via aria-live region")
+- Elke DEMO ONLY functie voorzien van inline label met productie-equivalent (bijv. "in engine via sortData()")
+- `dragState`-structuur gelabeld als normatief (PORT THIS)
+- `history[]` en snapshot-undo gelabeld als DEMO ONLY met verwijzing naar engine action replay
+
+**Layer 2 WP-C — Contracts voor input en output (dashboard.html):**
+- 4 formele contracts gedefinieerd met inline veld-documentatie:
+  - `datasetContract` — input vanuit Layer 3 (CSV-adapter): records, schema, sourceMeta
+  - `dashboardSpecContract` — input vanuit Layer 4 (AI): tabs, kolommen, features, domain
+  - `engineViewModel` — interne derive-output: filteredData, sortedData, groupedData, aggregations, viewport
+  - `renderContract` — input voor renderers: columns, rows, sortState, rowHeight, startIndex
+- Validatiefuncties: `validateDatasetContract()`, `validateDashboardSpec()`, `validateRenderContract()`
+- `_validateContractsOnInit()` aangeroepen bij dashboard-init (fail-fast)
+- `DASHBOARD_VERSION` → 0.45.0
+- Fase 2a (Breekpunt 1) volledig afgerond: WP-A ✅, WP-H ✅, WP-C ✅
+
+---
+
+## v0.44.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: UX Reference structuur en declaratieve config opschoning.
+
+**Layer 1 WP2 — Structuur (ux-reference.html v1.1):**
+- CSS opgedeeld in 12 benoemde secties met PORT THIS / base labels
+- JS herordend: interaction patterns (PORT THIS) vóór demo engine (DEMO ONLY)
+- JS opgedeeld in 17 benoemde secties met duidelijke labels
+- Developer note uitgebreid met STRUCTUUR-sectie (CSS/JS-volgorde)
+- PORTING NOTES sectie toegevoegd met migratiegids naar Layer 2
+
+**Layer 2 WP-H — Config opschonen (Breekpunt 1):**
+- `generateData` property verwijderd uit beide tab-configs
+- `_dataGenerators` registry toegevoegd — losgekoppeld van dashboardConfig
+- `initTabDataFromConfig()` bijgewerkt: lookup via `_dataGenerators[tab.id]`
+- `new Set()` in domain-config vervangen door plain arrays (JSON-serialiseerbaar)
+- Set-constructie verplaatst naar consumptie-punt (`_categoricalKeySet` etc.)
+- `DASHBOARD_VERSION` → 0.44.0
+
+---
+
+## v0.43.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Platformarchitectuur, laagpositionering
+
+Platformdocumentatie herschreven, twee uitvoeringsplannen toegevoegd, en eerste werkpakketten uitgevoerd:
+
+**Documentatie:**
+- **CLAUDE.md** herschreven met platformvisie, 5-lagenarchitectuur, roadmap met 3 breekpunten
+- **ARCHITECTUUR.md** verplaatst naar docs/ en uitgebreid met §13 Assembler Layer, doelmappenstructuur, generatieproces, eindbeeld
+- **VERANDERPAD.md** verplaatst naar docs/ (SCREAMING_CASE conventie)
+- **INDEX.md** bijgewerkt naar v2.1 met architectuursectie en actieve plannen
+- **LAYER1_PLAN.md** nieuw — UX Reference Layer: 12 werkpakketten, token-alignment, kruisafhankelijkheden
+- **LAYER2_PLAN.md** nieuw — Dashboard Engine Layer: 13 werkpakketten, 4 fasen, in-place migratiestrategie
+
+**Layer 1 WP1 — Herpositionering:**
+- `<title>` → "Dashboard UX Reference — CSV Dashboard Template Platform"
+- Hero-titel → "Dashboard UX Reference", chip → "UX Reference Layer"
+- Developer note met laagpositionering, PORT THIS/DEMO ONLY uitleg
+
+**Layer 2 WP-A — Positionering:**
+- Developer note met verantwoordelijkheden (✔) en niet-verantwoordelijkheden (✘)
+- Verwijzingen naar Layer 1, Layer 3, Layer 4, Layer 5
+- `DASHBOARD_VERSION` → 0.43.0
+
+---
+
 ## v0.42.0 — 2026-03-08
 
 **Type:** Refactor
