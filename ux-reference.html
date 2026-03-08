@@ -1,9 +1,24 @@
 <!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════
+     UX REFERENCE LAYER — CSV Dashboard Template Platform
+     Versie: 1.0 | Datum: 2026-03-08
+
+     Dit bestand is de bron van waarheid voor UX-patronen:
+     hintbar, drag preview, drop corridor, kolommenpaneel,
+     undo-toast, keyboard patterns, screenreader announce.
+
+     Het is GEEN production engine. De schaalbare runtime staat
+     in dashboard.html (Layer 2). Zie docs/LAYER1_PLAN.md en
+     docs/LAYER2_PLAN.md voor de volledige architectuur.
+
+     Patronen gemarkeerd met PORT THIS zijn normatief.
+     Patronen gemarkeerd met DEMO ONLY zijn alleen voor deze demo.
+     ═══════════════════════════════════════════════════════════════════ -->
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kolommen verplaatsen – demo</title>
+  <title>Dashboard UX Reference — CSV Dashboard Template Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <style>
@@ -87,7 +102,7 @@
 </head>
 <body>
   <div class="page">
-    <div class="hero"><div><h1>Kolommen verplaatsen</h1><p>Sleep kolomheaders om de volgorde aan te passen, of gebruik het toetsenbord: <strong>Shift+←→</strong> verplaatst, <strong>Enter</strong> sorteert, <strong>H</strong> verbergt.</p></div><div class="chip">Interactieve demo</div></div>
+    <div class="hero"><div><h1>Dashboard UX Reference</h1><p>Normatieve referentie voor dashboard-interactiepatronen. Sleep kolomheaders om te herschikken, of gebruik het toetsenbord: <strong>Shift+←→</strong> verplaatst, <strong>Enter</strong> sorteert, <strong>H</strong> verbergt.</p></div><div class="chip">UX Reference Layer</div></div>
     <div class="card">
       <div class="toolbar"><div class="toolbar-left"><div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Zoeken…" aria-label="Zoek in tabel"></div><span class="result-count" id="resultCount"></span></div>
       <div class="toolbar-right"><button id="colPanelBtn" title="Kolommen beheren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Kolommen</button><div class="toolbar-sep"></div><button id="shuffleBtn">Shuffle</button><button id="undoBtn" class="ghost" disabled>Undo</button><button class="primary" id="resetBtn">Reset</button></div></div>
@@ -104,7 +119,7 @@
     <div class="panel-list" id="panelList"></div>
   </div>
   <div class="undo-toast" id="undoToast" role="status" aria-live="polite"><span id="undoToastMsg"></span><button id="undoToastBtn">Undo</button></div>
-  <div class="drag-preview" id="dragPreview" aria-hidden="true"><div class="drag-preview-header"><span class="mini-handle"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span id="dragPreviewLabel">Kolom</span><span class="preview-badge">verplaatsen</span></div><div class="drag-preview-body" id="dragPreviewBody"></div></div>
+  <div class="drag-preview" id="dragPreview" aria-hidden="true"><div class="drag-preview-header"><span class="mini-handle"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span id="dragPreviewLabel">Kolom</span><span class="preview-badge">verplaats</span></div><div class="drag-preview-body" id="dragPreviewBody"></div></div>
   <div id="srAnnounce" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
 <script>
 const defaultColumns=[{key:'project',label:'Project',width:190},{key:'status',label:'Status',width:130},{key:'owner',label:'Eigenaar',width:160},{key:'budget',label:'Budget',width:140,align:'right'},{key:'progress',label:'Voortgang',width:150},{key:'updated',label:'Bijgewerkt',width:170}];

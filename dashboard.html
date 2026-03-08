@@ -1,4 +1,33 @@
 <!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════
+     DASHBOARD ENGINE LAYER — CSV Dashboard Template Platform
+     Versie: 0.43.0 | Datum: 2026-03-08
+
+     Dit bestand is de schaalbare runtime voor alle dashboards:
+     state management, filtering, sorting, grouping, aggregatie,
+     virtual scroll, export, tab management, performance instrumentatie.
+
+     UX-standaard (drag preview, corridor, panel, hintbar):
+       zie ux-reference.html (Layer 1) en docs/LAYER1_PLAN.md
+
+     Verantwoordelijkheden Layer 2 (dit bestand):
+       ✔ AppState met dirty flags en derived-state cache
+       ✔ Engine pipeline: filter → sort → group → aggregate → render
+       ✔ Virtual scroll (renderVirtualBody, _renderGroupedVirtual)
+       ✔ Declaratief configuratiemodel (dashboardConfig)
+       ✔ Cell renderers en export (CSV, JSON)
+       ✔ 42 RODS design tokens
+       ✔ Ingebouwde test runner (DTR, 241 checks)
+       ✔ Performance instrumentatie (27 budgetten)
+
+     NIET de verantwoordelijkheid van Layer 2:
+       ✘ UX-patronen en visuele states → Layer 1 (ux-reference.html)
+       ✘ CSV parsing en headernormalisatie → Layer 3 (nog niet gebouwd)
+       ✘ Dashboard-specifieke configuratie → Layer 4 (AI-gegenereerd)
+       ✘ Bundeling naar single-file → Layer 5 (assembler)
+
+     Zie docs/LAYER2_PLAN.md voor het volledige taakplan.
+     ═══════════════════════════════════════════════════════════════════ -->
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -542,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.42.0';
+const DASHBOARD_VERSION = '0.43.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie

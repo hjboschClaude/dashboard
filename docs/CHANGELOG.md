@@ -8,18 +8,28 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ## v0.43.0 — 2026-03-08
 
-**Type:** Documentatie
-**Domein:** Architectuur, planvorming
+**Type:** Architectuur
+**Domein:** Platformarchitectuur, laagpositionering
 
-Platformdocumentatie herschreven en twee uitvoeringsplannen toegevoegd:
+Platformdocumentatie herschreven, twee uitvoeringsplannen toegevoegd, en eerste werkpakketten uitgevoerd:
 
+**Documentatie:**
 - **CLAUDE.md** herschreven met platformvisie, 5-lagenarchitectuur, roadmap met 3 breekpunten
-- **ARCHITECTUUR.md** verplaatst naar docs/ en uitgebreid met §13 Assembler Layer, §13.1 doelmappenstructuur, §13.2 generatieproces, §14 eindbeeld
+- **ARCHITECTUUR.md** verplaatst naar docs/ en uitgebreid met §13 Assembler Layer, doelmappenstructuur, generatieproces, eindbeeld
 - **VERANDERPAD.md** verplaatst naar docs/ (SCREAMING_CASE conventie)
 - **INDEX.md** bijgewerkt naar v2.1 met architectuursectie en actieve plannen
-- **LAYER1_PLAN.md** nieuw — UX Reference Layer taakplan: 12 werkpakketten (WP1–WP12), 3 prioriteiten, token-alignment strategie, kruisafhankelijkheden met Layer 2
-- **LAYER2_PLAN.md** nieuw — Dashboard Engine Layer taakplan: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), in-place migratiestrategie, contracts-first aanpak, 241-tests-intact garantie
-- Oude planbestanden uit root verwijderd (layer-1-task-plan.md, layer-2-task-plan.md, veranderpad.md, architectuurdocument v1.md)
+- **LAYER1_PLAN.md** nieuw — UX Reference Layer: 12 werkpakketten, token-alignment, kruisafhankelijkheden
+- **LAYER2_PLAN.md** nieuw — Dashboard Engine Layer: 13 werkpakketten, 4 fasen, in-place migratiestrategie
+
+**Layer 1 WP1 — Herpositionering:**
+- `<title>` → "Dashboard UX Reference — CSV Dashboard Template Platform"
+- Hero-titel → "Dashboard UX Reference", chip → "UX Reference Layer"
+- Developer note met laagpositionering, PORT THIS/DEMO ONLY uitleg
+
+**Layer 2 WP-A — Positionering:**
+- Developer note met verantwoordelijkheden (✔) en niet-verantwoordelijkheden (✘)
+- Verwijzingen naar Layer 1, Layer 3, Layer 4, Layer 5
+- `DASHBOARD_VERSION` → 0.43.0
 
 ---
 
