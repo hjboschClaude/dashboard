@@ -1,6 +1,6 @@
 # Index — Plannen, Sprint-IDs & Documenten
 
-Versie: 2.1
+Versie: 2.2
 Datum: 2026-03-08
 
 ---
@@ -27,7 +27,8 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 |----------|-------|--------|
 | [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: 12 werkpakketten (WP1–WP12), herpositionering, structuur, PORT THIS/DEMO ONLY, token-alignment, pattern catalog, porting notes | ○ Open — P1 eerst |
 | [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
-| [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 241 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
+| [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 18 werkpakketten (WP-S1–S18), 3 fasen, semantisch generieke engine | ○ Actief — Fase 1 afgerond (v0.56.0) |
+| [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
 
 ---
 
@@ -48,7 +49,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | [TOETSINGSKADER.md](TOETSINGSKADER.md) | 64 bevindingen over 11 dimensies + beoordelingskader 10 domeinen | Per sprint herscoren |
 | [TESTPLAN.md](TESTPLAN.md) | Testplan design-wijzigingen (DevTools-based) | Bij testwijziging |
 | [BUGS.md](BUGS.md) | Bug tracker (BUG-016+) | Bij nieuwe bug of fix |
-| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.55.0) | Elke versie |
+| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.56.0) | Elke versie |
 | [WERKWIJZE_VERSIEBEHEER.md](WERKWIJZE_VERSIEBEHEER.md) | Proces: versienummering, changelog, commits, toetsing | Bij proceswijziging |
 | [VOORSTEL_UX_KOLOMMEN.md](VOORSTEL_UX_KOLOMMEN.md) | Kolom drag-drop UX voorstel: visuele feedback combinatie | Referentie |
 
@@ -68,6 +69,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **D-P/M/C/L/S** | TESTREGISTER.md | Performance-budgetten: timing, DOM, heap, CSS, latency, stabiliteit, 27 metrics | ✅ v0.39.0 |
 | **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference: herpositionering, structuur, labels, tokens, patterns, porting, a11y, review | ○ Open |
 | **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
+| **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ○ Fase 1 afgerond (v0.56.0) |
 
 ---
 

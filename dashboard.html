@@ -601,7 +601,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.52.0';
+const DASHBOARD_VERSION = '0.56.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -784,7 +784,21 @@ const dashboardConfig = {
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
-      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] }
+      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] },
+      schemaContract: {
+        primaryKey: "id",
+        semanticFields: {
+          primaryLabel: "name",
+          secondaryLabel: "programma",
+          owner: "pm",
+          status: "status",
+          priority: "priority",
+          progress: "progress",
+          activeFlag: null,
+          detailTitle: "name",
+          searchTextFields: ["directeur", "aog", "pm"]
+        }
+      }
     },
     {
       id: "team",
@@ -795,7 +809,21 @@ const dashboardConfig = {
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
-      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] }
+      defaults: { rowHeight:"compact", visibleColumns:null, sort:null, grouping:[] },
+      schemaContract: {
+        primaryKey: "id",
+        semanticFields: {
+          primaryLabel: "name",
+          secondaryLabel: "functie",
+          owner: "leidinggevende",
+          status: "status",
+          priority: null,
+          progress: "capaciteit",
+          activeFlag: "actief",
+          detailTitle: "name",
+          searchTextFields: ["name"]
+        }
+      }
     }
   ],
   // E.1: domein-configuratie gecentraliseerd in config (single source of truth)
@@ -950,14 +978,234 @@ function validateRenderContract(input) {
   return errors;
 }
 
+// ── CONTRACT 5: FEATURE_REQUIREMENTS ── Feature → vereiste semantiek
+// Declareert per feature welke semantische rollen nodig zijn.
+// mode: 'requires' = alle rollen verplicht, 'anyOf' = minstens één rol aanwezig
+var FEATURE_REQUIREMENTS = {
+  search:           { mode: 'anyOf',    roles: ['searchTextFields', 'primaryLabel'] },
+  filter:           { mode: 'requires', roles: [] },
+  sort:             { mode: 'requires', roles: [] },
+  group:            { mode: 'requires', roles: [] },
+  condFormatting:   { mode: 'anyOf',    roles: ['status', 'priority', 'progress'] },
+  freeze:           { mode: 'requires', roles: [] },
+  multiSelect:      { mode: 'requires', roles: ['primaryKey'] },
+  contextMenu:      { mode: 'requires', roles: ['primaryKey'] },
+  modal:            { mode: 'requires', roles: ['primaryKey', 'detailTitle'] },
+  rowAria:          { mode: 'requires', roles: ['primaryLabel'] },
+  exportSelection:  { mode: 'requires', roles: ['primaryKey'] }
+};
+
+// ── CONTRACT 6: SEMANTIC_ROLE_RULES ── Type-constraints per semantische rol
+// Valideert dat velden die aan semantische rollen zijn gekoppeld het juiste type hebben.
+var SEMANTIC_ROLE_RULES = {
+  primaryKey:       { allowedTypes: ['text', 'number'],  nullable: false, unique: true },
+  primaryLabel:     { allowedTypes: ['text'],             nullable: false },
+  secondaryLabel:   { allowedTypes: ['text'],             nullable: true },
+  owner:            { allowedTypes: ['text', 'enum'],     nullable: true },
+  status:           { allowedTypes: ['text', 'enum'],     nullable: true },
+  priority:         { allowedTypes: ['text', 'enum'],     nullable: true },
+  progress:         { allowedTypes: ['number'],           nullable: true,  range: [0, 100] },
+  activeFlag:       { allowedTypes: ['boolean'],          nullable: true },
+  detailTitle:      { allowedTypes: ['text'],             nullable: false },
+  searchTextFields: { allowedTypes: ['text', 'enum'],     nullable: true,  array: true }
+};
+
+// ── CONTRACT VALIDATOR A: validateSchemaAlignment ──
+// Controleert dat primaryKey en alle semanticFields naar bestaande kolommen verwijzen.
+// Input: tab (dashboardConfig.tabs[i]), colDefs (tab.columns array)
+// Output: { errors:string[], warnings:string[] }
+function validateSchemaAlignment(tab, colDefs) {
+  var result = { errors: [], warnings: [] };
+  if (!tab || !tab.schemaContract) {
+    result.warnings.push('Tab "' + (tab ? tab.id : '?') + '" heeft geen schemaContract');
+    return result;
+  }
+  var sc = tab.schemaContract;
+  var sf = sc.semanticFields || {};
+  var colKeys = {};
+  if (Array.isArray(colDefs)) {
+    colDefs.forEach(function(c) { if (c.key) colKeys[c.key] = true; });
+  }
+  // primaryKey moet bestaan als kolom
+  if (!sc.primaryKey) {
+    result.errors.push('Tab "' + tab.id + '": primaryKey ontbreekt in schemaContract');
+  } else if (!colKeys[sc.primaryKey]) {
+    result.errors.push('Tab "' + tab.id + '": primaryKey "' + sc.primaryKey + '" verwijst niet naar een bestaande kolom');
+  }
+  // Elke semanticField moet naar een bestaande kolom verwijzen (of null zijn)
+  Object.keys(sf).forEach(function(role) {
+    var val = sf[role];
+    if (val === null || val === undefined) return; // null = niet van toepassing
+    if (Array.isArray(val)) {
+      // searchTextFields: elke entry moet bestaande kolom zijn
+      val.forEach(function(fieldName) {
+        if (!colKeys[fieldName]) {
+          result.errors.push('Tab "' + tab.id + '": semanticField "' + role + '" bevat "' + fieldName + '" — geen bestaande kolom');
+        }
+      });
+    } else if (typeof val === 'string') {
+      if (!colKeys[val]) {
+        result.errors.push('Tab "' + tab.id + '": semanticField "' + role + '" verwijst naar "' + val + '" — geen bestaande kolom');
+      }
+    }
+  });
+  return result;
+}
+
+// ── CONTRACT VALIDATOR B: validateTypeSemantics ──
+// Controleert dat semanticField-mappings voldoen aan SEMANTIC_ROLE_RULES type-constraints.
+// Input: tab (dashboardConfig.tabs[i]), colDefs (tab.columns array)
+// Output: { errors:string[], warnings:string[] }
+function validateTypeSemantics(tab, colDefs) {
+  var result = { errors: [], warnings: [] };
+  if (!tab || !tab.schemaContract || !tab.schemaContract.semanticFields) return result;
+  var sf = tab.schemaContract.semanticFields;
+  var colMap = {};
+  if (Array.isArray(colDefs)) {
+    colDefs.forEach(function(c) { if (c.key) colMap[c.key] = c; });
+  }
+  Object.keys(sf).forEach(function(role) {
+    var rule = SEMANTIC_ROLE_RULES[role];
+    if (!rule) return; // Onbekende rol, geen validatie
+    var val = sf[role];
+    if (val === null || val === undefined) {
+      if (!rule.nullable) {
+        result.errors.push('Tab "' + tab.id + '": rol "' + role + '" is null maar niet nullable');
+      }
+      return;
+    }
+    if (rule.array) {
+      // Array-rol (searchTextFields): elk veld moet juist type hebben
+      if (!Array.isArray(val)) {
+        result.errors.push('Tab "' + tab.id + '": rol "' + role + '" moet een array zijn');
+        return;
+      }
+      val.forEach(function(fieldName) {
+        var col = colMap[fieldName];
+        if (col && rule.allowedTypes.indexOf(col.type) === -1) {
+          result.warnings.push('Tab "' + tab.id + '": "' + fieldName + '" (rol "' + role + '") heeft type "' + col.type + '", verwacht: ' + rule.allowedTypes.join('|'));
+        }
+      });
+    } else {
+      // Scalaire rol
+      var col = colMap[val];
+      if (col && rule.allowedTypes.indexOf(col.type) === -1) {
+        result.errors.push('Tab "' + tab.id + '": "' + val + '" (rol "' + role + '") heeft type "' + col.type + '", verwacht: ' + rule.allowedTypes.join('|'));
+      }
+    }
+  });
+  // Valideer ook primaryKey type
+  var pkRule = SEMANTIC_ROLE_RULES.primaryKey;
+  var pkField = tab.schemaContract.primaryKey;
+  if (pkField && colMap[pkField] && pkRule) {
+    if (pkRule.allowedTypes.indexOf(colMap[pkField].type) === -1) {
+      result.errors.push('Tab "' + tab.id + '": primaryKey "' + pkField + '" heeft type "' + colMap[pkField].type + '", verwacht: ' + pkRule.allowedTypes.join('|'));
+    }
+  }
+  return result;
+}
+
+// ── CONTRACT VALIDATOR C: validateFeatureRequirements ──
+// Controleert per ingeschakelde feature of vereiste semantiek aanwezig is.
+// Input: tab (dashboardConfig.tabs[i])
+// Output: { errors:string[], warnings:string[], resolvedFeatures:Object }
+function validateFeatureRequirements(tab) {
+  var result = { errors: [], warnings: [], resolvedFeatures: {} };
+  if (!tab) return result;
+  var features = tab.features || {};
+  var sc = tab.schemaContract;
+  var sf = (sc && sc.semanticFields) ? sc.semanticFields : {};
+  var pk = sc ? sc.primaryKey : null;
+
+  // Helper: controleert of een rol aanwezig is (niet null, niet lege array)
+  function hasRole(roleName) {
+    if (roleName === 'primaryKey') return !!pk;
+    var val = sf[roleName];
+    if (val === null || val === undefined) return false;
+    if (Array.isArray(val)) return val.length > 0;
+    return true;
+  }
+
+  Object.keys(FEATURE_REQUIREMENTS).forEach(function(featureName) {
+    var req = FEATURE_REQUIREMENTS[featureName];
+    // Feature staat uit in config → resolved false, geen fout
+    if (features[featureName] === false) {
+      result.resolvedFeatures[featureName] = false;
+      return;
+    }
+    // Geen contract → feature degradeert
+    if (!sc) {
+      if (req.roles.length > 0) {
+        result.warnings.push('Tab "' + tab.id + '": feature "' + featureName + '" gedegradeerd — geen schemaContract');
+        result.resolvedFeatures[featureName] = false;
+      } else {
+        result.resolvedFeatures[featureName] = true;
+      }
+      return;
+    }
+    // Valideer op basis van mode
+    if (req.mode === 'requires') {
+      var missingAll = [];
+      req.roles.forEach(function(r) { if (!hasRole(r)) missingAll.push(r); });
+      if (missingAll.length > 0) {
+        result.warnings.push('Tab "' + tab.id + '": feature "' + featureName + '" gedegradeerd — ontbrekende rollen: ' + missingAll.join(', '));
+        result.resolvedFeatures[featureName] = false;
+      } else {
+        result.resolvedFeatures[featureName] = true;
+      }
+    } else if (req.mode === 'anyOf') {
+      var hasAny = false;
+      req.roles.forEach(function(r) { if (hasRole(r)) hasAny = true; });
+      if (req.roles.length > 0 && !hasAny) {
+        result.warnings.push('Tab "' + tab.id + '": feature "' + featureName + '" gedegradeerd — geen van: ' + req.roles.join(', '));
+        result.resolvedFeatures[featureName] = false;
+      } else {
+        result.resolvedFeatures[featureName] = true;
+      }
+    }
+  });
+  return result;
+}
+
 // ── Contract validatie bij init (fail-fast) ──
 // Wordt aangeroepen in het INIT-blok na data-laden
 function _validateContractsOnInit() {
-  // Valideer dashboardSpec (de huidige dashboardConfig)
+  // Stap A: Valideer dashboardSpec structuur
   var specErrors = validateDashboardSpec(dashboardConfig);
   if (specErrors.length > 0) {
     console.error('[Contract] dashboardSpec validatie mislukt:', specErrors);
+    return; // Structuur ongeldig → overige validatie zinloos
   }
+  // Stap B–E: Per tab schema-alignment, type-semantics en feature-requirements valideren
+  dashboardConfig.tabs.forEach(function(tab) {
+    var colDefs = tab.columns || [];
+    // Stap C: Schema alignment — verwijzen semanticFields naar bestaande kolommen?
+    var alignment = validateSchemaAlignment(tab, colDefs);
+    if (alignment.errors.length > 0) {
+      console.error('[Contract] Tab "' + tab.id + '" schema alignment fouten:', alignment.errors);
+    }
+    if (alignment.warnings.length > 0) {
+      console.warn('[Contract] Tab "' + tab.id + '" schema alignment waarschuwingen:', alignment.warnings);
+    }
+    // Stap D: Type semantics — hebben gemapte kolommen het juiste type?
+    var types = validateTypeSemantics(tab, colDefs);
+    if (types.errors.length > 0) {
+      console.error('[Contract] Tab "' + tab.id + '" type semantics fouten:', types.errors);
+    }
+    if (types.warnings.length > 0) {
+      console.warn('[Contract] Tab "' + tab.id + '" type semantics waarschuwingen:', types.warnings);
+    }
+    // Stap E: Feature requirements — welke features zijn actief gegeven de semantiek?
+    var featureResult = validateFeatureRequirements(tab);
+    if (featureResult.errors.length > 0) {
+      console.error('[Contract] Tab "' + tab.id + '" feature requirements fouten:', featureResult.errors);
+    }
+    if (featureResult.warnings.length > 0) {
+      console.warn('[Contract] Tab "' + tab.id + '" feature requirements waarschuwingen:', featureResult.warnings);
+    }
+    // Log resolved features
+    console.info('[Contract] Tab "' + tab.id + '" resolved features:', featureResult.resolvedFeatures);
+  });
 }
 
 
@@ -4286,6 +4534,75 @@ function runTests(){
   var hasFreezeClass=containers.length>0;
   assert('A-U12b: .table-container elementen bestaan voor freeze', hasFreezeClass);
   AppState.freezeCol=savedFreeze;
+
+  // ── A-CONTRACT: Schema Contract & Feature Gating (WP-S6) ──
+  group('A-CONTRACT');
+
+  // --- Constanten bestaan en correcte structuur ---
+  assert('FEATURE_REQUIREMENTS is een object', typeof FEATURE_REQUIREMENTS === 'object' && FEATURE_REQUIREMENTS !== null);
+  assert('SEMANTIC_ROLE_RULES is een object', typeof SEMANTIC_ROLE_RULES === 'object' && SEMANTIC_ROLE_RULES !== null);
+  assert('FEATURE_REQUIREMENTS.search bestaat', !!FEATURE_REQUIREMENTS.search);
+  assert('FEATURE_REQUIREMENTS.search heeft mode', FEATURE_REQUIREMENTS.search.mode === 'anyOf');
+  assert('FEATURE_REQUIREMENTS.modal vereist primaryKey+detailTitle', FEATURE_REQUIREMENTS.modal.roles.indexOf('primaryKey') !== -1 && FEATURE_REQUIREMENTS.modal.roles.indexOf('detailTitle') !== -1);
+  assert('SEMANTIC_ROLE_RULES.primaryKey bestaat', !!SEMANTIC_ROLE_RULES.primaryKey);
+  assert('SEMANTIC_ROLE_RULES.primaryKey niet nullable', SEMANTIC_ROLE_RULES.primaryKey.nullable === false);
+  assert('SEMANTIC_ROLE_RULES.progress is number-only', SEMANTIC_ROLE_RULES.progress.allowedTypes.length === 1 && SEMANTIC_ROLE_RULES.progress.allowedTypes[0] === 'number');
+  assert('SEMANTIC_ROLE_RULES.searchTextFields is array-rol', SEMANTIC_ROLE_RULES.searchTextFields.array === true);
+
+  // --- schemaContract aanwezig in beide tabs ---
+  var tab0 = getTabConfig('projects');
+  var tab1 = getTabConfig('team');
+  assert('Tab projects heeft schemaContract', !!tab0 && !!tab0.schemaContract);
+  assert('Tab team heeft schemaContract', !!tab1 && !!tab1.schemaContract);
+  assert('Tab projects primaryKey is "id"', tab0 && tab0.schemaContract && tab0.schemaContract.primaryKey === 'id');
+  assert('Tab team primaryLabel is "name"', tab1 && tab1.schemaContract && tab1.schemaContract.semanticFields && tab1.schemaContract.semanticFields.primaryLabel === 'name');
+
+  // --- validateSchemaAlignment: correcte config ---
+  var alignOk = validateSchemaAlignment(tab0, tab0.columns);
+  assert('validateSchemaAlignment: tab0 geen fouten', alignOk.errors.length === 0);
+  assert('validateSchemaAlignment: tab0 geen warnings', alignOk.warnings.length === 0);
+
+  // --- validateSchemaAlignment: foute config ---
+  var fakeTab = { id:'test', schemaContract: { primaryKey:'NIET_BESTAAND', semanticFields: { primaryLabel:'OOK_FAKE' } }, columns: [{ key:'a', label:'A', type:'text', renderer:'text' }] };
+  var alignFail = validateSchemaAlignment(fakeTab, fakeTab.columns);
+  assert('validateSchemaAlignment: detecteert fout primaryKey', alignFail.errors.length > 0 && alignFail.errors[0].indexOf('NIET_BESTAAND') !== -1);
+
+  // --- validateSchemaAlignment: ontbrekend contract ---
+  var noContractTab = { id:'empty' };
+  var alignNoContract = validateSchemaAlignment(noContractTab, []);
+  assert('validateSchemaAlignment: warning bij ontbrekend contract', alignNoContract.warnings.length > 0);
+
+  // --- validateTypeSemantics: correcte config ---
+  var typeOk = validateTypeSemantics(tab0, tab0.columns);
+  assert('validateTypeSemantics: tab0 geen fouten', typeOk.errors.length === 0);
+
+  // --- validateTypeSemantics: verkeerd type ---
+  var wrongTypeTab = { id:'typetest', schemaContract: { primaryKey:'x', semanticFields: { progress:'naam' } }, columns: [{ key:'x', label:'X', type:'number', renderer:'text' }, { key:'naam', label:'N', type:'text', renderer:'text' }] };
+  var typeFail = validateTypeSemantics(wrongTypeTab, wrongTypeTab.columns);
+  assert('validateTypeSemantics: detecteert verkeerd type voor progress', typeFail.errors.length > 0 || typeFail.warnings.length > 0);
+
+  // --- validateFeatureRequirements: correcte config ---
+  var featOk = validateFeatureRequirements(tab0);
+  assert('validateFeatureRequirements: tab0 resolved features bevat search', featOk.resolvedFeatures.search === true);
+  assert('validateFeatureRequirements: tab0 resolved features bevat modal', featOk.resolvedFeatures.modal === true);
+  assert('validateFeatureRequirements: tab0 geen fouten', featOk.errors.length === 0);
+
+  // --- validateFeatureRequirements: degradatie zonder primaryKey ---
+  var noPkTab = { id:'nopk', features: { multiSelect:true, contextMenu:true, modal:true, search:true }, schemaContract: { primaryKey:null, semanticFields: { primaryLabel:'name', searchTextFields:['name'] } }, columns: [{ key:'name', label:'N', type:'text', renderer:'text' }] };
+  var featNoPk = validateFeatureRequirements(noPkTab);
+  assert('validateFeatureRequirements: multiSelect false zonder primaryKey', featNoPk.resolvedFeatures.multiSelect === false);
+  assert('validateFeatureRequirements: modal false zonder primaryKey', featNoPk.resolvedFeatures.modal === false);
+  assert('validateFeatureRequirements: search true met searchTextFields', featNoPk.resolvedFeatures.search === true);
+
+  // --- validateFeatureRequirements: degradatie zonder detailTitle ---
+  var noDetailTab = { id:'nodetail', features: { modal:true, search:true }, schemaContract: { primaryKey:'id', semanticFields: { primaryLabel:'name', detailTitle:null, searchTextFields:['name'] } }, columns: [{ key:'id', label:'ID', type:'number', renderer:'text' }, { key:'name', label:'N', type:'text', renderer:'text' }] };
+  var featNoDetail = validateFeatureRequirements(noDetailTab);
+  assert('validateFeatureRequirements: modal false zonder detailTitle', featNoDetail.resolvedFeatures.modal === false);
+
+  // --- Validatorfuncties bestaan ---
+  assert('validateSchemaAlignment is een functie', typeof validateSchemaAlignment === 'function');
+  assert('validateTypeSemantics is een functie', typeof validateTypeSemantics === 'function');
+  assert('validateFeatureRequirements is een functie', typeof validateFeatureRequirements === 'function');
 
   var elapsed=Math.round(performance.now()-t0);
   var summary=passed+'/'+(passed+failed)+' tests geslaagd ('+elapsed+'ms)';
