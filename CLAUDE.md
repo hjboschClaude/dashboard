@@ -100,7 +100,7 @@ Eén commit per versienummer.
 - Testrapporten: `archive/testrapporten/testrapport-v{X.Y.Z}-{YYYY-MM-DD}.md`
 - Snapshots: `archive/snapshots/dashboard-v{X.Y.Z}.html`
 - Nooit spaties in bestandsnamen
-- Alleen `dashboard.html` en `CLAUDE.md` in de root
+- Alleen `dashboard.html`, `ux-reference.html` en `CLAUDE.md` in de root
 
 ## Workflow per sessie
 
@@ -112,7 +112,7 @@ Eén commit per versienummer.
 6. Commit: `<type>(v<versie>): <samenvatting>`
 7. Optioneel: toets tegen `docs/TOETSINGSKADER.md` bij sprint-afronding
 
-## Architectuur — huidige implementatie (v0.42.0)
+## Architectuur — huidige implementatie (v0.43.0)
 
 De huidige `dashboard.html` bevat de engine-laag en UX-laag nog in één bestand:
 
