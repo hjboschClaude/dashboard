@@ -406,7 +406,7 @@ Fase 2d (Build-ready):
 
 ---
 
-### WP-F — Render adapters scheiden
+### WP-F — Render adapters scheiden ✅ v0.49.0
 
 **Doel:** Rendering modulair maken.
 
@@ -432,8 +432,14 @@ Fase 2d (Build-ready):
 4. Documenteer DOM-ownership: welke DOM-elementen door renderers worden beheerd vs. door UX overlays
 
 **Acceptatiecriteria:**
-- Een renderer kan later vervangen of uitgebreid worden zonder engine-core te wijzigen
-- DOM-ownership is duidelijk gedocumenteerd
+- ✅ Een renderer kan later vervangen of uitgebreid worden zonder engine-core te wijzigen
+- ✅ DOM-ownership is duidelijk gedocumenteerd
+
+**Huidige staat (v0.49.0):**
+- 8 render-adapters met sectie-comments: Cell Renderers, Orchestration & Cache, Header, Virtual Body (flat), Grouped Virtual Body, Aggregation, Meta & Footer, Tab Bar
+- Elk adapter-comment documenteert: idempotentie (alle ja), DOM-ownership (welke elementen), trigger (dirty flag), vervangbaarheid
+- Dirty-flag → adapter mapping volledig gedocumenteerd bij Orchestration (8 flags → bijbehorende adapters)
+- cellRenderers{} expliciet als uitbreidbaar gemarkeerd: 1 regel toevoegen + col.renderer verwijzing
 
 ---
 

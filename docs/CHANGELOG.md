@@ -6,6 +6,23 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.49.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Werkpakket WP-F: render adapters scheiden — Fase 2b afgerond.
+
+**Layer 2 WP-F — Render adapters scheiden (dashboard.html):**
+- 7 render-adapters gecategoriseerd met sectie-comments: Cell Renderers, Orchestration, Header, Virtual Body, Grouped Virtual Body, Aggregation, Meta & Footer, Tab Bar
+- Idempotentie per adapter gedocumenteerd: alle 7 adapters zijn idempotent (zelfde input → zelfde output)
+- DOM-ownership per adapter geëxpliciteerd: welke DOM-elementen elke adapter bezit en schrijft
+- Dirty-flag mapping gedocumenteerd bij Orchestration: 8 flags → bijbehorende adapter(s)
+- Vervangbaarheid: cellRenderers uitbreidbaar met 1 regel; body/header/agg adapters vervangbaar zonder engine-core wijziging
+- Trigger-documentatie: welke dirty flag elke adapter activeert
+
+---
+
 ## v0.48.0 — 2026-03-08
 
 **Type:** Architectuur
