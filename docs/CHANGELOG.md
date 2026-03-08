@@ -6,6 +6,33 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.47.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: derive-pipeline contracten en demo-engine minimalisatie.
+
+**Layer 2 WP-D — Derive layer structureren (dashboard.html):**
+- Derive-pipeline contracttabel toegevoegd in [6/11] header: 5 stappen + 4 helpers met cache-slot, dirty flag en cascade per stap
+- Elk DERIVE-sectiecomment uitgebreid met formeel contract: Input, Output, Cache, Cascade, Test
+- Filtering contract: getData + search + filters → _derived.filteredData, cascade → sort/group/agg
+- Sorting contract: data[] + sortRules → sortedRows[] (puur, geen side effects)
+- Grouping contract: data[] + groupFields → nested tree | null (puur)
+- Conditional Formatting contract: row + condEnabled → CSS class (inline, geen cache)
+- Row Height contract: rowHeight → pixels (puur lookup)
+- Compute Functions header: caching wrappers beschreven met aanroepvolgorde
+- Aggregation Model contract: 4 accumulator-types gedocumenteerd (categorical, average, boolean, none)
+- Testbaarheidsnotitie: alle functies puur of near-pure, aanroepbaar via Suite A
+
+**Layer 1 WP10 — Demo-engine minimaliseren (ux-reference.html v1.4):**
+- REFERENCE INTERACTIONS blokheader toegevoegd: groepeert alle PORT THIS patronen met contract-beschrijving
+- DEMO ENGINE blokheader toegevoegd met expliciete waarschuwing: niet overnemen in productie
+- Per-functie vervangingstabel: formatCell→cellRenderers, render→renderVirtualBody+renderHeader, etc.
+- Versie bijgewerkt naar 1.4
+
+---
+
 ## v0.46.0 — 2026-03-08
 
 **Type:** Architectuur

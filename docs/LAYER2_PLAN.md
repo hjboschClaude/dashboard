@@ -186,7 +186,7 @@ Fase 2d (Build-ready):
 | WP-H | Declaratieve config opschonen | 2a | P1 | WP-A | ✅ v0.44.0 |
 | WP-C | Contracts voor input en output | 2a | P1 | WP-H | ✅ v0.45.0 |
 | WP-B | Engine Core expliciteren | 2b | P1 | WP-C | ✅ v0.46.0 |
-| WP-D | Derive layer structureren | 2b | P1 | WP-B | ○ Open |
+| WP-D | Derive layer structureren | 2b | P1 | WP-B | ✅ v0.47.0 |
 | WP-E | Virtualisatie en performance | 2b | P1 | WP-D | ○ Open |
 | WP-F | Render adapters scheiden | 2b | P1 | WP-E | ○ Open |
 | WP-I | Data source abstractie | 2c | P2 | WP-F | ○ Open |
@@ -362,9 +362,11 @@ Fase 2d (Build-ready):
 4. Definieer wanneer elke stap opnieuw moet worden uitgevoerd (dirty-flag mapping)
 5. Zorg dat elke derive-functie apart aanroepbaar en testbaar is
 
+**Huidige staat (v0.47.0):** Derive-pipeline contracttabel in [6/11] header met 5 stappen + 4 helpers (cache-slot, dirty flag, cascade). Elk DERIVE-sectiecomment voorzien van formeel contract (Input, Output, Cache, Cascade, Test). Aggregation Model met 4 accumulator-types. Testbaarheidsnotitie toegevoegd.
+
 **Acceptatiecriteria:**
-- De derive-pipeline is leesbaar als opeenvolgende, testbare stappen
-- Elke stap kan apart getest en geprofileerd worden
+- ✅ De derive-pipeline is leesbaar als opeenvolgende, testbare stappen
+- ✅ Elke stap kan apart getest en geprofileerd worden
 
 ---
 

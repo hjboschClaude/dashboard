@@ -129,7 +129,7 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 | WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
 | WP8 | Accessibility reference verdiepen | P2 | WP3 | ○ Open |
 | WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ○ Open |
-| WP10 | Demo-engine minimaliseren | P1 | WP6 | ○ Open |
+| WP10 | Demo-engine minimaliseren | P1 | WP6 | ✅ v0.47.0 |
 | WP11 | Koppeling naar single-file build | P3 | WP10 | ○ Open |
 | WP12 | Review en validatie | P3 | WP11 | ○ Open |
 
@@ -424,9 +424,11 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
    ```
 3. Minimaliseer niet de functionaliteit (demo moet blijven werken), maar minimaliseer de cognitieve nadruk
 
+**Huidige staat (v0.47.0):** REFERENCE INTERACTIONS blokheader met contract-beschrijving boven alle PORT THIS patronen. DEMO ENGINE blokheader met expliciete waarschuwing en per-functie vervangingstabel. Bestaande sectie-indeling (DEMO DATA, STATE, REFERENCE INTERACTIONS, DEMO ENGINE) versterkt met groepskoppen.
+
 **Acceptatiecriteria:**
-- De reference-functie van het document overheerst duidelijk boven de demo-implementatie
-- Demo-engine is in max 10 seconden te lokaliseren en af te bakenen
+- ✅ De reference-functie van het document overheerst duidelijk boven de demo-implementatie
+- ✅ Demo-engine is in max 10 seconden te lokaliseren en af te bakenen
 
 ---
 

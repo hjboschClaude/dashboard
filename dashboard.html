@@ -571,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.46.0';
+const DASHBOARD_VERSION = '0.47.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -1315,10 +1315,27 @@ function getData(tabIdx){return _tabData[tabIdx!==undefined?tabIdx:AppState.curr
 // Bevat: cellRenderers, filter, sort, group, compute, aggregatie
 //
 // ══ ENGINE CORE: Derive Layer ═════════════════════════════════
-// De derive-pipeline transformeert ruwe data naar render-klare output:
-//   computeFilteredData() → computeSortedData() → computeGroupModel()
-//   → computeVisibleCols() → computeAggModel()
+// De derive-pipeline transformeert ruwe data naar render-klare output.
 // Elke stap is apart aanroepbaar, testbaar en cachebaar via _derived.
+//
+// ┌──────────────────┬──────────────────────────┬──────────────────────┬───────────────┬─────────────────────┐
+// │ Stap             │ Functie                  │ Cache-slot           │ Dirty flag    │ Cascade             │
+// ├──────────────────┼──────────────────────────┼──────────────────────┼───────────────┼─────────────────────┤
+// │ 1. Filtering     │ computeFilteredData()    │ _derived.filteredData│ _dirty.data   │ → sort, group, agg  │
+// │ 2. Sorting       │ computeSortedData()      │ _derived.sortedData  │ _dirty.sort   │ → group             │
+// │ 3. Grouping      │ computeGroupModel()      │ _derived.groupModel  │ _dirty.group  │ —                   │
+// │ 4. Visible Cols  │ computeVisibleCols()     │ _derived.visibleCols │ (altijd)      │ —                   │
+// │ 5. Aggregation   │ computeAggModel()        │ _derived.aggModel    │ _dirty.agg    │ —                   │
+// ├──────────────────┼──────────────────────────┼──────────────────────┼───────────────┼─────────────────────┤
+// │ Helpers (inline) │ condClass(row)           │ —                    │ —             │ —                   │
+// │                  │ getRowH()                │ —                    │ —             │ —                   │
+// │                  │ matchRule(row, rule)      │ —                    │ —             │ —                   │
+// │                  │ applyFiltersToData(data)  │ —                    │ —             │ —                   │
+// └──────────────────┴──────────────────────────┴──────────────────────┴───────────────┴─────────────────────┘
+//
+// Testbaarheid: alle derive-functies zijn puur of near-pure (lezen
+// uit AppState, schrijven naar _derived). Aanroepbaar via Suite A
+// (runTests) of direct in console.
 // ████████████████████████████████████████████████████████████████
 
 // ══ RENDER: Cell Renderers ════════════════════════════════════
@@ -1383,7 +1400,12 @@ function renderCell(col,r){
 }
 
 // ══ DERIVE: Filtering ═════════════════════════════════════════
-// Input: data[], AppState.filterRules, AppState.filterLogic → Output: filteredRows[]
+// Contract:
+//   Input:  getData(tab) + search + globalNameFilter + colFilters + filterRules
+//   Output: filteredData[] → _derived.filteredData
+//   Cache:  _derived.filteredData (invalidated door _dirty.data)
+//   Cascade: data dirty → sort, group, agg dirty
+//   Test:   computeFilteredData(searchOverride) — searchOverride omzeilt DOM
 const filterOps={'bevat':'contains','bevat niet':'not_contains','is gelijk aan':'equals','is niet':'not_equals','groter dan':'gt','kleiner dan':'lt','is leeg':'empty','is niet leeg':'not_empty'};
 
 // Sprint 3, taak 3.4: defensive coding — NaN-checks op gt/lt
@@ -1674,7 +1696,12 @@ function setGlobalNameFilter(val){
 }
 
 // ══ DERIVE: Sorting ═══════════════════════════════════════════
-// Input: data[], AppState.sortRules → Output: sortedRows[]
+// Contract:
+//   Input:  data[] (puur), AppState.sortRules [{field, dir}]
+//   Output: sortedRows[] (nieuw array, origineel ongewijzigd)
+//   Cache:  _derived.sortedData (via computeSortedData wrapper)
+//   Cascade: sort dirty → group dirty
+//   Test:   sortData(anyArray) — puur, geen side effects
 function sortData(data){
   if(!AppState.sortRules.length) return data;
   return data.slice().sort(function(a,b){
@@ -1692,7 +1719,11 @@ function sortData(data){
 }
 
 // ══ DERIVE: Grouping ══════════════════════════════════════════
-// Input: data[], AppState.groupFields → Output: nested tree {_rows[], _children{}}
+// Contract:
+//   Input:  data[] (puur), AppState.groupFields [field1, field2, ...]
+//   Output: nested tree {_rows[], _children:{key: node}} | null
+//   Cache:  _derived.groupModel (via computeGroupModel wrapper)
+//   Test:   groupData(anyArray) — puur, bouwt nieuw tree-object
 function groupData(data){
   if(!AppState.groupFields.length) return null;
   // Build nested tree: {_rows:[], _children:{key: node}}
@@ -1709,6 +1740,11 @@ function groupData(data){
 }
 
 // ══ DERIVE: Conditional Formatting ════════════════════════════
+// Contract:
+//   Input:  row object, AppState.condEnabled
+//   Output: CSS class string ('cond-red'|'cond-green'|'cond-yellow'|'')
+//   Cache:  — (inline per rij, geen cache)
+//   Test:   condClass({priority:'Hoog'}) → 'cond-red' — puur, geen DOM
 function condClass(r){
   if(!AppState.condEnabled) return '';
   if(r.priority==='Hoog'||r.status==='On Hold') return 'cond-red';
@@ -1718,6 +1754,11 @@ function condClass(r){
 }
 
 // ══ DERIVE: Row Height ════════════════════════════════════════
+// Contract:
+//   Input:  AppState.rowHeight ('tall'|'medium'|'compact')
+//   Output: pixels (52|42|32)
+//   Cache:  — (inline, geen cache)
+//   Test:   getRowH() — puur lookup, geen DOM
 function getRowH(){return AppState.rowHeight==='tall'?52:AppState.rowHeight==='medium'?42:32;}
 
 // #42: Debounce voor zoekfunctie — voorkomt render bij elke toetsaanslag
@@ -1738,8 +1779,11 @@ function clearSearch(){
   render();
 }
 
-// ══ DERIVE: Compute Functions (afgeleide data) ════════════════
-// Elke compute-functie schrijft naar AppState._derived en is apart testbaar.
+// ══ DERIVE: Compute Functions ═════════════════════════════════
+// Caching wrappers rond pure derive-functies.
+// Elke wrapper: leest uit _derived → roept pure functie → schrijft naar _derived.
+// Aanroepvolgorde: filteredData → sortedData → groupModel → visibleCols → aggModel
+// Orchestratie: render() roept wrappers aan op basis van dirty flags.
 
 // Compute filtered data (only when data dirty)
 function computeFilteredData(searchOverride) { // D.2: searchOverride voor testbaarheid zonder DOM
@@ -1772,7 +1816,15 @@ function computeVisibleCols() {
 }
 
 // ══ DERIVE: Aggregation Model (one-pass) ══════════════════════
-// Input: _derived.sortedData, _derived.visibleCols → Output: aggModel{}
+// Contract:
+//   Input:  _derived.sortedData, _derived.visibleCols
+//   Output: aggModel{colKey: {type, ...accumulators}} → _derived.aggModel
+//   Types:  categorical {unique{}, count, uniqueCount}
+//           average     {sum, count, avg}
+//           boolean     {trueCount, total}
+//           none        {}
+//   Cache:  _derived.aggModel (invalidated door _dirty.agg)
+//   Test:   computeAggModel() — leest uit _derived, schrijft naar _derived
 function computeAggModel() {
   var data = _derived.sortedData || _derived.filteredData || [];
   var cols = _derived.visibleCols || computeVisibleCols();

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ═══════════════════════════════════════════════════════════════════
      UX REFERENCE LAYER — CSV Dashboard Template Platform
-     Versie: 1.3 | Datum: 2026-03-08
+     Versie: 1.4 | Datum: 2026-03-08
 
      Dit bestand is de bron van waarheid voor UX-patronen:
      hintbar, drag preview, drop corridor, kolommenpaneel,
@@ -195,6 +195,16 @@ function getVisibleColumns(){return columns.filter(c=>!hiddenColumns.has(c.key))
 function getFilteredRows(){if(!searchTerm)return rows;const t=searchTerm.toLowerCase();return rows.filter(r=>columns.some(c=>{const v=r[c.key];return(typeof v==='number'?euroFmt.format(v):String(v)).toLowerCase().includes(t)}))}
 function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRows().length} van ${rows.length}`:''}
 
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  REFERENCE INTERACTIONS — PORT THIS                         ║
+// ║  Normatieve UX-patronen voor dashboard-interactie.          ║
+// ║  Elk patroon definieert een contract voor:                  ║
+// ║    - Trigger (muis / keyboard / programmatisch)              ║
+// ║    - Zichtbare state-wijziging                              ║
+// ║    - Screenreader-aankondiging                              ║
+// ║    - Engine-hook (Layer 2 mapping — zie PORTING MAP onder)  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
 // ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
 // Contract: elke state-wijziging die de gebruiker niet visueel kan volgen, wordt aangekondigd via aria-live region
 // PORTING NOTE: announce() wordt een engine utility; elke engine-actie roept announce() aan als laatste stap
@@ -302,6 +312,20 @@ searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();re
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
 undoBtn.addEventListener('click',()=>undo());
 undoToastBtn.addEventListener('click',()=>{undo();undoToast.classList.remove('visible')});
+
+// ══════════════════════════════════════════════════════════════
+// DEMO ENGINE (DEMO ONLY)
+// Onderstaande code is een minimale implementatie om de
+// UX-patronen hierboven werkend te demonstreren.
+// Niet overnemen in productie — gebruik de Dashboard Engine
+// Layer (dashboard.html) als runtime-implementatie.
+//
+// Vervanging per functie:
+//   formatCell()      → engine cellRenderers registry
+//   formatCellPlain() → engine cellRenderers registry (plain variant)
+//   render()          → engine renderVirtualBody() + renderHeader()
+//   shuffle/reset     → geen equivalent in productie
+// ══════════════════════════════════════════════════════════════
 
 // ── DEMO ENGINE: Cell Formatters (DEMO ONLY) ──────────────────────
 // Vereenvoudigde renderers; in productie vervangen door engine cellRenderers object
