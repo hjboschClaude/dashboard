@@ -184,7 +184,7 @@ Fase 2d (Build-ready):
 |---|-----------|------|------------|-----------------|--------|
 | WP-A | Positionering en afbakening | 2a | P1 | — | ✅ v0.43.0 |
 | WP-H | Declaratieve config opschonen | 2a | P1 | WP-A | ✅ v0.44.0 |
-| WP-C | Contracts voor input en output | 2a | P1 | WP-H | ○ Open |
+| WP-C | Contracts voor input en output | 2a | P1 | WP-H | ✅ v0.45.0 |
 | WP-B | Engine Core expliciteren | 2b | P1 | WP-C | ○ Open |
 | WP-D | Derive layer structureren | 2b | P1 | WP-B | ○ Open |
 | WP-E | Virtualisatie en performance | 2b | P1 | WP-D | ○ Open |

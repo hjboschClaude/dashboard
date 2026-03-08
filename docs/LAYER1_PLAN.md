@@ -122,7 +122,7 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 |---|-----------|------------|-----------------|--------|
 | WP1 | Herpositionering en naamgeving | P1 | — | ✅ v0.43.0 |
 | WP2 | Structuur expliciet maken | P1 | WP1 | ✅ v0.44.0 |
-| WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ○ Open |
+| WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ✅ v0.45.0 |
 | WP4 | Design tokens isoleren en alignen | P2 | WP3 | ○ Open |
 | WP5 | Interaction pattern catalog | P2 | WP4 | ○ Open |
 | WP6 | Porting notes naar engine | P1 | WP3 | ○ Open |

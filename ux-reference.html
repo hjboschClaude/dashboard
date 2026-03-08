@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ═══════════════════════════════════════════════════════════════════
      UX REFERENCE LAYER — CSV Dashboard Template Platform
-     Versie: 1.1 | Datum: 2026-03-08
+     Versie: 1.2 | Datum: 2026-03-08
 
      Dit bestand is de bron van waarheid voor UX-patronen:
      hintbar, drag preview, drop corridor, kolommenpaneel,
@@ -51,7 +51,7 @@
     .card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
     .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
 
-    /* ══ TOOLBAR PATTERNS ══ — PORT THIS */
+    /* ══ TOOLBAR PATTERNS ══ — PORT THIS: layout en spacing van toolbar-container, zoekbox, separators */
     .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border-light)}
     .toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
     .toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -61,18 +61,18 @@
     .search-box svg{flex-shrink:0;color:var(--muted)}.search-box input{border:none;background:transparent;outline:none;font:inherit;font-size:13px;color:var(--text);width:100%;min-width:0}.search-box input::placeholder{color:var(--border)}
     .result-count{font-size:12px;color:var(--muted);white-space:nowrap;padding:0 4px}
 
-    /* ══ UNDO-TOAST ══ — PORT THIS */
+    /* ══ UNDO-TOAST ══ — PORT THIS: fixed-bottom feedback-toast met undo-knop, slide-in animatie */
     .undo-toast{position:fixed;bottom:24px;left:50%;z-index:10000;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px 0 16px;border-radius:12px;background:var(--text);color:#fff;font-size:13px;font-weight:500;box-shadow:var(--shadow-xl);transform:translateX(-50%) translateY(80px);opacity:0;transition:all 280ms cubic-bezier(.34,1.56,.64,1);pointer-events:none}
     .undo-toast.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
     .undo-toast button{height:28px;padding:0 10px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;font-size:12px;font-weight:700}.undo-toast button:hover{background:rgba(255,255,255,.28)}
 
-    /* ══ HINTBAR ══ — PORT THIS */
+    /* ══ HINTBAR ══ — PORT THIS: keyboard-shortcut hints onder toolbar, kbd-styling */
     .hintbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);font-size:13px;color:var(--muted)}
     .hintbar .hint-item{display:flex;align-items:center;gap:6px}
     .hintbar .hint-icon{width:20px;height:20px;border-radius:5px;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
     .hintbar kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font:inherit;font-size:11px;font-weight:600;color:var(--text);box-shadow:0 1px 0 var(--border)}
 
-    /* ══ TABLE & HEADER STYLES ══ — PORT THIS */
+    /* ══ TABLE & HEADER STYLES ══ — PORT THIS: sticky thead, drag-handle, sort-btn, hide-col-btn, td-layout */
     .table-wrap{overflow:auto;position:relative;scroll-behavior:smooth;max-height:480px}
     table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed}
     thead th{position:sticky;top:0;z-index:3;height:var(--header-h);padding:0;text-align:left;vertical-align:middle;background:#fff;border-bottom:2px solid var(--border);border-right:1px solid var(--border-light);user-select:none;white-space:nowrap;transition:opacity var(--transition-med),transform var(--transition-med),background-color var(--transition-med)}
@@ -91,7 +91,7 @@
     .status-chip.success{background:var(--success-light);color:var(--success)}.status-chip.success::before{background:var(--success)}.status-chip.warning{background:var(--warning-light);color:var(--warning)}.status-chip.warning::before{background:var(--warning)}.status-chip.danger{background:var(--danger-light);color:var(--danger)}.status-chip.danger::before{background:var(--danger)}
     .progress-cell{display:flex;align-items:center;gap:8px}.progress-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:40px;max-width:80px}.progress-bar-fill{height:100%;border-radius:3px;transition:width 300ms ease}.progress-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.budget-val{font-variant-numeric:tabular-nums;font-weight:500}
 
-    /* ══ DRAG & DROP STATES ══ — PORT THIS */
+    /* ══ DRAG & DROP STATES ══ — PORT THIS: source-opacity, shift-left/right animaties, focus/flash states */
     th.th-drag-source{opacity:.35;background:var(--surface)!important}th.th-drag-source .th-title,th.th-drag-source .sort-btn,th.th-drag-source .hide-col-btn{visibility:hidden}th.th-drag-source .drag-handle{opacity:.15}
     td.col-drag-source{opacity:.3;background:var(--surface)!important}td.col-drag-source>*{visibility:hidden!important}
     thead th:focus{background:var(--surface);z-index:4}thead th:focus .drag-handle{color:var(--muted)}thead th:focus .th-title{color:var(--accent)}
@@ -108,7 +108,7 @@
     .drag-preview-header{display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;font-weight:700}.drag-preview-header .mini-handle{color:var(--border);display:grid;place-items:center;flex:0 0 auto}.drag-preview-header .preview-badge{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.drag-preview-body{background:#fff}
     .drag-preview-cell{display:flex;align-items:center;height:34px;padding:0 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.drag-preview-cell:nth-child(even){background:#fafcfc}.drag-preview-cell:last-child{border-bottom:none}
 
-    /* ══ COLUMN PANEL PATTERNS ══ — PORT THIS */
+    /* ══ COLUMN PANEL PATTERNS ══ — PORT THIS: slide-in paneel rechts, toggle-switch, drag-reorder in lijst */
     .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease}.panel-overlay.open{opacity:1;pointer-events:auto}
     .col-panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);max-width:90vw;background:#fff;z-index:101;box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform 250ms cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}.col-panel.open{transform:translateX(0)}
     .panel-header{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border-light);flex-shrink:0}.panel-header h2{font-size:16px;font-weight:700;flex:1}
@@ -155,6 +155,7 @@
   <div id="srAnnounce" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
 <script>
 // ── DEMO DATA (DEMO ONLY) ─────────────────────────────────────────
+// Hardcoded voorbeeld-data; in productie komt data via Layer 3 CSV-adapter
 const defaultColumns=[{key:'project',label:'Project',width:190},{key:'status',label:'Status',width:130},{key:'owner',label:'Eigenaar',width:160},{key:'budget',label:'Budget',width:140,align:'right'},{key:'progress',label:'Voortgang',width:150},{key:'updated',label:'Bijgewerkt',width:170}];
 const defaultRows=[
   {project:'Warmtenet Noord',status:'Op schema',owner:'A. de Boer',budget:4200000,progress:73,updated:'2026-03-08 09:12'},
@@ -171,9 +172,10 @@ const defaultRows=[
   {project:'Waterberging Polder',status:'Aandacht',owner:'L. Bakker',budget:3100000,progress:38,updated:'2026-03-06 09:55'}];
 
 // ── STATE & HISTORY (DEMO ONLY) ───────────────────────────────────
+// Directe state-mutatie; in productie loopt state via engine AppState + dirty flags
 let columns=structuredClone(defaultColumns),rows=structuredClone(defaultRows),sortState={key:null,dir:null},searchTerm='',hiddenColumns=new Set();
-const history=[],MAX_HISTORY=20;
-const dragState={active:false,sourceKey:null,targetKey:null,placement:null,pointerX:0,pointerY:0,markerX:0,previewAnchorX:100,previewAnchorY:18,previewWidth:200};
+const history=[],MAX_HISTORY=20; // DEMO ONLY: snapshot-array — in engine via action replay
+const dragState={active:false,sourceKey:null,targetKey:null,placement:null,pointerX:0,pointerY:0,markerX:0,previewAnchorX:100,previewAnchorY:18,previewWidth:200}; // PORT THIS: dragState-structuur is normatief
 
 // ── DOM REFERENCES & UTILITY FUNCTIONS ────────────────────────────
 const $=id=>document.getElementById(id);
@@ -186,30 +188,36 @@ function getFilteredRows(){if(!searchTerm)return rows;const t=searchTerm.toLower
 function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRows().length} van ${rows.length}`:''}
 
 // ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
+// Contract: elke state-wijziging die de gebruiker niet visueel kan volgen, wordt aangekondigd via aria-live region
 function announce(m){srAnnounce.textContent='';requestAnimationFrame(()=>{srAnnounce.textContent=m})}
 
 // ── REFERENCE INTERACTION: Undo & Feedback ── PORT THIS ───────────
+// Contract: destructieve acties tonen een toast met undo-optie (4s timeout), screenreader melding bij undo
 let undoToastTimer=null;
-function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)}
-function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false} // DEMO ONLY: snapshot-based undo
-function undo(){if(!history.length)return;const s=history.pop();columns=s.columns;rows=s.rows;sortState=s.sort;hiddenColumns=s.hidden;undoBtn.disabled=history.length===0;render();renderPanel();announce('Ongedaan gemaakt: '+s.label)}
+function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)} // PORT THIS: toast-timing en animatie
+function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false} // DEMO ONLY: snapshot-based undo — vervangen door engine action replay
+function undo(){if(!history.length)return;const s=history.pop();columns=s.columns;rows=s.rows;sortState=s.sort;hiddenColumns=s.hidden;undoBtn.disabled=history.length===0;render();renderPanel();announce('Ongedaan gemaakt: '+s.label)} // DEMO ONLY: restore snapshot — in engine via action replay
 
 // ── REFERENCE INTERACTION: Sort ── PORT THIS ──────────────────────
-function toggleSort(k){pushHistory('sortering');if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir='asc'}applySortToRows();render();updateSortIndicator()}
-function applySortToRows(){if(!sortState.key||!sortState.dir)return;const k=sortState.key,d=sortState.dir==='asc'?1:-1;rows.sort((a,b)=>{let va=a[k],vb=b[k];if(typeof va==='number'&&typeof vb==='number')return(va-vb)*d;va=String(va).toLowerCase();vb=String(vb).toLowerCase();return va<vb?-d:va>vb?d:0})}
-function updateSortIndicator(){const el=$('sortIndicator');if(!sortState.key){el.textContent='';return}const c=columns.find(x=>x.key===sortState.key);el.textContent=`Gesorteerd: ${c?c.label:sortState.key} ${sortState.dir==='asc'?'↑':'↓'}`}
+// Contract: klik op sort-btn toggled asc→desc, indicator in footer, screenreader melding
+function toggleSort(k){pushHistory('sortering');if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir='asc'}applySortToRows();render();updateSortIndicator()} // PORT THIS: toggle-logica en indicator
+function applySortToRows(){if(!sortState.key||!sortState.dir)return;const k=sortState.key,d=sortState.dir==='asc'?1:-1;rows.sort((a,b)=>{let va=a[k],vb=b[k];if(typeof va==='number'&&typeof vb==='number')return(va-vb)*d;va=String(va).toLowerCase();vb=String(vb).toLowerCase();return va<vb?-d:va>vb?d:0})} // DEMO ONLY: directe array-mutatie — in engine via sortData()
+function updateSortIndicator(){const el=$('sortIndicator');if(!sortState.key){el.textContent='';return}const c=columns.find(x=>x.key===sortState.key);el.textContent=`Gesorteerd: ${c?c.label:sortState.key} ${sortState.dir==='asc'?'↑':'↓'}`} // PORT THIS: footer-indicator patroon
 
 // ── REFERENCE INTERACTION: Column Visibility ── PORT THIS ─────────
+// Contract: verberg kolom met undo-toast + announce, minimaal 1 kolom blijft zichtbaar
 function hideColumn(k){if(hiddenColumns.size>=columns.length-1)return;pushHistory(`kolom verborgen`);hiddenColumns.add(k);render();renderPanel();showUndoToast('Kolom verborgen');announce(`Kolom ${columns.find(c=>c.key===k)?.label} verborgen`)}
 
 // ── REFERENCE INTERACTION: Column Move ── PORT THIS ───────────────
-function moveColumn(s,t,p){if(!s||!t||s===t)return false;const si=getColumnIndex(s),ti=getColumnIndex(t);if(si<0||ti<0)return false;const c=columns.find(x=>x.key===s);pushHistory(`"${c?.label}" verplaatst`);const[m]=columns.splice(si,1);let ii=getColumnIndex(t);if(p==='after')ii++;columns.splice(ii,0,m);showUndoToast(`"${c?.label}" verplaatst`);announce(`Kolom ${c?.label} verplaatst`);return true}
+// Contract: verplaats kolom met before/after placement, undo-toast + announce, return boolean succes
+function moveColumn(s,t,p){if(!s||!t||s===t)return false;const si=getColumnIndex(s),ti=getColumnIndex(t);if(si<0||ti<0)return false;const c=columns.find(x=>x.key===s);pushHistory(`"${c?.label}" verplaatst`);const[m]=columns.splice(si,1);let ii=getColumnIndex(t);if(p==='after')ii++;columns.splice(ii,0,m);showUndoToast(`"${c?.label}" verplaatst`);announce(`Kolom ${c?.label} verplaatst`);return true} // DEMO ONLY: directe splice — in engine via columnOrder mutatie
 
 // ── REFERENCE INTERACTION: Drag & Drop ── PORT THIS ───────────────
-function clearDropClasses(){table.querySelectorAll('th,td').forEach(e=>e.classList.remove('th-drag-source','col-drag-source','shift-left','shift-right'))}
-function getBoundaryColumns(){if(!dragState.active||!dragState.targetKey||!dragState.placement)return{leftKey:null,rightKey:null};const ti=getColumnIndex(dragState.targetKey);if(ti<0)return{leftKey:null,rightKey:null};return dragState.placement==='before'?{leftKey:columns[ti-1]?.key||null,rightKey:columns[ti]?.key||null}:{leftKey:columns[ti]?.key||null,rightKey:columns[ti+1]?.key||null}}
-function applyColumnShift(k,d){if(!k||!d)return;const c=d==='left'?'shift-left':'shift-right',i=getColumnIndex(k)+1;if(i<=0)return;table.querySelectorAll(`thead th:nth-child(${i}),tbody td:nth-child(${i})`).forEach(e=>e.classList.add(c))}
-function applyDragClasses(){clearDropClasses();if(!dragState.active||!dragState.sourceKey)return;const si=getColumnIndex(dragState.sourceKey)+1;if(si>0){const th=table.querySelector(`thead th:nth-child(${si})`);if(th)th.classList.add('th-drag-source');table.querySelectorAll(`tbody td:nth-child(${si})`).forEach(t=>t.classList.add('col-drag-source'))}const b=getBoundaryColumns();applyColumnShift(b.leftKey,'left');applyColumnShift(b.rightKey,'right')} // DEMO ONLY: querySelectorAll op tbody td
+// Contract: column drag met corridor-indicator, shift-animatie op buren, preview-kaart bij cursor
+function clearDropClasses(){table.querySelectorAll('th,td').forEach(e=>e.classList.remove('th-drag-source','col-drag-source','shift-left','shift-right'))} // PORT THIS: visuele state cleanup
+function getBoundaryColumns(){if(!dragState.active||!dragState.targetKey||!dragState.placement)return{leftKey:null,rightKey:null};const ti=getColumnIndex(dragState.targetKey);if(ti<0)return{leftKey:null,rightKey:null};return dragState.placement==='before'?{leftKey:columns[ti-1]?.key||null,rightKey:columns[ti]?.key||null}:{leftKey:columns[ti]?.key||null,rightKey:columns[ti+1]?.key||null}} // PORT THIS: boundary-berekening voor shift
+function applyColumnShift(k,d){if(!k||!d)return;const c=d==='left'?'shift-left':'shift-right',i=getColumnIndex(k)+1;if(i<=0)return;table.querySelectorAll(`thead th:nth-child(${i}),tbody td:nth-child(${i})`).forEach(e=>e.classList.add(c))} // PORT THIS: shift-class op buurkolommen
+function applyDragClasses(){clearDropClasses();if(!dragState.active||!dragState.sourceKey)return;const si=getColumnIndex(dragState.sourceKey)+1;if(si>0){const th=table.querySelector(`thead th:nth-child(${si})`);if(th)th.classList.add('th-drag-source');table.querySelectorAll(`tbody td:nth-child(${si})`).forEach(t=>t.classList.add('col-drag-source'))}const b=getBoundaryColumns();applyColumnShift(b.leftKey,'left');applyColumnShift(b.rightKey,'right')} // DEMO ONLY: querySelectorAll op alle td's — in engine via virtual scroll column index
 function updatePreview(){if(!dragState.active||!dragState.sourceKey){preview.classList.remove('visible');preview.style.transform='translate(-9999px,-9999px)';return}const c=columns.find(x=>x.key===dragState.sourceKey);previewLabel.textContent=c?c.label:'Kolom';previewBody.innerHTML=rows.slice(0,5).map(r=>`<div class="drag-preview-cell" style="justify-content:${c?.align==='right'?'flex-end':'flex-start'}">${escapeHTML(formatCellPlain(r[dragState.sourceKey],dragState.sourceKey))}</div>`).join('');preview.classList.add('visible');preview.style.transform=`translate(${dragState.pointerX-dragState.previewAnchorX}px,${dragState.pointerY-dragState.previewAnchorY}px)`}
 function syncOverlay(){if(!dragState.active||!dragState.targetKey||!dragState.placement){dropOverlay.classList.remove('active');return}const th=table.querySelector(`th[data-col-key="${dragState.targetKey}"]`);if(!th){dropOverlay.classList.remove('active');return}const wr=tableWrap.getBoundingClientRect(),tr=th.getBoundingClientRect(),mx=(dragState.placement==='before'?tr.left:tr.right)-wr.left+tableWrap.scrollLeft,oh=tableWrap.scrollHeight;dropOverlay.style.width=`${table.scrollWidth}px`;dropOverlay.style.height=`${oh}px`;dropCorridor.style.left=`${mx}px`;dropCorridor.style.height=`${oh}px`;dropCorridor.style.top='0';dropOverlay.classList.add('active')}
 function handleDragStart(e){const th=e.target.closest('th[data-col-key]');if(!th)return;dragState.active=true;dragState.sourceKey=th.dataset.colKey;dragState.targetKey=null;dragState.placement=null;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;const r=th.getBoundingClientRect();dragState.previewAnchorX=Math.max(20,Math.min(180,e.clientX-r.left));dragState.previewAnchorY=Math.max(12,Math.min(28,e.clientY-r.top));if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragState.sourceKey);const img=new Image();img.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';e.dataTransfer.setDragImage(img,0,0)}updatePreview();applyDragClasses();syncOverlay()}
@@ -221,6 +229,7 @@ document.addEventListener('dragover',e=>{if(!dragState.active)return;dragState.p
 tableWrap.addEventListener('scroll',()=>{if(dragState.active)syncOverlay()});window.addEventListener('resize',()=>{if(dragState.active)syncOverlay()});
 
 // ── REFERENCE INTERACTION: Focus Management ── PORT THIS ──────────
+// Contract: na kolom-verplaatsing blijft focus op verplaatste kolom, flash-animatie als bevestiging
 let lastFocusedColKey=null;
 table.addEventListener('focusin',e=>{const th=e.target.closest('th[data-col-key]');if(th)lastFocusedColKey=th.dataset.colKey});
 function focusCol(k){if(!k)return;const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.focus();el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});lastFocusedColKey=k}
@@ -228,6 +237,7 @@ function flashCol(k){const el=table.querySelector(`th[data-col-key="${k}"]`);if(
 function resolveColKey(e){let th=e.target.closest('th[data-col-key]');if(th)return th.dataset.colKey;const a=document.activeElement;if(a&&table.contains(a)){th=a.closest('th[data-col-key]');if(th)return th.dataset.colKey}return lastFocusedColKey||null}
 
 // ── REFERENCE INTERACTION: Keyboard ── PORT THIS ──────────────────
+// Contract: Shift+←→ verplaatst kolom, Enter/Space sorteert, H verbergt, ←→ navigeert focus
 table.addEventListener('keydown',e=>{
   const key=resolveColKey(e);if(!key)return;
   const idx=getColumnIndex(key),vc=getVisibleColumns(),vi=vc.findIndex(c=>c.key===key);
@@ -240,6 +250,7 @@ table.addEventListener('keydown',e=>{
 });
 
 // ── REFERENCE INTERACTION: Column Panel ── PORT THIS ──────────────
+// Contract: slide-in paneel met zoek, toggle-visibility, drag-reorder, Escape sluit
 let panelSearchTerm='';
 function openPanel(){colPanel.classList.add('open');panelOverlay.classList.add('open');renderPanel();panelSearchInput.focus()}
 function closePanel(){colPanel.classList.remove('open');panelOverlay.classList.remove('open')}
@@ -264,14 +275,17 @@ $('panelHideAll').addEventListener('click',()=>{pushHistory('alles verborgen');c
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&colPanel.classList.contains('open')){e.preventDefault();closePanel()}});
 
 // ── REFERENCE INTERACTION: Search ── PORT THIS ────────────────────
+// Contract: live-filter op invoer, resultaatteller in toolbar, lege zoekterm = alle rijen
 searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();render()});
 
 // ── REFERENCE INTERACTION: Global Undo Shortcut ── PORT THIS ──────
+// Contract: Ctrl/Cmd+Z triggert undo op documentniveau, ongeacht focus
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
 undoBtn.addEventListener('click',()=>undo());
 undoToastBtn.addEventListener('click',()=>{undo();undoToast.classList.remove('visible')});
 
 // ── DEMO ENGINE: Cell Formatters (DEMO ONLY) ──────────────────────
+// Vereenvoudigde renderers; in productie vervangen door engine cellRenderers object
 function formatCell(v,k){
   if(k==='budget')return`<span class="budget-val">${euroFmt.format(v)}</span>`;
   if(k==='status'){const c=v==='Op schema'?'success':v==='Aandacht'?'warning':'danger';return`<span class="status-chip ${c}">${escapeHTML(v)}</span>`}
@@ -282,7 +296,7 @@ function formatCell(v,k){
 function formatCellPlain(v,k){if(k==='budget')return euroFmt.format(v);if(k==='progress')return(typeof v==='number'?v:parseInt(v))+'%';if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}return String(v)}
 
 // ── DEMO ENGINE: Table Render (DEMO ONLY) ─────────────────────────
-// Volledige tabel-rerender — in productie vervangen door engine virtual scroll
+// Volledige innerHTML-rerender; in productie vervangen door engine renderVirtualBody()
 function render(){
   const vc=getVisibleColumns(),fr=getFilteredRows();
   const sa=k=>{const a=sortState.key===k,c=a?'sort-btn active':'sort-btn',i=a&&sortState.dir==='desc'?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>';return`<button class="${c}" data-sort-key="${k}" tabindex="-1" title="Sorteer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${i}</svg></button>`};
@@ -297,6 +311,7 @@ function render(){
 }
 
 // ── DEMO ENGINE: Shuffle & Reset (DEMO ONLY) ─────────────────────
+// Demo-acties om state-herstel en re-render te testen; geen equivalent in productie
 $('resetBtn').addEventListener('click',()=>{pushHistory('reset');columns=structuredClone(defaultColumns);rows=structuredClone(defaultRows);sortState={key:null,dir:null};searchTerm='';searchInput.value='';hiddenColumns.clear();render();renderPanel();announce('Gereset')});
 $('shuffleBtn').addEventListener('click',()=>{pushHistory('shuffle');rows=[...rows].sort(()=>Math.random()-.5);sortState={key:null,dir:null};render();announce('Geschud')});
 

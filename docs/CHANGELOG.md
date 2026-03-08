@@ -6,6 +6,32 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.45.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: PORT THIS/DEMO ONLY labeling en formele contracts.
+
+**Layer 1 WP3 — Must-port vs. demo-only labelen (ux-reference.html v1.2):**
+- Elke PORT THIS sectie voorzien van 1-regelig UX-contract (bijv. "Contract: elke state-wijziging wordt aangekondigd via aria-live region")
+- Elke DEMO ONLY functie voorzien van inline label met productie-equivalent (bijv. "in engine via sortData()")
+- `dragState`-structuur gelabeld als normatief (PORT THIS)
+- `history[]` en snapshot-undo gelabeld als DEMO ONLY met verwijzing naar engine action replay
+
+**Layer 2 WP-C — Contracts voor input en output (dashboard.html):**
+- 4 formele contracts gedefinieerd met inline veld-documentatie:
+  - `datasetContract` — input vanuit Layer 3 (CSV-adapter): records, schema, sourceMeta
+  - `dashboardSpecContract` — input vanuit Layer 4 (AI): tabs, kolommen, features, domain
+  - `engineViewModel` — interne derive-output: filteredData, sortedData, groupedData, aggregations, viewport
+  - `renderContract` — input voor renderers: columns, rows, sortState, rowHeight, startIndex
+- Validatiefuncties: `validateDatasetContract()`, `validateDashboardSpec()`, `validateRenderContract()`
+- `_validateContractsOnInit()` aangeroepen bij dashboard-init (fail-fast)
+- `DASHBOARD_VERSION` → 0.45.0
+- Fase 2a (Breekpunt 1) volledig afgerond: WP-A ✅, WP-H ✅, WP-C ✅
+
+---
+
 ## v0.44.0 — 2026-03-08
 
 **Type:** Architectuur

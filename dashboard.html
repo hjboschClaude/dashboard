@@ -571,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.44.0';
+const DASHBOARD_VERSION = '0.45.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -812,8 +812,122 @@ function getTabLabel(tabIdOrIndex){
   return tc?tc.label:'';
 }
 
-// Taak 3.2 (P2): async data-initialisatie — blokkeert main thread niet meer
-// _tabCols altijd synchroon (nul compute), _tabData asynchroon tab-voor-tab
+// ============================================================
+// LAYER 2 CONTRACTS — WP-C: formele input/output interfaces
+// ============================================================
+
+// ── CONTRACT 1: datasetContract ── Input vanuit Layer 3 (CSV-adapter)
+// Beschrijft het formaat dat de engine verwacht van externe data.
+// Veld        | Type              | Verplicht | Beschrijving
+// records     | Array<Object>     | ja        | Rij-objecten met key-value pairs
+// schema      | Object            | nee       | { fields: [{ name:string, type:'text'|'number'|'date'|'boolean'|'enum', nullable:boolean }] }
+// sourceMeta  | Object            | nee       | { filename:string, rowCount:number, parseWarnings:string[] }
+function validateDatasetContract(dataset) {
+  var errors = [];
+  if (!dataset || typeof dataset !== 'object') return ['dataset is geen object'];
+  if (!Array.isArray(dataset.records)) errors.push('dataset.records is geen array');
+  else if (dataset.records.length > 0 && typeof dataset.records[0] !== 'object') errors.push('dataset.records[0] is geen object');
+  if (dataset.schema) {
+    if (!Array.isArray(dataset.schema.fields)) errors.push('dataset.schema.fields is geen array');
+    else dataset.schema.fields.forEach(function(f, i) {
+      if (!f.name) errors.push('schema.fields[' + i + '].name ontbreekt');
+      if (f.type && ['text','number','date','boolean','enum'].indexOf(f.type) === -1) errors.push('schema.fields[' + i + '].type ongeldig: ' + f.type);
+    });
+  }
+  return errors;
+}
+
+// ── CONTRACT 2: dashboardSpecContract ── Input vanuit Layer 4 (AI-gegenereerd)
+// Beschrijft het formaat van de dashboard-configuratie die de engine aanstuurt.
+// Veld                  | Type        | Verplicht | Beschrijving
+// app.title             | string      | ja        | Dashboardtitel
+// app.defaultTabId      | string      | ja        | Standaard actieve tab
+// tabs[]                | Array       | ja        | Minimaal 1 tab
+// tabs[].id             | string      | ja        | Unieke tab-identifier
+// tabs[].label          | string      | ja        | Weergavenaam
+// tabs[].columns[]      | Array       | ja        | Kolomdefinities
+// tabs[].columns[].key  | string      | ja        | Veldnaam in data
+// tabs[].columns[].label| string      | ja        | Kolomkop
+// tabs[].columns[].type | string      | ja        | 'text'|'number'|'date'|'boolean'|'enum'
+// tabs[].columns[].renderer | string  | ja        | Renderertype (text, tag, budget, progress, etc.)
+// tabs[].features       | Object      | nee       | { search:bool, filter:bool, sort:bool, group:bool }
+// tabs[].exports        | Object      | nee       | { allow:string[], defaultScope:string }
+// tabs[].defaults       | Object      | nee       | { rowHeight:string, sort:null|Object, grouping:string[] }
+// domain.categoricalFields | string[] | nee       | Velden voor groepering/filtering
+// domain.averageFields     | string[] | nee       | Velden voor numerieke aggregaties
+// domain.booleanFields     | string[] | nee       | Booleaanse velden
+// domain.ordinalOrders     | Object   | nee       | Vaste sorteervolgorden per enum-veld
+// domain.tagColors         | Object   | nee       | Kleurenmapping per enum-veld
+function validateDashboardSpec(spec) {
+  var errors = [];
+  if (!spec || typeof spec !== 'object') return ['spec is geen object'];
+  if (!spec.app || !spec.app.title) errors.push('app.title ontbreekt');
+  if (!spec.app || !spec.app.defaultTabId) errors.push('app.defaultTabId ontbreekt');
+  if (!Array.isArray(spec.tabs) || spec.tabs.length === 0) errors.push('tabs array is leeg of ontbreekt');
+  else {
+    var ids = {};
+    spec.tabs.forEach(function(tab, i) {
+      var p = 'tabs[' + i + ']';
+      if (!tab.id) errors.push(p + '.id ontbreekt');
+      if (ids[tab.id]) errors.push(p + '.id is niet uniek: ' + tab.id);
+      ids[tab.id] = true;
+      if (!tab.label) errors.push(p + '.label ontbreekt');
+      if (!Array.isArray(tab.columns) || tab.columns.length === 0) errors.push(p + '.columns is leeg of ontbreekt');
+      else tab.columns.forEach(function(col, j) {
+        var cp = p + '.columns[' + j + ']';
+        if (!col.key) errors.push(cp + '.key ontbreekt');
+        if (!col.label) errors.push(cp + '.label ontbreekt');
+        if (!col.type) errors.push(cp + '.type ontbreekt');
+        if (!col.renderer) errors.push(cp + '.renderer ontbreekt');
+      });
+    });
+  }
+  return errors;
+}
+
+// ── CONTRACT 3: engineViewModel ── Interne output van derive-stappen
+// Beschrijft wat de engine pipeline produceert na filtering/sorting/grouping.
+// Veld           | Type          | Bron
+// filteredData   | Array<Object> | computeFilteredData()
+// sortedData     | Array<Object> | sortData()
+// groupedData    | Object|null   | groupData()
+// aggregations   | Object        | computeAggModel()
+// visibleColumns | Array<Object> | kolommen met visible===true
+// viewport       | Object        | { startRow:number, endRow:number, scrollTop:number, rowHeight:number }
+// totalRows      | number        | filteredData.length
+// (Geen validatiefunctie nodig — dit is een intern contract, afgedwongen door dirty flags)
+
+// ── CONTRACT 4: renderContract ── Input voor render-adapters
+// Beschrijft wat een renderer nodig heeft om een tabelblok te tekenen.
+// Veld        | Type          | Verplicht | Beschrijving
+// columns     | Array<Object> | ja        | Zichtbare kolommen met key, label, renderer, type
+// rows        | Array<Object> | ja        | Data-rijen binnen viewport
+// sortState   | Object        | ja        | { rules: [{ col:string, dir:'asc'|'desc' }] }
+// groupState  | Object        | nee       | { fields:string[], collapsed:Set }
+// rowHeight   | number        | ja        | Rijhoogte in pixels
+// startIndex  | number        | ja        | Eerste zichtbare rij-index (voor virtualisatie)
+function validateRenderContract(input) {
+  var errors = [];
+  if (!input || typeof input !== 'object') return ['renderInput is geen object'];
+  if (!Array.isArray(input.columns)) errors.push('columns is geen array');
+  if (!Array.isArray(input.rows)) errors.push('rows is geen array');
+  if (!input.sortState || !Array.isArray(input.sortState.rules)) errors.push('sortState.rules ontbreekt');
+  if (typeof input.rowHeight !== 'number') errors.push('rowHeight is geen number');
+  if (typeof input.startIndex !== 'number') errors.push('startIndex is geen number');
+  return errors;
+}
+
+// ── Contract validatie bij init (fail-fast) ──
+// Wordt aangeroepen in het INIT-blok na data-laden
+function _validateContractsOnInit() {
+  // Valideer dashboardSpec (de huidige dashboardConfig)
+  var specErrors = validateDashboardSpec(dashboardConfig);
+  if (specErrors.length > 0) {
+    console.error('[Contract] dashboardSpec validatie mislukt:', specErrors);
+  }
+}
+
+
 function initTabDataFromConfig(onComplete) {
   dashboardConfig.tabs.forEach(function(tab, idx) {
     _tabCols[idx] = tab.columns;
@@ -3785,6 +3899,7 @@ if (_checkBrowserSupport()) {
   renderTabContainers(); // Sprint 3: dynamische tab-containers
   initTableDelegation(); // Sprint 3: event delegation op alle tabs
   showLoadingState();    // Taak 3.2: skeleton terwijl data asynchroon laadt
+  _validateContractsOnInit(); // WP-C: fail-fast bij ongeldige config
   // Taak 3.2 (P2): data asynchroon laden — render() pas aanroepen na onComplete
   initTabDataFromConfig(function() {
     render();
