@@ -65,6 +65,11 @@ dashboard-template-platform/
 4. **Assembler combineert** — UX reference + engine + data + spec → single HTML
 5. **Output** — één tailor-made `dashboard.html` per use case
 
+## Omgevingsbeperkingen
+
+- **Geen Python** beschikbaar op deze Windows-laptop — gebruik geen Python-scripts of pip-commando's
+- **Geen Chrome/browser-test** mogelijk vanuit CLI — visuele verificatie en testruns gebeuren door de gebruiker in de browser
+
 ## Conventies
 
 ### Taal

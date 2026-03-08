@@ -1,9 +1,9 @@
 # SCHEMA_CONTRACT_PLAN.md — Schema Contract & Feature Gating
 
-Versie: 1.1
+Versie: 1.2
 Datum: 2026-03-08
-Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 2 volgt
-Bron: `advies stable row identity.md` (v1.1 integratie)
+Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 1½ volgt
+Bronnen: `advies stable row identity.md` (v1.1), `Performance_Roadmap_Dashboard_v052.md` (v1.2)
 
 ---
 
@@ -74,12 +74,21 @@ De volgende items vallen buiten Fase 1–3 maar moeten bij Layer 3 (CSV-adapter)
 | WP-S5 | _validateContractsOnInit() uitbreiden | ✅ |
 | WP-S6 | Unit tests A-CONTRACT suite (≥20 assertions) | ✅ |
 
+### Fase 1½ — Performance quickfixes (v0.56.1)
+
+Bron: `Performance_Roadmap_Dashboard_v052.md` — routes 1, 6 (prio 1/2, nul risico).
+
+| WP | Beschrijving | Status |
+|----|-------------|--------|
+| WP-P1 | `_perfDebug` guard: `performance.mark/measure` + `console.log` alleen als `_perfDebug=true`; standaard uit in productie (Route 1) | ○ |
+| WP-P2 | `computeVisibleCols()` cachen: dirty flag `_dirty.cols`, alleen herberekenen bij kolom-toggle/reorder (Route 6) | ○ |
+
 ### Fase 2 — Semantic accessors + dual mode (v0.57.0)
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
 | WP-S7 | Semantic accessor-functies (9 functies): 6 bestaand + `normalizeRecordId(value)`, `makeRowKey(tabId, recordId)`, `parseRowKey(rowKey)` | ○ |
-| WP-S8 | Refactor applyFiltersToData() — dual mode | ○ |
+| WP-S8 | Refactor applyFiltersToData() — dual mode + single-pass filtering: 3 `.filter()` passes → 1 samengesteld predikaat (Perf Route 2, 20–40% winst op filter) | ○ |
 | WP-S9 | Refactor condClass() — dual mode | ○ |
 | WP-S10 | Refactor rowHtml() — dual mode + `data-row-key` attribuut op elke `<tr>` via `makeRowKey()` | ○ |
 | WP-S11 | Refactor openModal() + expandRow() — dual mode + `_tabIndexById` Map per tab voor O(1) lookup, `getRecordByRowKey()`, `showCtx()` bewaart full rowKey | ○ |
@@ -101,9 +110,10 @@ De volgende items vallen buiten Fase 1–3 maar moeten bij Layer 3 (CSV-adapter)
 ## 4. Afhankelijkheden
 
 ```
-Fase 1:  S1+S2+S3 (parallel) → S4 → S5 → S6
-Fase 2:  S7 → S8+S9+S10+S12 (parallel) → S11 (na S10) → S13
-Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
+Fase 1:   S1+S2+S3 (parallel) → S4 → S5 → S6
+Fase 1½:  P1+P2 (parallel, onafhankelijk)
+Fase 2:   S7 → S8+S9+S10+S12 (parallel) → S11 (na S10) → S13
+Fase 3:   S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 ```
 
 ---
@@ -113,7 +123,8 @@ Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 | Versie | Fase | WPs | Impact |
 |--------|------|-----|--------|
 | v0.56.0 | 1 | S1–S6 | Nul runtime-impact, alleen diagnostiek |
-| v0.57.0 | 2 | S7–S13 | Identiek gedrag, generiekere code |
+| v0.56.1 | 1½ | P1–P2 | Performance quickfixes, nul functionele impact |
+| v0.57.0 | 2 | S7–S13 | Identiek gedrag, generiekere code + single-pass filter |
 | v0.58.0 | 3 | S14–S17 | Features schakelbaar, UI reageert |
 | v0.59.0 | (opt) | S18 | Cleanup, nul hardcoded veldnamen |
 
@@ -128,6 +139,11 @@ Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 - [ ] `_validateContractsOnInit()` draait volledige validatieketen
 - [ ] A-CONTRACT testsuite met ≥20 assertions
 - [ ] Alle bestaande tests groen, geen runtime-gedrag gewijzigd
+
+### Fase 1½ (v0.56.1)
+- [ ] `_perfDebug` guard: `performance.mark/measure` alleen bij `_perfDebug=true`
+- [ ] `computeVisibleCols()` gecached met dirty flag
+- [ ] Alle bestaande tests groen, geen functioneel verschil
 
 ### Fase 2 (v0.57.0)
 - [ ] 9 semantic accessor-functies beschikbaar (incl. `normalizeRecordId()`, `makeRowKey()`, `parseRowKey()`)
