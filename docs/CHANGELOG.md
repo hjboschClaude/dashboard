@@ -6,6 +6,43 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.56.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Schema Contract & Feature Gating — Fase 1 (Layer 2 extensie)
+
+Contractlaag toegevoegd aan de dashboard engine: schema contracts, feature requirements en semantic role rules. Nul runtime-impact, alleen diagnostiek en validatie.
+
+**WP-S1 — SchemaContract per tab:**
+- `schemaContract` toegevoegd aan beide tabs in `dashboardConfig`
+- Tab "projects": primaryKey=id, primaryLabel=name, searchTextFields=[directeur,aog,pm], priority, status, progress
+- Tab "team": primaryKey=id, primaryLabel=name, searchTextFields=[name], activeFlag=actief, progress=capaciteit
+
+**WP-S2 — FEATURE_REQUIREMENTS constante:**
+- Declaratieve mapping van 11 features naar vereiste semantische rollen
+- modes: `requires` (alle rollen verplicht) en `anyOf` (minstens één)
+
+**WP-S3 — SEMANTIC_ROLE_RULES constante:**
+- Type-constraints voor 10 semantische rollen (primaryKey, primaryLabel, progress, activeFlag, etc.)
+- Valideert allowedTypes, nullable, unique, range, array
+
+**WP-S4 — Drie nieuwe validatorfuncties:**
+- `validateSchemaAlignment(tab, colDefs)` — controleert of semanticFields naar bestaande kolommen verwijzen
+- `validateTypeSemantics(tab, colDefs)` — controleert type-constraints tegen SEMANTIC_ROLE_RULES
+- `validateFeatureRequirements(tab)` — bepaalt per feature of vereiste semantiek aanwezig is, retourneert resolvedFeatures
+
+**WP-S5 — _validateContractsOnInit() uitgebreid:**
+- Volledige validatieketen: structuur → alignment → types → feature requirements
+- Per tab console.info met resolved features
+- Alleen warnings, geen blokkade
+
+**WP-S6 — A-CONTRACT testsuite:**
+- 30 assertions: constanten, schemaContract aanwezigheid, alignment, type-semantics, feature degradatie
+- Degradatie-scenarios: multiSelect/modal false zonder primaryKey, modal false zonder detailTitle
+- Testtelling: 241 → 271
+
+---
+
 ## v0.55.0 — 2026-03-08
 
 **Type:** Architectuur
