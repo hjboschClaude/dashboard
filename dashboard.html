@@ -1000,7 +1000,7 @@ var FEATURE_REQUIREMENTS = {
 var SEMANTIC_ROLE_RULES = {
   primaryKey:       { allowedTypes: ['text', 'number'],  nullable: false, unique: true },
   primaryLabel:     { allowedTypes: ['text'],             nullable: false },
-  secondaryLabel:   { allowedTypes: ['text'],             nullable: true },
+  secondaryLabel:   { allowedTypes: ['text', 'enum'],      nullable: true },
   owner:            { allowedTypes: ['text', 'enum'],     nullable: true },
   status:           { allowedTypes: ['text', 'enum'],     nullable: true },
   priority:         { allowedTypes: ['text', 'enum'],     nullable: true },
@@ -1026,11 +1026,12 @@ function validateSchemaAlignment(tab, colDefs) {
   if (Array.isArray(colDefs)) {
     colDefs.forEach(function(c) { if (c.key) colKeys[c.key] = true; });
   }
-  // primaryKey moet bestaan als kolom
+  // primaryKey moet gedefinieerd zijn; als het geen UI-kolom is, is dat een warning
+  // (primaryKey verwijst vaak naar een intern dataveld zoals "id" dat geen zichtbare kolom is)
   if (!sc.primaryKey) {
     result.errors.push('Tab "' + tab.id + '": primaryKey ontbreekt in schemaContract');
   } else if (!colKeys[sc.primaryKey]) {
-    result.errors.push('Tab "' + tab.id + '": primaryKey "' + sc.primaryKey + '" verwijst niet naar een bestaande kolom');
+    result.warnings.push('Tab "' + tab.id + '": primaryKey "' + sc.primaryKey + '" is geen UI-kolom (intern dataveld)');
   }
   // Elke semanticField moet naar een bestaande kolom verwijzen (of null zijn)
   Object.keys(sf).forEach(function(role) {
@@ -4560,12 +4561,13 @@ function runTests(){
   // --- validateSchemaAlignment: correcte config ---
   var alignOk = validateSchemaAlignment(tab0, tab0.columns);
   assert('validateSchemaAlignment: tab0 geen fouten', alignOk.errors.length === 0);
-  assert('validateSchemaAlignment: tab0 geen warnings', alignOk.warnings.length === 0);
+  assert('validateSchemaAlignment: tab0 alleen primaryKey-warning', alignOk.warnings.length <= 1);
 
   // --- validateSchemaAlignment: foute config ---
   var fakeTab = { id:'test', schemaContract: { primaryKey:'NIET_BESTAAND', semanticFields: { primaryLabel:'OOK_FAKE' } }, columns: [{ key:'a', label:'A', type:'text', renderer:'text' }] };
   var alignFail = validateSchemaAlignment(fakeTab, fakeTab.columns);
-  assert('validateSchemaAlignment: detecteert fout primaryKey', alignFail.errors.length > 0 && alignFail.errors[0].indexOf('NIET_BESTAAND') !== -1);
+  assert('validateSchemaAlignment: detecteert onbekend primaryKey', alignFail.warnings.length > 0 && alignFail.warnings[0].indexOf('NIET_BESTAAND') !== -1);
+  assert('validateSchemaAlignment: detecteert fout semanticField', alignFail.errors.length > 0 && alignFail.errors[0].indexOf('OOK_FAKE') !== -1);
 
   // --- validateSchemaAlignment: ontbrekend contract ---
   var noContractTab = { id:'empty' };
