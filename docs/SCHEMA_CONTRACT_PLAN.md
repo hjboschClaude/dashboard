@@ -1,8 +1,9 @@
 # SCHEMA_CONTRACT_PLAN.md — Schema Contract & Feature Gating
 
-Versie: 1.0
+Versie: 1.1
 Datum: 2026-03-08
 Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 2 volgt
+Bron: `advies stable row identity.md` (v1.1 integratie)
 
 ---
 
@@ -38,6 +39,26 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 
 `matchRule()`, `sortData()`, `groupData()`, `renderCell()`, `buildSearchIndex()` — gebruiken dynamische veldnamen.
 
+### 2.4 Row identity kwetsbaarheden
+
+De huidige row-identity is fragiel en hardcoded:
+
+| Locatie | Probleem | Risico |
+|---------|----------|--------|
+| `expandRow()` | `parseInt(el.id.split('-')[1])` — breekt bij string-keys (bijv. `"P-1042"`) | Crash / verkeerde rij |
+| `openModal()` | `x.id === id` — hardcoded veldnaam `id` | Niet-generiek |
+| `selectedRows` Set | Bevat `"tab-id"` strings — tab-index afhankelijk | Stale na tab-herordening |
+| `contextRow` / `showCtx()` | Wordt geparsed met `split('-')` — fragiel bij samengestelde keys | Verkeerde context |
+
+Oplossingsrichting: drielaags identity model (business key → engine row key → row reference), geïntegreerd in Fase 2 accessors.
+
+### 2.5 Items voor Layer 3 (buiten scope dit plan)
+
+De volgende items vallen buiten Fase 1–3 maar moeten bij Layer 3 (CSV-adapter) opgepakt worden:
+
+- **Stale selection reconciliation** — na CSV reload kunnen `selectedRowKeys` verwijzen naar verwijderde records; `reconcileSelectionForTab(tabId, newData)` functie nodig
+- **Cross-tab selection persistence** — bij tab-switch moeten selecties bewaard blijven via rowKey (niet index)
+
 ---
 
 ## 3. Werkpakketten
@@ -57,13 +78,13 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
-| WP-S7 | Semantic accessor-functies (6 functies) | ○ |
+| WP-S7 | Semantic accessor-functies (9 functies): 6 bestaand + `normalizeRecordId(value)`, `makeRowKey(tabId, recordId)`, `parseRowKey(rowKey)` | ○ |
 | WP-S8 | Refactor applyFiltersToData() — dual mode | ○ |
 | WP-S9 | Refactor condClass() — dual mode | ○ |
-| WP-S10 | Refactor rowHtml() — dual mode | ○ |
-| WP-S11 | Refactor openModal() + expandRow() — dual mode | ○ |
+| WP-S10 | Refactor rowHtml() — dual mode + `data-row-key` attribuut op elke `<tr>` via `makeRowKey()` | ○ |
+| WP-S11 | Refactor openModal() + expandRow() — dual mode + `_tabIndexById` Map per tab voor O(1) lookup, `getRecordByRowKey()`, `showCtx()` bewaart full rowKey | ○ |
 | WP-S12 | Refactor getAllUniqueNames() — semantic | ○ |
-| WP-S13 | Tests A-SEMANTIC suite (≥16 assertions) | ○ |
+| WP-S13 | Tests A-SEMANTIC suite (≥24 assertions): 16 bestaand + identity tests (`normalizeRecordId`, `makeRowKey`/`parseRowKey` round-trip, `data-row-key` op `<tr>`) | ○ |
 
 ### Fase 3 — Feature gating actief (v0.58.0)
 
@@ -73,7 +94,7 @@ Na afronding kan elke dataset met willekeurige veldnamen een volledig werkend da
 | WP-S15 | UI reageert op resolved features | ○ |
 | WP-S16 | Declaratief conditional formatting | ○ |
 | WP-S17 | Tests A-FEATURE-GATE + A-DEGRADE suites | ○ |
-| WP-S18 | Legacy fallbacks verwijderen (optioneel) | ○ |
+| WP-S18 | Legacy fallbacks verwijderen (optioneel) + `selectedRows` → `selectedRowKeys` hernoemen, `contextRow` → `contextRowKey` hernoemen, duplicate-key validatie bij data-init | ○ |
 
 ---
 
@@ -109,9 +130,12 @@ Fase 3:  S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 - [ ] Alle bestaande tests groen, geen runtime-gedrag gewijzigd
 
 ### Fase 2 (v0.57.0)
-- [ ] 6 semantic accessor-functies beschikbaar
+- [ ] 9 semantic accessor-functies beschikbaar (incl. `normalizeRecordId()`, `makeRowKey()`, `parseRowKey()`)
 - [ ] 5 engine-functies gebruiken semantic pad met legacy fallback
-- [ ] A-SEMANTIC testsuite met ≥16 assertions
+- [ ] Alle `<tr>` elementen hebben `data-row-key` attribuut via `makeRowKey()`
+- [ ] `_tabIndexById` Map actief per tab, O(1) record lookup in `openModal()` / `expandRow()`
+- [ ] Event handlers lezen rowKey uit DOM i.p.v. index-parse
+- [ ] A-SEMANTIC testsuite met ≥24 assertions (incl. identity round-trip tests)
 - [ ] Gedrag identiek aan pre-contract versie
 
 ### Fase 3 (v0.58.0)
