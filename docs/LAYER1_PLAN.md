@@ -124,11 +124,11 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 | WP2 | Structuur expliciet maken | P1 | WP1 | ✅ v0.44.0 |
 | WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ✅ v0.45.0 |
 | WP4 | Design tokens isoleren en alignen | P2 | WP3 | ✅ v0.53.0 |
-| WP5 | Interaction pattern catalog | P2 | WP4 | ○ Open |
+| WP5 | Interaction pattern catalog | P2 | WP4 | ✅ v0.54.0 |
 | WP6 | Porting notes naar engine | P1 | WP3 | ✅ v0.46.0 |
 | WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
 | WP8 | Accessibility reference verdiepen | P2 | WP3 | ✅ v0.53.0 |
-| WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ○ Open |
+| WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ✅ v0.54.0 |
 | WP10 | Demo-engine minimaliseren | P1 | WP6 | ✅ v0.47.0 |
 | WP11 | Koppeling naar single-file build | P3 | WP10 | ○ Open |
 | WP12 | Review en validatie | P3 | WP11 | ○ Open |
@@ -252,15 +252,12 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 
 **Doel:** De reference niet alleen code laten zijn, maar ook een catalogus van interactiepatronen.
 
-**Taken:**
-1. Schrijf per patroon een commentblok met:
-   - Doel
-   - Trigger (muis/keyboard/programmatisch)
-   - Zichtbare state
-   - Toegankelijkheidsverwachting
-   - Engine-hook (verwijzing naar Layer 2)
+**Fase:** P2 — ✅ **Afgerond in v0.54.0**
 
-2. Documenteer minimaal deze 12 patronen:
+**Taken:**
+1. ✅ Per patroon een gestructureerd commentblok geschreven met:
+   - Doel, Trigger, Zichtbare state, A11y-verwachting, Engine-hook
+2. ✅ Alle 12 patronen gedocumenteerd in INTERACTION PATTERN CATALOG:
 
    | # | Patroon | Trigger | Engine-hook |
    |---|---------|---------|-------------|
@@ -277,9 +274,11 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
    | 11 | Undo feedback | Na elke mutatie | `undo()` + toast |
    | 12 | Screen reader announce | Na elke interactie | `announce()` utility |
 
+3. ✅ Overzichtstabel + per-patroon blok met 5 velden in REFERENCE INTERACTIONS sectie
+
 **Acceptatiecriteria:**
-- Elk UX-patroon is beschrijfbaar zonder naar de demo-engine te verwijzen
-- De catalogus dient als contract tussen Layer 1 en Layer 2
+- ✅ Elk UX-patroon is beschrijfbaar zonder naar de demo-engine te verwijzen
+- ✅ De catalogus dient als contract tussen Layer 1 en Layer 2
 
 ---
 
@@ -374,24 +373,28 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 
 **Doel:** De reference focussen op standaard dashboardinteractie.
 
+**Fase:** P2 — ✅ **Afgerond in v0.54.0**
+
 **Taken:**
-1. Behoud als reference-patronen:
+1. ✅ Behouden als reference-patronen:
    - Search box + result count
    - Kolommen-button (panel trigger)
    - Undo-button
-2. Markeer als demo-only:
-   - Shuffle-button → `// DEMO ONLY — niet opnemen in productie`
-   - Reset-button → `// DEMO ONLY — in productie via spec-defaults`
-3. Behoud kolommenpaneel volledig als reference:
-   - Search in panel
-   - Show all / Hide all
-   - Toggle per kolom
-   - Drag reorder in panel
-4. Overweeg: verplaats Shuffle/Reset naar een `<details>` blok met label "Demo tools"
+2. ✅ Gemarkeerd als demo-only:
+   - Shuffle-button → in `<details class="demo-tools">` blok
+   - Reset-button → in `<details class="demo-tools">` blok
+   - HTML-comment: `<!-- DEMO ONLY: shuffle en reset zijn demo-acties -->`
+3. ✅ Kolommenpaneel volledig behouden als reference:
+   - Search in panel, Show all / Hide all, Toggle per kolom, Drag reorder
+4. ✅ Shuffle/Reset verplaatst naar `<details class="demo-tools">` met:
+   - Dashed border (visueel ondergeschikt)
+   - ⚙ icoon + "Demo tools" label
+   - Dropdown-panel met Shuffle + Reset knoppen
+   - CSS: `.demo-tools`, `.demo-tools-toggle`, `.demo-tools-panel`
 
 **Acceptatiecriteria:**
-- De UI toont alleen patronen die logisch onderdeel zijn van de dashboardstandaard
-- Demo-tools zijn visueel ondergeschikt aan reference-patronen
+- ✅ De UI toont alleen patronen die logisch onderdeel zijn van de dashboardstandaard
+- ✅ Demo-tools zijn visueel ondergeschikt aan reference-patronen
 
 ---
 

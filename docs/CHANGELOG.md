@@ -6,6 +6,31 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.54.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P2 afgerond: interaction pattern catalog en toolbar rationalisatie.
+
+**Layer 1 WP5 — Interaction pattern catalog (ux-reference.html):**
+- Volledige INTERACTION PATTERN CATALOG met 12 normatieve patronen
+- Elk patroon gedocumenteerd met 5 velden: Doel, Trigger, Zichtbare state, A11y-verwachting, Engine-hook
+- Overzichtstabel + gedetailleerde per-patroon commentblokken in REFERENCE INTERACTIONS sectie
+- Patronen: drag start/move/commit/cancel, drop corridor, header shift, column panel, show/hide all, keyboard reorder, hide column, undo feedback, screen reader announce
+
+**Layer 1 WP9 — Toolbar en paneel rationaliseren (ux-reference.html):**
+- Shuffle en Reset verplaatst naar `<details class="demo-tools">` dropdown
+- Demo-tools visueel ondergeschikt: dashed border, ⚙ icoon, "Demo tools" label
+- Reference-patronen (search, kolommen, undo) behouden op prominente positie in toolbar
+- Kolommenpaneel volledig behouden als reference-patroon
+- TOOLBAR PATTERNS CSS-comment uitgebreid met reference/demo-only classificatie
+- Nieuwe CSS: `.demo-tools`, `.demo-tools-toggle`, `.demo-tools-panel`
+
+**Status Layer 1 P2:** ✅ Compleet (4/4 WPs: WP4, WP5, WP8, WP9)
+
+---
+
 ## v0.53.0 — 2026-03-08
 
 **Type:** Architectuur

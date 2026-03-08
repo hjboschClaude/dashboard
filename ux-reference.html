@@ -117,8 +117,10 @@
     .card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
     .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--text-muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
 
-    /* ══ TOOLBAR PATTERNS ══ — PORT THIS: layout en spacing van toolbar-container, zoekbox, separators */
-    /* PORTING NOTE: zoekbox → engine setSearchTerm(); result-count → getFilteredCount(); CSS layout overnemen */
+    /* ══ TOOLBAR PATTERNS ══ — PORT THIS: layout en spacing van toolbar-container, zoekbox, separators
+     * Reference-patronen: search-box, result-count, kolommen-btn, undo-btn
+     * Demo-only: shuffle-btn, reset-btn (in <details class="demo-tools"> blok)
+     * PORTING NOTE: zoekbox → engine setSearchTerm(); result-count → getFilteredCount(); CSS layout overnemen */
     .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border-light)}
     .toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
     .toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -127,6 +129,14 @@
     .search-box:focus-within{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(0,128,62,.08)}
     .search-box svg{flex-shrink:0;color:var(--text-muted)}.search-box input{border:none;background:transparent;outline:none;font:inherit;font-size:13px;color:var(--text);width:100%;min-width:0}.search-box input::placeholder{color:var(--border)}
     .result-count{font-size:12px;color:var(--text-muted);white-space:nowrap;padding:0 4px}
+
+    /* ══ DEMO TOOLS ══ — DEMO ONLY: visueel ondergeschikt aan reference-patronen */
+    .demo-tools{position:relative}
+    .demo-tools-toggle{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 12px;border:1px dashed var(--border);border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer;font:inherit;font-size:12px;font-weight:500;list-style:none;white-space:nowrap;transition:all var(--transition-fast)}
+    .demo-tools-toggle:hover{background:var(--surface);border-color:#b8c5ca;color:var(--text)}
+    .demo-tools-toggle::-webkit-details-marker{display:none}
+    .demo-tools-toggle::before{content:'⚙';font-size:13px}
+    .demo-tools-panel{position:absolute;right:0;top:calc(100% + 4px);display:flex;gap:4px;padding:6px;background:#fff;border:1px solid var(--border-light);border-radius:8px;box-shadow:var(--shadow-md);z-index:10;white-space:nowrap}
 
     /* ══ UNDO-TOAST ══ — PORT THIS: fixed-bottom feedback-toast met undo-knop, slide-in animatie */
     /* PORTING NOTE: toast wordt getriggerd via engine undo-callback, niet via directe DOM-mutatie; timing (4s) en animatie zijn normatief */
@@ -237,7 +247,7 @@
     <div class="hero"><div><h1>Dashboard UX Reference</h1><p>Normatieve referentie voor dashboard-interactiepatronen. Sleep kolomheaders om te herschikken, of gebruik het toetsenbord: <strong>Shift+←→</strong> verplaatst, <strong>Enter</strong> sorteert, <strong>H</strong> verbergt.</p></div><div class="chip">UX Reference Layer</div></div>
     <div class="card">
       <div class="toolbar"><div class="toolbar-left"><div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Zoeken…" aria-label="Zoek in tabel"></div><span class="result-count" id="resultCount"></span></div>
-      <div class="toolbar-right"><button id="colPanelBtn" title="Kolommen beheren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Kolommen</button><div class="toolbar-sep"></div><button id="shuffleBtn">Shuffle</button><button id="undoBtn" class="ghost" disabled>Undo</button><button class="primary" id="resetBtn">Reset</button></div></div>
+      <div class="toolbar-right"><!-- Reference patterns: kolommen + undo --><button id="colPanelBtn" title="Kolommen beheren"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Kolommen</button><button id="undoBtn" class="ghost" disabled>Undo</button><div class="toolbar-sep"></div><!-- DEMO ONLY: shuffle en reset zijn demo-acties, niet opnemen in productie --><details class="demo-tools"><summary class="demo-tools-toggle">Demo tools</summary><div class="demo-tools-panel"><button id="shuffleBtn" class="sm">Shuffle</button><button id="resetBtn" class="sm primary">Reset</button></div></details></div></div>
       <div class="hintbar"><span class="hint-item"><span class="hint-icon"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.4" fill="currentColor"/><circle cx="10" cy="3" r="1.4" fill="currentColor"/><circle cx="4" cy="7" r="1.4" fill="currentColor"/><circle cx="10" cy="7" r="1.4" fill="currentColor"/><circle cx="4" cy="11" r="1.4" fill="currentColor"/><circle cx="10" cy="11" r="1.4" fill="currentColor"/></svg></span>Sleep headers om te herschikken</span><span class="hint-item"><kbd>←</kbd><kbd>→</kbd> navigeer · <kbd>Shift</kbd><kbd>←</kbd><kbd>→</kbd> verplaats · <kbd>Enter</kbd> sorteer · <kbd>H</kbd> verberg</span></div>
       <div class="table-wrap" id="tableWrap"><table id="demoTable" role="grid"></table><div class="drop-overlay" id="dropOverlay" aria-hidden="true"><div class="drop-corridor" id="dropCorridor"></div></div></div>
       <div class="footer-bar"><span><span class="col-count" id="colCount">6</span> kolommen · <span id="rowCount">12</span> rijen</span><span id="sortIndicator"></span></div>
@@ -296,6 +306,145 @@ function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRo
 // ║    - Screenreader-aankondiging                              ║
 // ║    - Engine-hook (Layer 2 mapping — zie PORTING MAP onder)  ║
 // ╚══════════════════════════════════════════════════════════════╝
+//
+// ══ INTERACTION PATTERN CATALOG ══════════════════════════════════
+// 12 normatieve patronen — contract tussen Layer 1 (UX) en Layer 2 (Engine)
+// Elk patroon hieronder definieert WAT er moet gebeuren; de HOW staat in Layer 2.
+//
+// ┌────┬──────────────────────┬───────────────────────────────────────┐
+// │ #  │ Patroon              │ Samenvatting                          │
+// ├────┼──────────────────────┼───────────────────────────────────────┤
+// │  1 │ Column drag start    │ Gebruiker pakt kolomheader op         │
+// │  2 │ Column drag move     │ Gebruiker sleept over andere headers  │
+// │  3 │ Column drag commit   │ Gebruiker laat los op doelpositie     │
+// │  4 │ Column drag cancel   │ Drag wordt afgebroken                 │
+// │  5 │ Drop corridor        │ Visuele indicator waar kolom landt    │
+// │  6 │ Header shift         │ Buurkolommen schuiven opzij           │
+// │  7 │ Column panel         │ Slide-in paneel voor kolombeheer      │
+// │  8 │ Show all / hide all  │ Bulk-toggle kolom-zichtbaarheid       │
+// │  9 │ Keyboard reorder     │ Kolom verplaatsen via toetsenbord     │
+// │ 10 │ Hide column          │ Enkele kolom verbergen                │
+// │ 11 │ Undo feedback        │ Toast met ongedaan-maken optie        │
+// │ 12 │ Screen reader announce│ Statusmelding voor screenreaders     │
+// └────┴──────────────────────┴───────────────────────────────────────┘
+//
+// ── PATROON 1: Column drag start ────────────────────────────────
+//   Doel:       Kolomheader oppakken om te herschikken
+//   Trigger:    mousedown / dragstart op thead th
+//   State:      source-kolom krijgt opacity 35%, drag-preview verschijnt
+//               bij cursor, grab → grabbing cursor
+//   A11y:       Geen announce (visueel voldoende); preview heeft
+//               aria-hidden="true"
+//   Engine-hook: beginColumnDrag(key) → zet dragState.active=true
+//
+// ── PATROON 2: Column drag move ─────────────────────────────────
+//   Doel:       Visuele feedback geven tijdens slepen
+//   Trigger:    dragover op thead th (continu bij muisbeweging)
+//   State:      Target-detectie (before/after op 42%/58% grens),
+//               preview volgt cursor, corridor verplaatst,
+//               buurkolommen krijgen shift-animatie
+//   A11y:       Geen announce tijdens movement (te frequent)
+//   Engine-hook: updateColumnDrag(targetKey, placement) → update
+//               dragState + getColumnGeometry() voor corridor-positie
+//
+// ── PATROON 3: Column drag commit ───────────────────────────────
+//   Doel:       Kolom definitief verplaatsen naar doelpositie
+//   Trigger:    drop op thead th
+//   State:      Kolom springt naar nieuwe positie, alle drag-states
+//               worden opgeruimd, undo-toast verschijnt
+//   A11y:       announce("Kolom {label} verplaatst"), toast met
+//               undo-knop (role="status", aria-live="polite")
+//   Engine-hook: commitColumnMove(sourceKey, targetKey, placement)
+//               → muteert columnOrder via _tabCols
+//
+// ── PATROON 4: Column drag cancel ───────────────────────────────
+//   Doel:       Drag afbreken zonder state-wijziging
+//   Trigger:    dragend event / Escape-toets tijdens drag
+//   State:      Alle drag-classes verwijderd, preview verborgen,
+//               corridor verborgen, kolommen terug op originele positie
+//   A11y:       Geen announce (geen state-wijziging)
+//   Engine-hook: cancelColumnDrag() → reset dragState, cleanup classes
+//
+// ── PATROON 5: Drop corridor ────────────────────────────────────
+//   Doel:       Visueel tonen waar de kolom zal landen
+//   Trigger:    Automatisch tijdens drag, bij th boundary
+//   State:      Verticale lijn (accent-kleur) op grens tussen kolommen,
+//               volledige hoogte van tabel, vloeiende transitie (100ms)
+//   A11y:       aria-hidden="true" op overlay (decoratief element)
+//   Engine-hook: Render adapter: getColumnGeometry() levert left/right
+//               posities; engine berekent corridorpositie
+//
+// ── PATROON 6: Header shift ─────────────────────────────────────
+//   Doel:       Buurkolommen visueel laten opschuiven tijdens drag
+//   Trigger:    Automatisch wanneer drag-target verandert
+//   State:      Linker buurkolom krijgt shift-left (translateX -½ gap),
+//               rechter buurkolom krijgt shift-right (translateX +½ gap)
+//   A11y:       Puur visueel, geen announce
+//   Engine-hook: CSS classes via render adapter; getBoundaryColumns()
+//               bepaalt welke kolommen verschuiven
+//
+// ── PATROON 7: Column panel open/close ──────────────────────────
+//   Doel:       Kolommenpaneel openen voor beheer (toggle, reorder, zoek)
+//   Trigger:    Klik op "Kolommen"-knop / Escape-toets / klik op overlay
+//   State:      Paneel schuift in van rechts (250ms cubic-bezier),
+//               overlay verschijnt (25% zwart), focus naar zoekvel
+//   A11y:       role="dialog", focus trap actief (Tab cycled),
+//               Escape sluit, focus return naar trigger-knop
+//   Engine-hook: togglePanel('columns') → getActivePanel(); panel leest
+//               getPanelItems(), schrijft via setColumnOrder()/
+//               setHiddenColumns()
+//
+// ── PATROON 8: Show all / hide all ──────────────────────────────
+//   Doel:       Alle kolommen in één keer tonen of verbergen
+//   Trigger:    Klik op "Alles tonen" / "Alles verbergen" in panel
+//   State:      Alle toggles in panel veranderen, tabel re-rendert,
+//               eerste kolom blijft altijd zichtbaar (bij hide all)
+//   A11y:       announce via undo-toast (role="status")
+//   Engine-hook: setAllColumnsVisible(bool) → bulk-update col.visible
+//               flags; invalidates header/body/meta
+//
+// ── PATROON 9: Keyboard reorder ─────────────────────────────────
+//   Doel:       Kolom verplaatsen zonder muis, volledig via toetsenbord
+//   Trigger:    Shift+←/→ op gefocuste thead th
+//   State:      Kolom verplaatst één positie, focus volgt mee,
+//               flash-animatie (500ms) op verplaatste kolom
+//   A11y:       announce("Kolom {label} verplaatst"),
+//               focus op verplaatste kolom behouden na re-render
+//   Engine-hook: moveColumn(key, direction) → commitColumnMove();
+//               render adapter behoudt data-col-key voor focus-restore
+//
+// ── PATROON 10: Hide column ─────────────────────────────────────
+//   Doel:       Enkele kolom verbergen uit de tabelweergave
+//   Trigger:    H-toets op gefocuste th / klik hide-col-btn in header
+//   State:      Kolom verdwijnt uit tabel, panel-toggle wordt uit,
+//               minimaal 1 kolom blijft altijd zichtbaar
+//   A11y:       announce("Kolom {label} verborgen"), undo-toast,
+//               focus verplaatst naar volgende zichtbare kolom
+//   Engine-hook: hideColumn(key) → zet col.visible=false; invalidates
+//               header/body/meta; getHiddenColumns() als selector
+//
+// ── PATROON 11: Undo feedback ───────────────────────────────────
+//   Doel:       Gebruiker informeren over destructieve actie + undo bieden
+//   Trigger:    Na elke mutatie (move, hide, sort, show/hide all)
+//   State:      Toast verschijnt onderaan (slide-in 280ms cubic-bezier),
+//               verdwijnt na 4s, bevat bericht + undo-knop
+//   A11y:       role="status" aria-live="polite" op toast,
+//               Ctrl/Cmd+Z als global shortcut, undo-knop focusbaar
+//   Engine-hook: undo() via action replay; canUndo() als guard;
+//               toast getriggerd door engine actie-callback
+//
+// ── PATROON 12: Screen reader announce ──────────────────────────
+//   Doel:       Statuswijzigingen communiceren aan screenreader-gebruikers
+//   Trigger:    Programmatisch na elke interactie-afhandeling
+//   State:      Onzichtbaar element (aria-live="assertive") krijgt
+//               nieuwe tekst, screenreader leest voor
+//   A11y:       aria-live="assertive" + aria-atomic="true";
+//               tekst wordt eerst leeggemaakt (rAF) om herlezing
+//               te forceren bij dezelfde melding
+//   Engine-hook: announce(message) als engine utility; elke engine-actie
+//               roept announce() aan als laatste stap
+//
+// ═════════════════════════════════════════════════════════════════
 
 // ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
 // Contract: elke state-wijziging die de gebruiker niet visueel kan volgen, wordt aangekondigd via aria-live region
