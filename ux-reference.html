@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ═══════════════════════════════════════════════════════════════════
      UX REFERENCE LAYER — CSV Dashboard Template Platform
-     Versie: 1.0 | Datum: 2026-03-08
+     Versie: 1.1 | Datum: 2026-03-08
 
      Dit bestand is de bron van waarheid voor UX-patronen:
      hintbar, drag preview, drop corridor, kolommenpaneel,
@@ -13,6 +13,15 @@
 
      Patronen gemarkeerd met PORT THIS zijn normatief.
      Patronen gemarkeerd met DEMO ONLY zijn alleen voor deze demo.
+
+     STRUCTUUR
+     ─────────
+     CSS:  Tokens → Base → Toolbar → Undo-toast → Hintbar →
+           Table & Header → Drag & Drop states → Overlay patterns →
+           Drag preview → Column panel → Accessibility → Responsive
+     JS:   Demo data → State & history → DOM refs & utilities →
+           Interaction patterns (drag, keyboard, panel, search, undo) →
+           Demo engine (render, formatters, shuffle, reset) → Init
      ═══════════════════════════════════════════════════════════════════ -->
 <html lang="nl">
 <head>
@@ -22,7 +31,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <style>
+    /* ══ DESIGN TOKENS ══ */
     :root{--bg:#ffffff;--surface:#f4f6f7;--surface-2:#eaeff1;--border:#d0d9dd;--border-light:#e4eaec;--text:#1a2e36;--muted:#5e7880;--accent:#00803e;--accent-light:#e6f5ed;--accent-subtle:rgba(0,128,62,.07);--danger:#c42b2b;--danger-light:#fef0f0;--warning:#a65c00;--warning-light:#fff6e8;--success:#0d7a2e;--success-light:#e8f6ec;--shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.07);--shadow-lg:0 12px 40px rgba(0,0,0,.12);--shadow-xl:0 24px 48px rgba(0,0,0,.16);--radius:10px;--radius-lg:14px;--header-h:44px;--row-h:44px;--drop-gap:24px;--transition-fast:100ms ease;--transition-med:180ms ease;--panel-w:320px}
+
+    /* ══ BASE STYLES ══ */
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#f0f3f4;color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
     .page{max-width:1320px;margin:0 auto;padding:28px 24px}
@@ -36,6 +48,10 @@
     button.primary{background:var(--accent);border-color:var(--accent);color:#fff}button.primary:hover{background:#006e35}
     button.ghost{border-color:transparent;background:transparent}button.ghost:hover{background:var(--surface)}
     button.sm{height:28px;padding:0 10px;font-size:12px;border-radius:6px}
+    .card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+    .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
+
+    /* ══ TOOLBAR PATTERNS ══ — PORT THIS */
     .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border-light)}
     .toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
     .toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -44,14 +60,19 @@
     .search-box:focus-within{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(0,128,62,.08)}
     .search-box svg{flex-shrink:0;color:var(--muted)}.search-box input{border:none;background:transparent;outline:none;font:inherit;font-size:13px;color:var(--text);width:100%;min-width:0}.search-box input::placeholder{color:var(--border)}
     .result-count{font-size:12px;color:var(--muted);white-space:nowrap;padding:0 4px}
+
+    /* ══ UNDO-TOAST ══ — PORT THIS */
     .undo-toast{position:fixed;bottom:24px;left:50%;z-index:10000;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px 0 16px;border-radius:12px;background:var(--text);color:#fff;font-size:13px;font-weight:500;box-shadow:var(--shadow-xl);transform:translateX(-50%) translateY(80px);opacity:0;transition:all 280ms cubic-bezier(.34,1.56,.64,1);pointer-events:none}
     .undo-toast.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
     .undo-toast button{height:28px;padding:0 10px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;font-size:12px;font-weight:700}.undo-toast button:hover{background:rgba(255,255,255,.28)}
-    .card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+
+    /* ══ HINTBAR ══ — PORT THIS */
     .hintbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);font-size:13px;color:var(--muted)}
     .hintbar .hint-item{display:flex;align-items:center;gap:6px}
     .hintbar .hint-icon{width:20px;height:20px;border-radius:5px;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
     .hintbar kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font:inherit;font-size:11px;font-weight:600;color:var(--text);box-shadow:0 1px 0 var(--border)}
+
+    /* ══ TABLE & HEADER STYLES ══ — PORT THIS */
     .table-wrap{overflow:auto;position:relative;scroll-behavior:smooth;max-height:480px}
     table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed}
     thead th{position:sticky;top:0;z-index:3;height:var(--header-h);padding:0;text-align:left;vertical-align:middle;background:#fff;border-bottom:2px solid var(--border);border-right:1px solid var(--border-light);user-select:none;white-space:nowrap;transition:opacity var(--transition-med),transform var(--transition-med),background-color var(--transition-med)}
@@ -69,18 +90,25 @@
     .status-chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:6px;font-size:12px;font-weight:600}.status-chip::before{content:'';width:5px;height:5px;border-radius:50%}
     .status-chip.success{background:var(--success-light);color:var(--success)}.status-chip.success::before{background:var(--success)}.status-chip.warning{background:var(--warning-light);color:var(--warning)}.status-chip.warning::before{background:var(--warning)}.status-chip.danger{background:var(--danger-light);color:var(--danger)}.status-chip.danger::before{background:var(--danger)}
     .progress-cell{display:flex;align-items:center;gap:8px}.progress-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:40px;max-width:80px}.progress-bar-fill{height:100%;border-radius:3px;transition:width 300ms ease}.progress-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.budget-val{font-variant-numeric:tabular-nums;font-weight:500}
+
+    /* ══ DRAG & DROP STATES ══ — PORT THIS */
     th.th-drag-source{opacity:.35;background:var(--surface)!important}th.th-drag-source .th-title,th.th-drag-source .sort-btn,th.th-drag-source .hide-col-btn{visibility:hidden}th.th-drag-source .drag-handle{opacity:.15}
     td.col-drag-source{opacity:.3;background:var(--surface)!important}td.col-drag-source>*{visibility:hidden!important}
     thead th:focus{background:var(--surface);z-index:4}thead th:focus .drag-handle{color:var(--muted)}thead th:focus .th-title{color:var(--accent)}
     thead th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-light)}thead th:focus-visible .th-title{color:var(--accent)}
     @keyframes col-flash{0%{background:var(--accent-light)}100%{background:transparent}}th.col-just-moved{animation:col-flash 500ms ease both}
     .shift-left{transform:translateX(calc(var(--drop-gap)*-.5))}.shift-right{transform:translateX(calc(var(--drop-gap)*.5))}
+
+    /* ══ OVERLAY PATTERNS ══ — PORT THIS: drop overlay + drop corridor */
     .drop-overlay{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 90ms ease}.drop-overlay.active{opacity:1}
     .drop-corridor{position:absolute;top:0;width:var(--drop-gap);transform:translateX(-50%);transition:left 100ms ease}.drop-corridor::before{content:'';position:absolute;inset:0;border-left:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.18;border-radius:2px}.drop-corridor::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--accent);border-radius:1px;opacity:.5}
+
+    /* ══ DRAG PREVIEW ══ — PORT THIS: floating column card */
     .drag-preview{position:fixed;left:0;top:0;transform:translate(-9999px,-9999px);width:200px;border:1px solid var(--border);border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-xl);pointer-events:none;z-index:9999;color:var(--text);opacity:0;transition:opacity 90ms ease;overflow:hidden}.drag-preview.visible{opacity:.92}
     .drag-preview-header{display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;font-weight:700}.drag-preview-header .mini-handle{color:var(--border);display:grid;place-items:center;flex:0 0 auto}.drag-preview-header .preview-badge{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.drag-preview-body{background:#fff}
     .drag-preview-cell{display:flex;align-items:center;height:34px;padding:0 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.drag-preview-cell:nth-child(even){background:#fafcfc}.drag-preview-cell:last-child{border-bottom:none}
-    .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
+
+    /* ══ COLUMN PANEL PATTERNS ══ — PORT THIS */
     .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease}.panel-overlay.open{opacity:1;pointer-events:auto}
     .col-panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);max-width:90vw;background:#fff;z-index:101;box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform 250ms cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}.col-panel.open{transform:translateX(0)}
     .panel-header{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border-light);flex-shrink:0}.panel-header h2{font-size:16px;font-weight:700;flex:1}
@@ -96,7 +124,11 @@
     .toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:10px;cursor:pointer;transition:background 200ms ease}.toggle .slider::before{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform 200ms ease}
     .toggle input:checked+.slider{background:var(--accent)}.toggle input:checked+.slider::before{transform:translateX(16px)}.toggle input:focus-visible+.slider{box-shadow:0 0 0 3px rgba(0,128,62,.2)}
     .panel-item.pi-dragging{opacity:.4;background:var(--surface)}.panel-item.pi-dragover{box-shadow:inset 0 2px 0 var(--accent)}
+
+    /* ══ ACCESSIBILITY ══ */
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+    /* ══ RESPONSIVE ══ */
     @media(max-width:640px){.page{padding:16px 12px}.hero{flex-direction:column;gap:8px}.hero h1{font-size:20px}}
   </style>
 </head>
@@ -122,6 +154,7 @@
   <div class="drag-preview" id="dragPreview" aria-hidden="true"><div class="drag-preview-header"><span class="mini-handle"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span id="dragPreviewLabel">Kolom</span><span class="preview-badge">verplaats</span></div><div class="drag-preview-body" id="dragPreviewBody"></div></div>
   <div id="srAnnounce" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
 <script>
+// ── DEMO DATA (DEMO ONLY) ─────────────────────────────────────────
 const defaultColumns=[{key:'project',label:'Project',width:190},{key:'status',label:'Status',width:130},{key:'owner',label:'Eigenaar',width:160},{key:'budget',label:'Budget',width:140,align:'right'},{key:'progress',label:'Voortgang',width:150},{key:'updated',label:'Bijgewerkt',width:170}];
 const defaultRows=[
   {project:'Warmtenet Noord',status:'Op schema',owner:'A. de Boer',budget:4200000,progress:73,updated:'2026-03-08 09:12'},
@@ -136,51 +169,47 @@ const defaultRows=[
   {project:'Fietsroute Binnenstad',status:'Op schema',owner:'P. Visser',budget:780000,progress:89,updated:'2026-03-07 14:15'},
   {project:'Digitaal Loket 2.0',status:'Op schema',owner:'S. Kaya',budget:420000,progress:95,updated:'2026-03-08 11:00'},
   {project:'Waterberging Polder',status:'Aandacht',owner:'L. Bakker',budget:3100000,progress:38,updated:'2026-03-06 09:55'}];
+
+// ── STATE & HISTORY (DEMO ONLY) ───────────────────────────────────
 let columns=structuredClone(defaultColumns),rows=structuredClone(defaultRows),sortState={key:null,dir:null},searchTerm='',hiddenColumns=new Set();
 const history=[],MAX_HISTORY=20;
 const dragState={active:false,sourceKey:null,targetKey:null,placement:null,pointerX:0,pointerY:0,markerX:0,previewAnchorX:100,previewAnchorY:18,previewWidth:200};
+
+// ── DOM REFERENCES & UTILITY FUNCTIONS ────────────────────────────
 const $=id=>document.getElementById(id);
 const table=$('demoTable'),tableWrap=$('tableWrap'),preview=$('dragPreview'),previewLabel=$('dragPreviewLabel'),previewBody=$('dragPreviewBody'),dropOverlay=$('dropOverlay'),dropCorridor=$('dropCorridor'),undoBtn=$('undoBtn'),undoToast=$('undoToast'),undoToastMsg=$('undoToastMsg'),undoToastBtn=$('undoToastBtn'),srAnnounce=$('srAnnounce'),searchInput=$('searchInput'),resultCount=$('resultCount'),panelOverlay=$('panelOverlay'),colPanel=$('colPanel'),panelList=$('panelList'),panelSearchInput=$('panelSearchInput');
 const euroFmt=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function announce(m){srAnnounce.textContent='';requestAnimationFrame(()=>{srAnnounce.textContent=m})}
-let undoToastTimer=null;
-function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)}
 function getColumnIndex(k){return columns.findIndex(c=>c.key===k)}
 function getVisibleColumns(){return columns.filter(c=>!hiddenColumns.has(c.key))}
 function getFilteredRows(){if(!searchTerm)return rows;const t=searchTerm.toLowerCase();return rows.filter(r=>columns.some(c=>{const v=r[c.key];return(typeof v==='number'?euroFmt.format(v):String(v)).toLowerCase().includes(t)}))}
 function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRows().length} van ${rows.length}`:''}
-function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false}
+
+// ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
+function announce(m){srAnnounce.textContent='';requestAnimationFrame(()=>{srAnnounce.textContent=m})}
+
+// ── REFERENCE INTERACTION: Undo & Feedback ── PORT THIS ───────────
+let undoToastTimer=null;
+function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)}
+function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false} // DEMO ONLY: snapshot-based undo
 function undo(){if(!history.length)return;const s=history.pop();columns=s.columns;rows=s.rows;sortState=s.sort;hiddenColumns=s.hidden;undoBtn.disabled=history.length===0;render();renderPanel();announce('Ongedaan gemaakt: '+s.label)}
+
+// ── REFERENCE INTERACTION: Sort ── PORT THIS ──────────────────────
 function toggleSort(k){pushHistory('sortering');if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir='asc'}applySortToRows();render();updateSortIndicator()}
 function applySortToRows(){if(!sortState.key||!sortState.dir)return;const k=sortState.key,d=sortState.dir==='asc'?1:-1;rows.sort((a,b)=>{let va=a[k],vb=b[k];if(typeof va==='number'&&typeof vb==='number')return(va-vb)*d;va=String(va).toLowerCase();vb=String(vb).toLowerCase();return va<vb?-d:va>vb?d:0})}
 function updateSortIndicator(){const el=$('sortIndicator');if(!sortState.key){el.textContent='';return}const c=columns.find(x=>x.key===sortState.key);el.textContent=`Gesorteerd: ${c?c.label:sortState.key} ${sortState.dir==='asc'?'↑':'↓'}`}
+
+// ── REFERENCE INTERACTION: Column Visibility ── PORT THIS ─────────
 function hideColumn(k){if(hiddenColumns.size>=columns.length-1)return;pushHistory(`kolom verborgen`);hiddenColumns.add(k);render();renderPanel();showUndoToast('Kolom verborgen');announce(`Kolom ${columns.find(c=>c.key===k)?.label} verborgen`)}
-function formatCell(v,k){
-  if(k==='budget')return`<span class="budget-val">${euroFmt.format(v)}</span>`;
-  if(k==='status'){const c=v==='Op schema'?'success':v==='Aandacht'?'warning':'danger';return`<span class="status-chip ${c}">${escapeHTML(v)}</span>`}
-  if(k==='progress'){const p=typeof v==='number'?v:parseInt(v);const c=p>=60?'var(--success)':p>=40?'var(--warning)':'var(--danger)';return`<span class="progress-cell"><span class="progress-bar"><span class="progress-bar-fill" style="width:${p}%;background:${c}"></span></span><span class="progress-val">${p}%</span></span>`}
-  if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}
-  return escapeHTML(String(v));
-}
-function formatCellPlain(v,k){if(k==='budget')return euroFmt.format(v);if(k==='progress')return(typeof v==='number'?v:parseInt(v))+'%';if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}return String(v)}
-function render(){
-  const vc=getVisibleColumns(),fr=getFilteredRows();
-  const sa=k=>{const a=sortState.key===k,c=a?'sort-btn active':'sort-btn',i=a&&sortState.dir==='desc'?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>';return`<button class="${c}" data-sort-key="${k}" tabindex="-1" title="Sorteer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${i}</svg></button>`};
-  const hb=k=>`<button class="hide-col-btn" data-hide-key="${k}" tabindex="-1" title="Verberg kolom"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
-  const thead=`<thead><tr>${vc.map(c=>`<th draggable="true" data-col-key="${c.key}" style="width:${c.width}px" role="columnheader" tabindex="0" aria-label="${escapeHTML(c.label)}"><div class="th-inner" ${c.align==='right'?'style="justify-content:flex-end"':''}><span class="drag-handle" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span class="th-title">${escapeHTML(c.label)}</span>${sa(c.key)}${hb(c.key)}</div></th>`).join('')}</tr></thead>`;
-  const tbody=`<tbody>${fr.map(r=>`<tr>${vc.map(c=>`<td style="text-align:${c.align==='right'?'right':'left'}">${formatCell(r[c.key],c.key)}</td>`).join('')}</tr>`).join('')}</tbody>`;
-  table.innerHTML=thead+tbody;
-  applyDragClasses();syncOverlay();updateSortIndicator();updateResultCount();
-  $('colCount').textContent=vc.length;$('rowCount').textContent=fr.length;
-  table.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toggleSort(b.dataset.sortKey);focusCol(b.closest('th')?.dataset.colKey)}));
-  table.querySelectorAll('.hide-col-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();hideColumn(b.dataset.hideKey)}));
-}
+
+// ── REFERENCE INTERACTION: Column Move ── PORT THIS ───────────────
 function moveColumn(s,t,p){if(!s||!t||s===t)return false;const si=getColumnIndex(s),ti=getColumnIndex(t);if(si<0||ti<0)return false;const c=columns.find(x=>x.key===s);pushHistory(`"${c?.label}" verplaatst`);const[m]=columns.splice(si,1);let ii=getColumnIndex(t);if(p==='after')ii++;columns.splice(ii,0,m);showUndoToast(`"${c?.label}" verplaatst`);announce(`Kolom ${c?.label} verplaatst`);return true}
+
+// ── REFERENCE INTERACTION: Drag & Drop ── PORT THIS ───────────────
 function clearDropClasses(){table.querySelectorAll('th,td').forEach(e=>e.classList.remove('th-drag-source','col-drag-source','shift-left','shift-right'))}
 function getBoundaryColumns(){if(!dragState.active||!dragState.targetKey||!dragState.placement)return{leftKey:null,rightKey:null};const ti=getColumnIndex(dragState.targetKey);if(ti<0)return{leftKey:null,rightKey:null};return dragState.placement==='before'?{leftKey:columns[ti-1]?.key||null,rightKey:columns[ti]?.key||null}:{leftKey:columns[ti]?.key||null,rightKey:columns[ti+1]?.key||null}}
 function applyColumnShift(k,d){if(!k||!d)return;const c=d==='left'?'shift-left':'shift-right',i=getColumnIndex(k)+1;if(i<=0)return;table.querySelectorAll(`thead th:nth-child(${i}),tbody td:nth-child(${i})`).forEach(e=>e.classList.add(c))}
-function applyDragClasses(){clearDropClasses();if(!dragState.active||!dragState.sourceKey)return;const si=getColumnIndex(dragState.sourceKey)+1;if(si>0){const th=table.querySelector(`thead th:nth-child(${si})`);if(th)th.classList.add('th-drag-source');table.querySelectorAll(`tbody td:nth-child(${si})`).forEach(t=>t.classList.add('col-drag-source'))}const b=getBoundaryColumns();applyColumnShift(b.leftKey,'left');applyColumnShift(b.rightKey,'right')}
+function applyDragClasses(){clearDropClasses();if(!dragState.active||!dragState.sourceKey)return;const si=getColumnIndex(dragState.sourceKey)+1;if(si>0){const th=table.querySelector(`thead th:nth-child(${si})`);if(th)th.classList.add('th-drag-source');table.querySelectorAll(`tbody td:nth-child(${si})`).forEach(t=>t.classList.add('col-drag-source'))}const b=getBoundaryColumns();applyColumnShift(b.leftKey,'left');applyColumnShift(b.rightKey,'right')} // DEMO ONLY: querySelectorAll op tbody td
 function updatePreview(){if(!dragState.active||!dragState.sourceKey){preview.classList.remove('visible');preview.style.transform='translate(-9999px,-9999px)';return}const c=columns.find(x=>x.key===dragState.sourceKey);previewLabel.textContent=c?c.label:'Kolom';previewBody.innerHTML=rows.slice(0,5).map(r=>`<div class="drag-preview-cell" style="justify-content:${c?.align==='right'?'flex-end':'flex-start'}">${escapeHTML(formatCellPlain(r[dragState.sourceKey],dragState.sourceKey))}</div>`).join('');preview.classList.add('visible');preview.style.transform=`translate(${dragState.pointerX-dragState.previewAnchorX}px,${dragState.pointerY-dragState.previewAnchorY}px)`}
 function syncOverlay(){if(!dragState.active||!dragState.targetKey||!dragState.placement){dropOverlay.classList.remove('active');return}const th=table.querySelector(`th[data-col-key="${dragState.targetKey}"]`);if(!th){dropOverlay.classList.remove('active');return}const wr=tableWrap.getBoundingClientRect(),tr=th.getBoundingClientRect(),mx=(dragState.placement==='before'?tr.left:tr.right)-wr.left+tableWrap.scrollLeft,oh=tableWrap.scrollHeight;dropOverlay.style.width=`${table.scrollWidth}px`;dropOverlay.style.height=`${oh}px`;dropCorridor.style.left=`${mx}px`;dropCorridor.style.height=`${oh}px`;dropCorridor.style.top='0';dropOverlay.classList.add('active')}
 function handleDragStart(e){const th=e.target.closest('th[data-col-key]');if(!th)return;dragState.active=true;dragState.sourceKey=th.dataset.colKey;dragState.targetKey=null;dragState.placement=null;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;const r=th.getBoundingClientRect();dragState.previewAnchorX=Math.max(20,Math.min(180,e.clientX-r.left));dragState.previewAnchorY=Math.max(12,Math.min(28,e.clientY-r.top));if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragState.sourceKey);const img=new Image();img.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';e.dataTransfer.setDragImage(img,0,0)}updatePreview();applyDragClasses();syncOverlay()}
@@ -190,11 +219,15 @@ function endDrag(){dragState.active=false;dragState.sourceKey=null;dragState.tar
 table.addEventListener('dragstart',handleDragStart);table.addEventListener('dragover',handleDragOver);table.addEventListener('drop',handleDrop);table.addEventListener('dragend',()=>endDrag());
 document.addEventListener('dragover',e=>{if(!dragState.active)return;dragState.pointerX=e.clientX;dragState.pointerY=e.clientY;updatePreview()});
 tableWrap.addEventListener('scroll',()=>{if(dragState.active)syncOverlay()});window.addEventListener('resize',()=>{if(dragState.active)syncOverlay()});
+
+// ── REFERENCE INTERACTION: Focus Management ── PORT THIS ──────────
 let lastFocusedColKey=null;
 table.addEventListener('focusin',e=>{const th=e.target.closest('th[data-col-key]');if(th)lastFocusedColKey=th.dataset.colKey});
 function focusCol(k){if(!k)return;const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.focus();el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});lastFocusedColKey=k}
 function flashCol(k){const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.classList.remove('col-just-moved');void el.offsetWidth;el.classList.add('col-just-moved')}
 function resolveColKey(e){let th=e.target.closest('th[data-col-key]');if(th)return th.dataset.colKey;const a=document.activeElement;if(a&&table.contains(a)){th=a.closest('th[data-col-key]');if(th)return th.dataset.colKey}return lastFocusedColKey||null}
+
+// ── REFERENCE INTERACTION: Keyboard ── PORT THIS ──────────────────
 table.addEventListener('keydown',e=>{
   const key=resolveColKey(e);if(!key)return;
   const idx=getColumnIndex(key),vc=getVisibleColumns(),vi=vc.findIndex(c=>c.key===key);
@@ -205,6 +238,8 @@ table.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'&&!e.shiftKey&&vi>0){e.preventDefault();focusCol(vc[vi-1].key);return}
   if(e.key==='ArrowRight'&&!e.shiftKey&&vi<vc.length-1){e.preventDefault();focusCol(vc[vi+1].key);return}
 });
+
+// ── REFERENCE INTERACTION: Column Panel ── PORT THIS ──────────────
 let panelSearchTerm='';
 function openPanel(){colPanel.classList.add('open');panelOverlay.classList.add('open');renderPanel();panelSearchInput.focus()}
 function closePanel(){colPanel.classList.remove('open');panelOverlay.classList.remove('open')}
@@ -227,13 +262,57 @@ panelSearchInput.addEventListener('input',()=>{panelSearchTerm=panelSearchInput.
 $('panelShowAll').addEventListener('click',()=>{pushHistory('alles getoond');hiddenColumns.clear();render();renderPanel()});
 $('panelHideAll').addEventListener('click',()=>{pushHistory('alles verborgen');columns.forEach((c,i)=>{if(i>0)hiddenColumns.add(c.key)});render();renderPanel()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&colPanel.classList.contains('open')){e.preventDefault();closePanel()}});
+
+// ── REFERENCE INTERACTION: Search ── PORT THIS ────────────────────
+searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();render()});
+
+// ── REFERENCE INTERACTION: Global Undo Shortcut ── PORT THIS ──────
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
-$('resetBtn').addEventListener('click',()=>{pushHistory('reset');columns=structuredClone(defaultColumns);rows=structuredClone(defaultRows);sortState={key:null,dir:null};searchTerm='';searchInput.value='';hiddenColumns.clear();render();renderPanel();announce('Gereset')});
-$('shuffleBtn').addEventListener('click',()=>{pushHistory('shuffle');rows=[...rows].sort(()=>Math.random()-.5);sortState={key:null,dir:null};render();announce('Geschud')});
 undoBtn.addEventListener('click',()=>undo());
 undoToastBtn.addEventListener('click',()=>{undo();undoToast.classList.remove('visible')});
-searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();render()});
+
+// ── DEMO ENGINE: Cell Formatters (DEMO ONLY) ──────────────────────
+function formatCell(v,k){
+  if(k==='budget')return`<span class="budget-val">${euroFmt.format(v)}</span>`;
+  if(k==='status'){const c=v==='Op schema'?'success':v==='Aandacht'?'warning':'danger';return`<span class="status-chip ${c}">${escapeHTML(v)}</span>`}
+  if(k==='progress'){const p=typeof v==='number'?v:parseInt(v);const c=p>=60?'var(--success)':p>=40?'var(--warning)':'var(--danger)';return`<span class="progress-cell"><span class="progress-bar"><span class="progress-bar-fill" style="width:${p}%;background:${c}"></span></span><span class="progress-val">${p}%</span></span>`}
+  if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}
+  return escapeHTML(String(v));
+}
+function formatCellPlain(v,k){if(k==='budget')return euroFmt.format(v);if(k==='progress')return(typeof v==='number'?v:parseInt(v))+'%';if(k==='updated'){const m=String(v).match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);if(m)return`${m[3]}-${m[2]}-${m[1]} ${m[4]}`}return String(v)}
+
+// ── DEMO ENGINE: Table Render (DEMO ONLY) ─────────────────────────
+// Volledige tabel-rerender — in productie vervangen door engine virtual scroll
+function render(){
+  const vc=getVisibleColumns(),fr=getFilteredRows();
+  const sa=k=>{const a=sortState.key===k,c=a?'sort-btn active':'sort-btn',i=a&&sortState.dir==='desc'?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>';return`<button class="${c}" data-sort-key="${k}" tabindex="-1" title="Sorteer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${i}</svg></button>`};
+  const hb=k=>`<button class="hide-col-btn" data-hide-key="${k}" tabindex="-1" title="Verberg kolom"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>`;
+  const thead=`<thead><tr>${vc.map(c=>`<th draggable="true" data-col-key="${c.key}" style="width:${c.width}px" role="columnheader" tabindex="0" aria-label="${escapeHTML(c.label)}"><div class="th-inner" ${c.align==='right'?'style="justify-content:flex-end"':''}><span class="drag-handle" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" fill="currentColor"/><circle cx="10" cy="3" r="1.2" fill="currentColor"/><circle cx="4" cy="7" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="4" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="11" r="1.2" fill="currentColor"/></svg></span><span class="th-title">${escapeHTML(c.label)}</span>${sa(c.key)}${hb(c.key)}</div></th>`).join('')}</tr></thead>`;
+  const tbody=`<tbody>${fr.map(r=>`<tr>${vc.map(c=>`<td style="text-align:${c.align==='right'?'right':'left'}">${formatCell(r[c.key],c.key)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+  table.innerHTML=thead+tbody;
+  applyDragClasses();syncOverlay();updateSortIndicator();updateResultCount();
+  $('colCount').textContent=vc.length;$('rowCount').textContent=fr.length;
+  table.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toggleSort(b.dataset.sortKey);focusCol(b.closest('th')?.dataset.colKey)}));
+  table.querySelectorAll('.hide-col-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();hideColumn(b.dataset.hideKey)}));
+}
+
+// ── DEMO ENGINE: Shuffle & Reset (DEMO ONLY) ─────────────────────
+$('resetBtn').addEventListener('click',()=>{pushHistory('reset');columns=structuredClone(defaultColumns);rows=structuredClone(defaultRows);sortState={key:null,dir:null};searchTerm='';searchInput.value='';hiddenColumns.clear();render();renderPanel();announce('Gereset')});
+$('shuffleBtn').addEventListener('click',()=>{pushHistory('shuffle');rows=[...rows].sort(()=>Math.random()-.5);sortState={key:null,dir:null};render();announce('Geschud')});
+
+// ── INIT ──────────────────────────────────────────────────────────
 render();
+
+// ── PORTING NOTES ─────────────────────────────────────────────────
+// Bij migratie naar Layer 2 (dashboard.html):
+// - Alle functies gelabeld PORT THIS moeten als UX controller hooks
+//   worden aangesloten op de engine acties (zie LAYER2_PLAN.md WP-G).
+// - Drag & drop: vervang directe DOM mutatie door engine moveColumn actie.
+// - Column panel: schrijf naar engine columnOrder en hiddenColumns.
+// - Undo: vervang snapshot-based undo door engine action replay.
+// - render(): vervang door engine virtual scroll (renderVirtualBody).
+// - formatCell/formatCellPlain: vervang door engine cellRenderers.
+// - Tokens: align met RODS-tokenset (zie WP4).
 </script>
 </body>
 </html>

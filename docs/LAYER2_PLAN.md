@@ -180,21 +180,21 @@ Fase 2d (Build-ready):
   WP-L ──→ WP-M
 ```
 
-| # | Werkpakket | Fase | Prioriteit | Afhankelijk van |
-|---|-----------|------|------------|-----------------|
-| WP-A | Positionering en afbakening | 2a | P1 | — |
-| WP-H | Declaratieve config opschonen | 2a | P1 | WP-A |
-| WP-C | Contracts voor input en output | 2a | P1 | WP-H |
-| WP-B | Engine Core expliciteren | 2b | P1 | WP-C |
-| WP-D | Derive layer structureren | 2b | P1 | WP-B |
-| WP-E | Virtualisatie en performance | 2b | P1 | WP-D |
-| WP-F | Render adapters scheiden | 2b | P1 | WP-E |
-| WP-I | Data source abstractie | 2c | P2 | WP-F |
-| WP-G | UX controller hooks | 2c | P2 | WP-F + **Layer 1 P1** |
-| WP-J | Export standaardiseren | 2c | P2 | WP-G |
-| WP-K | Accessibility en interaction parity | 2c | P2 | WP-J |
-| WP-L | Teststrategie | 2d | P3 | WP-K |
-| WP-M | Assembler-interface | 2d | P3 | WP-L |
+| # | Werkpakket | Fase | Prioriteit | Afhankelijk van | Status |
+|---|-----------|------|------------|-----------------|--------|
+| WP-A | Positionering en afbakening | 2a | P1 | — | ✅ v0.43.0 |
+| WP-H | Declaratieve config opschonen | 2a | P1 | WP-A | ✅ v0.44.0 |
+| WP-C | Contracts voor input en output | 2a | P1 | WP-H | ○ Open |
+| WP-B | Engine Core expliciteren | 2b | P1 | WP-C | ○ Open |
+| WP-D | Derive layer structureren | 2b | P1 | WP-B | ○ Open |
+| WP-E | Virtualisatie en performance | 2b | P1 | WP-D | ○ Open |
+| WP-F | Render adapters scheiden | 2b | P1 | WP-E | ○ Open |
+| WP-I | Data source abstractie | 2c | P2 | WP-F | ○ Open |
+| WP-G | UX controller hooks | 2c | P2 | WP-F + **Layer 1 P1** | ○ Open |
+| WP-J | Export standaardiseren | 2c | P2 | WP-G | ○ Open |
+| WP-K | Accessibility en interaction parity | 2c | P2 | WP-J | ○ Open |
+| WP-L | Teststrategie | 2d | P3 | WP-K | ○ Open |
+| WP-M | Assembler-interface | 2d | P3 | WP-L | ○ Open |
 
 ---
 
@@ -261,7 +261,7 @@ Fase 2d (Build-ready):
 4. Definieer standaardwaarden (defaults) voor alle optionele velden
 5. Maak voorbeeldconfigs voor minimaal twee dashboardtypen
 
-**Huidige staat:** `dashboardConfig` bevat al tabs, kolommen, features, exports en defaults. Het is ~70% declaratief. De `generateData()` functies en sommige inline renderers zijn de runtime-vervuiling.
+**Huidige staat (v0.44.0):** `dashboardConfig` is nu ~95% declaratief. `generateData()` is verplaatst naar `_dataGenerators` registry, `new Set()` constructors vervangen door plain arrays. Resterende runtime-referenties: `DASHBOARD_VERSION` constante en `cols0`/`cols1` variabelen — worden in WP-C aangepakt.
 
 **Acceptatiecriteria:**
 - `dashboardConfig` bevat **geen** runtime-logica meer

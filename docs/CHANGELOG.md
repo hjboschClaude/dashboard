@@ -6,6 +6,30 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.44.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: UX Reference structuur en declaratieve config opschoning.
+
+**Layer 1 WP2 — Structuur (ux-reference.html v1.1):**
+- CSS opgedeeld in 12 benoemde secties met PORT THIS / base labels
+- JS herordend: interaction patterns (PORT THIS) vóór demo engine (DEMO ONLY)
+- JS opgedeeld in 17 benoemde secties met duidelijke labels
+- Developer note uitgebreid met STRUCTUUR-sectie (CSS/JS-volgorde)
+- PORTING NOTES sectie toegevoegd met migratiegids naar Layer 2
+
+**Layer 2 WP-H — Config opschonen (Breekpunt 1):**
+- `generateData` property verwijderd uit beide tab-configs
+- `_dataGenerators` registry toegevoegd — losgekoppeld van dashboardConfig
+- `initTabDataFromConfig()` bijgewerkt: lookup via `_dataGenerators[tab.id]`
+- `new Set()` in domain-config vervangen door plain arrays (JSON-serialiseerbaar)
+- Set-constructie verplaatst naar consumptie-punt (`_categoricalKeySet` etc.)
+- `DASHBOARD_VERSION` → 0.44.0
+
+---
+
 ## v0.43.0 — 2026-03-08
 
 **Type:** Architectuur

@@ -571,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.43.0';
+const DASHBOARD_VERSION = '0.44.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -656,7 +656,11 @@ function rndDate(y1,y2){return new Date(rndInt(y1,y2),rndInt(0,11),rndInt(1,28))
 
 // Sprint 3, taak 3.1: factory-functies — single source of truth voor data-generatie
 function generateProjectData(count){return Array.from({length:count},function(_,i){var sl=assignSturingslijn();return {id:i+1,name:projectNames[i%projectNames.length]||'Project '+(i+1),status:rnd(statuses),priority:rnd(priorities),directeur:sl.directeur,aog:sl.aog,pm:sl.pm,deadline:rndDate(2025,2027),progress:rndInt(0,100),budget:rndInt(50,500)*1000,cluster:rnd(clusters),approved:Math.random()>.4,note:rnd(notes),fase:rnd(fases),risico:rnd(risicoNiveaus),startDatum:rndDate(2022,2026),regio:rnd(regios),type:rnd(projectTypes),fte:rndInt(1,20),kostenRealisatie:rndInt(10,400)*1000,oplevering:rndDate(2026,2029),stakeholders:rndInt(2,30),laatsteUpdate:rndDate(2025,2026),documentatie:rnd(docStatuses),programma:rnd(programmalijnen),milieu:rnd(milieuImpacts)};});}
-function generateTeamData(count){return Array.from({length:count},function(_,i){var nm=namen[i%namen.length]||(i<namen.length?namen[i]:'Lid '+(i+1));return {id:i+1,name:nm,functie:rnd(functies),afdeling:rnd(clusters),email:nm.toLowerCase().replace(/\s/g,'.').replace(/[àáâ]/g,'a')+(i>=namen.length?i:'')+'@'+dashboardConfig.domain.emailSuffix, /* E.2 */inDienst:rndDate(2010,2024),status:rnd(teamStatuses),beoordeling:rndInt(1,5),locatie:rnd(locs),capaciteit:rndInt(20,100),actief:Math.random()>.2,telefoon:'06-'+rndInt(10000000,99999999),contract:rnd(contractTypes),uren:rnd([24,28,32,36,40]),team:rnd(teams),leidinggevende:rnd(namen),opleiding:rnd(opleidingen),startProject:rndDate(2024,2026),projecten:rndInt(1,8),salSchaal:rnd(salSchalen),skills:rnd(skillSets),beschikbaarheid:rndInt(40,100),reisafstand:rndInt(2,60),kantoorDagen:rndInt(1,5),certificeringen:rndInt(0,6),laatsteGesprek:rndDate(2025,2026)};});}
+function generateTeamData(count){var emailSuffix=dashboardConfig.domain.emailSuffix;return Array.from({length:count},function(_,i){var nm=namen[i%namen.length]||(i<namen.length?namen[i]:'Lid '+(i+1));return {id:i+1,name:nm,functie:rnd(functies),afdeling:rnd(clusters),email:nm.toLowerCase().replace(/\s/g,'.').replace(/[àáâ]/g,'a')+(i>=namen.length?i:'')+'@'+emailSuffix, /* E.2 */inDienst:rndDate(2010,2024),status:rnd(teamStatuses),beoordeling:rndInt(1,5),locatie:rnd(locs),capaciteit:rndInt(20,100),actief:Math.random()>.2,telefoon:'06-'+rndInt(10000000,99999999),contract:rnd(contractTypes),uren:rnd([24,28,32,36,40]),team:rnd(teams),leidinggevende:rnd(namen),opleiding:rnd(opleidingen),startProject:rndDate(2024,2026),projecten:rndInt(1,8),salSchaal:rnd(salSchalen),skills:rnd(skillSets),beschikbaarheid:rndInt(40,100),reisafstand:rndInt(2,60),kantoorDagen:rndInt(1,5),certificeringen:rndInt(0,6),laatsteGesprek:rndDate(2025,2026)};});}
+
+// WP-H: Data-generatoren registry — losgekoppeld van dashboardConfig
+const _dataGenerators = { projects: generateProjectData, team: generateTeamData };
+
 // G3: Pre-built zoekindex — één lowercase string per rij
 function buildSearchIndex(data){
   data.forEach(function(r){
@@ -744,7 +748,6 @@ const dashboardConfig = {
       icon: "📋",
       dataSource: { type: "embedded" },
       columns: cols0,
-      generateData: generateProjectData,
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
@@ -756,7 +759,6 @@ const dashboardConfig = {
       icon: "👥",
       dataSource: { type: "embedded" },
       columns: cols1,
-      generateData: generateTeamData,
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
@@ -766,9 +768,9 @@ const dashboardConfig = {
   // E.1: domein-configuratie gecentraliseerd in config (single source of truth)
   domain: {
     emailSuffix: 'rotterdam.nl', // E.2: was hardcoded in generateTeamData
-    categoricalFields: new Set(['status','priority','directeur','aog','pm','cluster','afdeling','functie','locatie','fase','risico','regio','type','documentatie','programma','milieu','contract','team','leidinggevende','opleiding','salSchaal','skills']),
-    averageFields:     new Set(['progress','capaciteit','budget','kostenRealisatie','beoordeling','fte','stakeholders','uren','projecten','beschikbaarheid','reisafstand','kantoorDagen','certificeringen']),
-    booleanFields:     new Set(['approved','actief']),
+    categoricalFields: ['status','priority','directeur','aog','pm','cluster','afdeling','functie','locatie','fase','risico','regio','type','documentatie','programma','milieu','contract','team','leidinggevende','opleiding','salSchaal','skills'],
+    averageFields:     ['progress','capaciteit','budget','kostenRealisatie','beoordeling','fte','stakeholders','uren','projecten','beschikbaarheid','reisafstand','kantoorDagen','certificeringen'],
+    booleanFields:     ['approved','actief'],
     ordinalOrders: {
       priority:     ['Hoog','Middel','Laag'],
       risico:       ['Kritiek','Hoog','Middel','Laag'],
@@ -816,8 +818,9 @@ function initTabDataFromConfig(onComplete) {
   dashboardConfig.tabs.forEach(function(tab, idx) {
     _tabCols[idx] = tab.columns;
   });
+  // WP-H: generator-lookup via _dataGenerators registry i.p.v. config-property
   var pending = dashboardConfig.tabs.filter(function(t) {
-    return t.dataSource.type === 'embedded' && typeof t.generateData === 'function';
+    return t.dataSource.type === 'embedded' && typeof _dataGenerators[t.id] === 'function';
   });
   var i = 0;
   var schedule = window.requestIdleCallback || function(cb) { setTimeout(cb, 0); };
@@ -829,7 +832,7 @@ function initTabDataFromConfig(onComplete) {
     var tab = pending[i++];
     var tabIdx = dashboardConfig.tabs.indexOf(tab);
     schedule(function() {
-      _tabData[tabIdx] = tab.generateData(tab.defaultRowCount);
+      _tabData[tabIdx] = _dataGenerators[tab.id](tab.defaultRowCount);
       buildSearchIndex(_tabData[tabIdx]);
       next();
     });
@@ -1025,9 +1028,10 @@ function _getSortRulesForPanel(){return AppState._draftSortRules!==null?AppState
 // groupFields, condEnabled, rowHeight, freezeCol, activePanel,
 // colFilters, globalNameFilter verplaatst naar AppState
 // E.1: aliassen — code gebruikt nog de korte namen; config is de single source of truth
-const _categoricalKeySet = dashboardConfig.domain.categoricalFields;
-const _averageKeySet      = dashboardConfig.domain.averageFields;
-const _booleanKeySet      = dashboardConfig.domain.booleanFields;
+// WP-H: config bevat plain arrays (JSON-serialiseerbaar); Sets gebouwd bij init
+const _categoricalKeySet = new Set(dashboardConfig.domain.categoricalFields);
+const _averageKeySet      = new Set(dashboardConfig.domain.averageFields);
+const _booleanKeySet      = new Set(dashboardConfig.domain.booleanFields);
 
 // ============================================================
 // STATE MANAGEMENT & DIRTY FLAGS

@@ -81,11 +81,11 @@ Na uitvoering is Layer 1:
 | Aspect | Status | Detail |
 |--------|--------|--------|
 | Bestandsnaam | ✅ | Heet al `ux-reference.html` |
-| `<title>` | ❌ | Zegt nog "Kolommen verplaatsen – demo" |
-| Hero-titel | ❌ | Zegt nog "Kolommen verplaatsen" |
-| Chip-badge | ❌ | Zegt "Interactieve demo" i.p.v. "UX Reference" |
-| Sectie-comments | ❌ | Geen structuurcomments in CSS of JS |
-| PORT THIS / DEMO ONLY | ❌ | Geen labels |
+| `<title>` | ✅ | "Dashboard UX Reference — CSV Dashboard Template Platform" (WP1, v0.43.0) |
+| Hero-titel | ✅ | "Dashboard UX Reference" (WP1, v0.43.0) |
+| Chip-badge | ✅ | "UX Reference Layer" (WP1, v0.43.0) |
+| Sectie-comments | ✅ | 12 CSS + 17 JS secties (WP2, v0.44.0) |
+| PORT THIS / DEMO ONLY | ✅ | Alle secties gelabeld (WP2, v0.44.0) |
 | Tokens | ⚠️ | ~30 tokens, andere naamgeving dan RODS-set (42 tokens) |
 | Accessibility | ⚠️ | Basis aanwezig (srAnnounce, role=grid, aria-label), geen focus trap |
 | Regels | 224 | Compact, goed werkend |
@@ -118,20 +118,20 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
                               WP11 ──→ WP12
 ```
 
-| # | Werkpakket | Prioriteit | Afhankelijk van |
-|---|-----------|------------|-----------------|
-| WP1 | Herpositionering en naamgeving | P1 | — |
-| WP2 | Structuur expliciet maken | P1 | WP1 |
-| WP3 | Must-port vs. demo-only labelen | P1 | WP2 |
-| WP4 | Design tokens isoleren en alignen | P2 | WP3 |
-| WP5 | Interaction pattern catalog | P2 | WP4 |
-| WP6 | Porting notes naar engine | P1 | WP3 |
-| WP7 | Taal en inhoud generieker maken | P3 | WP9 |
-| WP8 | Accessibility reference verdiepen | P2 | WP3 |
-| WP9 | Toolbar en paneel rationaliseren | P2 | WP8 |
-| WP10 | Demo-engine minimaliseren | P1 | WP6 |
-| WP11 | Koppeling naar single-file build | P3 | WP10 |
-| WP12 | Review en validatie | P3 | WP11 |
+| # | Werkpakket | Prioriteit | Afhankelijk van | Status |
+|---|-----------|------------|-----------------|--------|
+| WP1 | Herpositionering en naamgeving | P1 | — | ✅ v0.43.0 |
+| WP2 | Structuur expliciet maken | P1 | WP1 | ✅ v0.44.0 |
+| WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ○ Open |
+| WP4 | Design tokens isoleren en alignen | P2 | WP3 | ○ Open |
+| WP5 | Interaction pattern catalog | P2 | WP4 | ○ Open |
+| WP6 | Porting notes naar engine | P1 | WP3 | ○ Open |
+| WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
+| WP8 | Accessibility reference verdiepen | P2 | WP3 | ○ Open |
+| WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ○ Open |
+| WP10 | Demo-engine minimaliseren | P1 | WP6 | ○ Open |
+| WP11 | Koppeling naar single-file build | P3 | WP10 | ○ Open |
+| WP12 | Review en validatie | P3 | WP11 | ○ Open |
 
 ---
 
