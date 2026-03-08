@@ -571,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.47.0';
+const DASHBOARD_VERSION = '0.48.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -1174,6 +1174,32 @@ const _averageKeySet      = new Set(dashboardConfig.domain.averageFields);
 const _booleanKeySet      = new Set(dashboardConfig.domain.booleanFields);
 
 // ══ ENGINE CORE: Performance Instrumentation ══════════════════
+// Performance-kritische paden en budgetten (zie TESTREGISTER.md §7.1):
+//
+// ┌──────────────────────────────┬───────────┬──────────┬──────────────────────────────────┐
+// │ Pad                          │ FAIL <    │ Target < │ Gemeten via                      │
+// ├──────────────────────────────┼───────────┼──────────┼──────────────────────────────────┤
+// │ Zoek → filter → render       │ 200 ms    │ 80 ms    │ D-L7 full render cycle            │
+// │   └ computeFilteredData      │  50 ms    │ 20 ms    │ D-L2 _measure('computeFiltered') │
+// │   └ computeSortedData        │  40 ms    │ 15 ms    │ D-L3 _measure('computeSorted')   │
+// │   └ renderVirtualBody        │  30 ms    │ 15 ms    │ D-L6 _measure('renderVirtual')   │
+// │ Sorteer → sort → render      │  40+30 ms │ 15+15 ms │ D-L3 + D-L6                      │
+// │ Tabwissel → full pipeline    │ 200 ms    │ 80 ms    │ D-L7 (alle dirty flags true)     │
+// │ Scroll → virtual update      │  16 ms    │ <1 frame │ rAF-throttled, D-S2 ≥ 45 fps     │
+// │ Hover → reflow               │   2 ms    │  1 ms    │ D-L1 hover reflow latency        │
+// ├──────────────────────────────┼───────────┼──────────┼──────────────────────────────────┤
+// │ Init (DOMContentLoaded)      │ 300 ms    │ 100 ms   │ D-P2 dashboard:total-init        │
+// │ First Paint                  │ 500 ms    │ 100 ms   │ D-P1a                            │
+// │ DOM nodes totaal             │ 3000      │ 2500     │ D-M1                             │
+// │ DOM rijen in viewport        │ 200       │ 100      │ D-M2 (virtualisatie actief)      │
+// └──────────────────────────────┴───────────┴──────────┴──────────────────────────────────┘
+//
+// Instrumentatie-tools:
+//   _measure(name, fn)     — wraps fn met performance.mark/measure, console.log bij _perfDebug
+//   _startFpsMonitor()     — rAF-loop, waarschuwt bij < 50 fps
+//   PerformanceObserver    — LongTask detectie (> 50ms frames)
+//   initPerfOverlay()      — visuele overlay rechtsonder bij _perfDebug
+//
 var _perfDebug = true; // A3: toggle performance logging
 
 // A3: Performance measurement helper
@@ -1957,6 +1983,30 @@ function _invalidateUniqueCache() {
 // DOM-ownership:
 //   Renderers beheren: thead, tbody, aggregatie-tr, tab-bar, meta/footer
 //   UX overlays (drag-preview, corridor, panel): buiten renderer-ownership
+//
+// ══ VIEWPORT-ONLY DOM REGEL ═════════════════════════════════
+// Architectuurregel voor alle huidige en toekomstige render-code:
+//
+//   "Alleen rijen binnen de viewport + buffer (_vBuf) bestaan in de DOM.
+//    Niet-zichtbare rijen worden NIET verborgen (display:none) maar
+//    bestaan simpelweg niet — hun ruimte wordt ingenomen door spacer-<tr>'s."
+//
+// Gevolgen voor UX-uitbreidingen (Layer 1 → Layer 2 porting):
+//   1. Event-listeners op rijen: bind via event-delegation op tbody,
+//      NIET op individuele <tr> (rijen worden hergebruikt bij scroll)
+//   2. Rij-selectie/highlight: sla state op in AppState (bijv. selectedRows Set),
+//      pas visuele klasse toe in rowHtml() — NIET via DOM-query na render
+//   3. Inline editing: activeer alleen op zichtbare rij, sla waarde op in data[],
+//      laat volgende virtual render de wijziging reflecteren
+//   4. Animaties: alleen op zichtbare rijen; rijen die uit viewport scrollen
+//      worden direct verwijderd (geen exit-animatie mogelijk)
+//   5. DOM-metingen (getBoundingClientRect): alleen betrouwbaar voor
+//      rijen in huidige viewport-window; niet-gerenderde rijen hebben geen rect
+//
+// Handhaving:
+//   D-M1 (< 3000 DOM nodes totaal) en D-M2 (< 200 rijen in viewport)
+//   bewaken deze regel automatisch bij elke testrun.
+//   Zie: TESTREGISTER.md §7.1.2
 // ████████████████████████████████████████████████████████████████
 
 // ══ RENDER: Orchestration & Cache ═════════════════════════════
@@ -2122,6 +2172,42 @@ function rowHtml(r,rn,cols,tab,hpx){
     }).join('')
     +'</tr>';
 }
+
+// ══ VIRTUALIZATION: Viewport & Row Window ═══════════════════
+// Model:
+//   Beide scroll-paden (flat + grouped) gebruiken hetzelfde viewport-model:
+//   1. scrollTop / rowH → eerste zichtbare rij (startIdx)
+//   2. (scrollTop + viewportH) / rowH → laatste zichtbare rij (endIdx)
+//   3. ± _vBuf buffer-rijen boven en onder → smooth scroll zonder flicker
+//   4. Spacer-<tr> boven en onder vullen de resterende hoogte
+//
+// Functies:
+//   renderVirtualBody()     — flat modus: data[] → viewport window
+//   _renderGroupedVirtual() — grouped modus: flatGroupedItems[] → viewport window
+//   renderGroupedBody()     — orchestratie: enrich → flatten → virtual render
+//   renderFlatBody()        — legacy alias → renderVirtualBody()
+//
+// Scroll-afhandeling:
+//   Eén scroll-listener per tab-container (eenmalig gebonden via _vScrollBound / _gvScrollBound)
+//   rAF-throttled: cancelAnimationFrame + requestAnimationFrame voorkomt >1 render/frame
+//   {passive:true} voor optimale scroll-performance (geen preventDefault)
+//
+// Skip-optimalisatie:
+//   _vRangeChanged(s,e,n) vergelijkt huidige range met vorige
+//   Unchanged range → skip rerender (bespaart innerHTML-write)
+//
+// Row height:
+//   getRowH() → vast (28/32/36px) of computed per config
+//   Alle rijen dezelfde hoogte → O(1) positieberekening (geen offset-tabel nodig)
+//
+// DOM-budget:
+//   Viewport ~20–30 rijen + 2×_vBuf(10) = 40–50 <tr> in DOM
+//   Niet-zichtbare rijen bestaan NIET in de DOM (geen display:none)
+//   Test: D-M2 < 200 DOM-rijen, target < 100 (zie TESTREGISTER.md §7.1.2)
+//
+// Zie ook: TESTREGISTER.md §7.1.4 (D-L6 renderVirtualBody < 30ms)
+//          TESTREGISTER.md §7.1.5 (D-S2 scroll FPS ≥ 45)
+// ═════════════════════════════════════════════════════════════
 
 // G1: DOM-virtualisatie — render alleen zichtbare rijen + buffer
 var _vBuf=10; // buffer rijen boven en onder viewport

@@ -6,6 +6,22 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.48.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Werkpakket WP-E: virtualisatie en performance verstevigen.
+
+**Layer 2 WP-E — Virtualisatie en performance verstevigen (dashboard.html):**
+- VIRTUALIZATION: Viewport & Row Window sectie-comment toegevoegd met volledig model: viewport-berekening, buffer, spacers, scroll-afhandeling, skip-optimalisatie, row height, DOM-budget
+- Performance-kritische paden tabel toegevoegd bij Performance Instrumentation: 8 paden met FAIL-drempel, target en meetmethode (D-L1 t/m D-L7, D-P1/P2, D-M1/M2, D-S2)
+- TESTREGISTER.md §7.1 referenties gelinkt: D-L6 (renderVirtualBody < 30ms), D-S2 (scroll FPS ≥ 45), D-M2 (< 200 viewport rijen)
+- Viewport-only DOM regel gedocumenteerd in [7/11] header: 5 gevolgen voor UX-uitbreidingen (event-delegation, rij-selectie, inline editing, animaties, DOM-metingen)
+- Handhaving via D-M1 (< 3000 DOM nodes) en D-M2 (< 200 viewport rijen) geëxpliciteerd
+
+---
+
 ## v0.47.0 — 2026-03-08
 
 **Type:** Architectuur

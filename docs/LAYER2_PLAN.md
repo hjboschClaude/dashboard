@@ -370,7 +370,7 @@ Fase 2d (Build-ready):
 
 ---
 
-### WP-E — Virtualisatie en performance verstevigen
+### WP-E — Virtualisatie en performance verstevigen ✅ v0.48.0
 
 **Doel:** De schaalvoordelen expliciet borgen.
 
@@ -395,9 +395,14 @@ Fase 2d (Build-ready):
 5. Zorg dat UX-uitbreidingen later alleen op zichtbare DOM werken (documenteer de regel)
 
 **Acceptatiecriteria:**
-- Virtualisatiegedrag is gedocumenteerd en reproduceerbaar
-- Performance-budgetten zijn gelinkt aan TESTREGISTER.md
-- De "viewport-only DOM" regel is vastgelegd
+- ✅ Virtualisatiegedrag is gedocumenteerd en reproduceerbaar
+- ✅ Performance-budgetten zijn gelinkt aan TESTREGISTER.md
+- ✅ De "viewport-only DOM" regel is vastgelegd
+
+**Huidige staat (v0.48.0):**
+- VIRTUALIZATION sectie-comment met volledig model: viewport-berekening, buffer, spacers, scroll-afhandeling (rAF, passive), skip-optimalisatie, row height, DOM-budget
+- Performance-kritische paden tabel bij Performance Instrumentation: 8 paden met FAIL/target/meetmethode, gelinkt aan D-L1–D-L7, D-P1/P2, D-M1/M2, D-S2
+- Viewport-only DOM regel in [7/11] header: 5 concrete gevolgen voor UX-uitbreidingen (event-delegation, rij-selectie, inline editing, animaties, DOM-metingen), handhaving via D-M1/D-M2
 
 ---
 
