@@ -48,7 +48,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | [TOETSINGSKADER.md](TOETSINGSKADER.md) | 64 bevindingen over 11 dimensies + beoordelingskader 10 domeinen | Per sprint herscoren |
 | [TESTPLAN.md](TESTPLAN.md) | Testplan design-wijzigingen (DevTools-based) | Bij testwijziging |
 | [BUGS.md](BUGS.md) | Bug tracker (BUG-016+) | Bij nieuwe bug of fix |
-| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.45.0) | Elke versie |
+| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.46.0) | Elke versie |
 | [WERKWIJZE_VERSIEBEHEER.md](WERKWIJZE_VERSIEBEHEER.md) | Proces: versienummering, changelog, commits, toetsing | Bij proceswijziging |
 | [VOORSTEL_UX_KOLOMMEN.md](VOORSTEL_UX_KOLOMMEN.md) | Kolom drag-drop UX voorstel: visuele feedback combinatie | Referentie |
 

@@ -571,7 +571,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.45.0';
+const DASHBOARD_VERSION = '0.46.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -968,53 +968,80 @@ Object.defineProperty(window, 'data1', {
 });
 
 // ████████████████████████████████████████████████████████████████
-// [5/11] APP STATE
-// Centrale runtime-state, dirty flags, caches, performance-instrumentatie
+// [5/11] APP STATE — ENGINE CORE
+// Centrale runtime-state, dirty flags, derived-state cache,
+// performance-instrumentatie, save/restore per tab
+//
+// Architectuur:
+//   AppState          — single source of truth voor alle runtime-state
+//   AppState._dirty   — dirty flags sturen de render pipeline
+//   AppState._derived — cache voor afgeleide data (filter/sort/group/agg)
+//   AppState.tabs     — per-tab viewState (opgeslagen bij tabswitch)
+//
+// State-categorieën:
+//   Dashboard  — activeTabId
+//   Selection  — selectedRows, _lastClickedIdx, contextRow
+//   Filter     — filterRules, filterLogic, colFilters, globalNameFilter
+//   Sort       — sortRules, _draftSortRules
+//   Group      — groupFields, collapsedGroups
+//   Display    — condEnabled, rowHeight, freezeCol
+//   Panel      — activePanel, _panelPrevFocus, _panelTrapHandler
+//   Export     — _exportMode
+//   Search     — _searchTimer
+//   Render     — _dirty, _derived, _vRange, _vBuf (virtual scroll)
+//   Perf       — _perfDebug, FPS monitor, LongTask observer
 // ████████████████████████████████████████████████████████████████
 
-// ============================================================
-// APPSTATE — centraal state-object (sprint 2, taak 2.1)
-// ============================================================
+// ══ ENGINE CORE: State Object ══════════════════════════════════
 var AppState = {
-  // Sprint 5, taak 5.1: id-gebaseerde navigatie
+  // ── Dashboard state (globaal) ──
   activeTabId: dashboardConfig.app.defaultTabId,
-  // Selectie (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+
+  // ── Selection state (per tab — save/restore bij tabswitch) ──
   selectedRows: new Set(),
   _lastClickedIdx: null,
   contextRow: null,
-  // Filtering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+
+  // ── Filter state (per tab — save/restore bij tabswitch) ──
   filterRules: [],
   filterLogic: 'AND',
   colFilters: {},
   globalNameFilter: null,
   _colFilterPanelKey: null,
   _colFilterSearch: '',
-  // Sortering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+
+  // ── Sort state (per tab — save/restore bij tabswitch) ──
   sortRules: [],
   _draftSortRules: null,
-  // Groepering (actieve tab — wordt opgeslagen/hersteld bij tabswitch)
+
+  // ── Group state (per tab — save/restore bij tabswitch) ──
   groupFields: [],
   collapsedGroups: new Set(),
-  // Weergave (globaal)
+
+  // ── Display state (globaal) ──
   condEnabled: false,
   rowHeight: 'compact',
   freezeCol: false,
-  // Panels (globaal)
+
+  // ── Panel state (globaal) ──
   activePanel: null,
   _panelPrevFocus: null,
   _panelTrapHandler: null,
-  // Export (globaal)
+
+  // ── Export state (globaal) ──
   _exportMode: 'all',
-  // Zoek (globaal)
+
+  // ── Search state (globaal) ──
   _searchTimer: null,
-  // [UI] View-state — gescheiden van data-state
+
+  // ── UI state — gescheiden van data-state ──
   ui: {
     density: 'compact',
     openPanel: null,
     freezeFirstDataColumn: false,
     condFormattingEnabled: false
   },
-  // Sprint 5, taak 5.2: per-tab viewState
+  // ── Per-tab viewState (save/restore bij tabswitch) ──
   tabs: (function(){
     var t={};
     dashboardConfig.tabs.forEach(function(tab){
@@ -1034,7 +1061,7 @@ var AppState = {
     });
     return t;
   })(),
-  // Methoden
+  // ── Core methoden ──
   reset: function() {
     this.filterRules = [];
     this.sortRules = [];
@@ -1065,7 +1092,7 @@ var AppState = {
   }
 };
 
-// Sprint 5, taak 5.1: currentTab als computed property (legacy accessor op AppState)
+// ══ ENGINE CORE: Computed Properties & Legacy Accessors ═══════
 Object.defineProperty(AppState, 'currentTab', {
   get: function(){ return getTabIndex(this.activeTabId); },
   set: function(idx){ var tab=dashboardConfig.tabs[idx]; if(tab) this.activeTabId=tab.id; },
@@ -1073,7 +1100,7 @@ Object.defineProperty(AppState, 'currentTab', {
   enumerable: true
 });
 
-// Sprint 5, taak 5.1: _tabSelections legacy accessor — leest uit per-tab viewState
+// Legacy accessor: _tabSelections leest uit per-tab viewState
 Object.defineProperty(AppState, '_tabSelections', {
   get: function(){
     var self=this;
@@ -1090,7 +1117,7 @@ Object.defineProperty(AppState, '_tabSelections', {
   configurable: true
 });
 
-// Sprint 5, taak 5.2: save/restore viewState bij tabswitch
+// ══ ENGINE CORE: ViewState Save/Restore (tabswitch) ═══════════
 function saveTabViewState(){
   var vs=AppState.tabs[AppState.activeTabId].viewState;
   vs.selection=new Set(AppState.selectedRows);
@@ -1117,9 +1144,8 @@ function restoreTabViewState(tabId){
 }
 
 
-// State (legacy declarations removed — now in AppState)
-// SORT-002: Draft model voor sorteerpaneel — wijzigingen pas toepassen bij "Klaar"
-// _draftSortRules verplaatst naar AppState
+// ══ ENGINE CORE: Sort Actions (draft model) ═══════════════════
+// Draft model: wijzigingen pas toepassen bij "Klaar"
 function _cloneSortRules(rules){return rules.map(function(r){return {field:r.field,dir:r.dir};});}
 function _openSortDraft(){AppState._draftSortRules=_cloneSortRules(AppState.sortRules);}
 function _applySortDraft(){
@@ -1147,9 +1173,7 @@ const _categoricalKeySet = new Set(dashboardConfig.domain.categoricalFields);
 const _averageKeySet      = new Set(dashboardConfig.domain.averageFields);
 const _booleanKeySet      = new Set(dashboardConfig.domain.booleanFields);
 
-// ============================================================
-// STATE MANAGEMENT & DIRTY FLAGS
-// ============================================================
+// ══ ENGINE CORE: Performance Instrumentation ══════════════════
 var _perfDebug = true; // A3: toggle performance logging
 
 // A3: Performance measurement helper
@@ -1216,7 +1240,29 @@ function _updatePerfOverlay(renderMs, rowCount, colCount) {
       : 'n/b');
 }
 
-// A2: Dirty flags — verplaatst naar AppState._dirty (sprint 2, taak 2.2)
+// ══ ENGINE CORE: Dirty Flags & Invalidation ═══════════════════
+//
+// Dirty flags sturen de render pipeline: alleen vuile stappen worden herberekend.
+// _invalidate([...]) markeert specifieke flags; _invalidateAll() markeert alles.
+//
+// Invalidatie-mapping (welke actie → welke flags):
+//   Search/filter  → data, sort, group, agg, body, meta
+//   Sort toggle    → sort, group, body, meta
+//   Group change   → group, agg, body, meta
+//   Tab switch     → ALL (via _invalidateAll)
+//   Column hide    → header, body, meta, widths
+//   Column reorder → header, body
+//   Row height     → body
+//   Cond format    → body
+//   Reset          → ALL
+//
+// Derive-pipeline volgorde (bij render):
+//   data dirty  → computeFilteredData()  → _derived.filteredData
+//   sort dirty  → computeSortedData()    → _derived.sortedData
+//   group dirty → computeGroupModel()    → _derived.groupModel
+//   agg dirty   → computeAggModel()      → _derived.aggModel
+//   visibleCols → computeVisibleCols()   → _derived.visibleCols
+//
 AppState._dirty = {
   data: true,      // filteredData needs recompute
   sort: true,      // sortedData needs recompute
@@ -1229,7 +1275,6 @@ AppState._dirty = {
 };
 var _dirty = AppState._dirty; // legacy alias
 
-// A2: Mark specific flags as dirty
 function _invalidate(flags) {
   flags.forEach(function(f) { _dirty[f] = true; });
   // Reset virtual range tracking bij data/body invalidatie
@@ -1248,7 +1293,7 @@ function _invalidateAll() {
   for (var k in _dirty) _dirty[k] = true;
 }
 
-// A2: Derived state cache — verplaatst naar AppState._derived (sprint 2, taak 2.2)
+// ══ ENGINE CORE: Derived State Cache ══════════════════════════
 AppState._derived = {
   filteredData: null,
   sortedData: null,
@@ -1265,14 +1310,18 @@ function getCols(tabIdx){return _tabCols[tabIdx!==undefined?tabIdx:AppState.curr
 function getData(tabIdx){return _tabData[tabIdx!==undefined?tabIdx:AppState.currentTab];}
 
 // ████████████████████████████████████████████████████████████████
-// [6/11] PURE HELPERS & CELL RENDERERS
+// [6/11] PURE HELPERS, CELL RENDERERS & DERIVE PIPELINE
 // Generieke hulpfuncties zonder DOM-effecten + cel-render-registry
 // Bevat: cellRenderers, filter, sort, group, compute, aggregatie
+//
+// ══ ENGINE CORE: Derive Layer ═════════════════════════════════
+// De derive-pipeline transformeert ruwe data naar render-klare output:
+//   computeFilteredData() → computeSortedData() → computeGroupModel()
+//   → computeVisibleCols() → computeAggModel()
+// Elke stap is apart aanroepbaar, testbaar en cachebaar via _derived.
 // ████████████████████████████████████████████████████████████████
 
-// ============================================================
-// CELL RENDERERS
-// ============================================================
+// ══ RENDER: Cell Renderers ════════════════════════════════════
 function statusTag(s){var m={Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'};return '<span class="tag tag-clickable '+(m[s]||'tag-info')+'" data-tag-field="status" data-tag-value="'+escapeAttr(s)+'">'+escapeHtml(s)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
 function priorityTag(p){var m={Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'};return '<span class="tag tag-clickable '+(m[p]||'tag-info')+'" data-tag-field="priority" data-tag-value="'+escapeAttr(p)+'">'+escapeHtml(p)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
 function progressCell(v){const pct=Math.min(100,Math.max(0,+v));const c=pct>=70?'var(--green-400)':pct>=40?'var(--orange-400)':'var(--red-400)';return '<div class="progress-cell"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+c+'"></div></div><span class="progress-label">'+pct+'%</span></div>';}
@@ -1333,9 +1382,8 @@ function renderCell(col,r){
   return fn ? fn(v,col) : cellRenderers.text(v,col);
 }
 
-// ============================================================
-// FILTER
-// ============================================================
+// ══ DERIVE: Filtering ═════════════════════════════════════════
+// Input: data[], AppState.filterRules, AppState.filterLogic → Output: filteredRows[]
 const filterOps={'bevat':'contains','bevat niet':'not_contains','is gelijk aan':'equals','is niet':'not_equals','groter dan':'gt','kleiner dan':'lt','is leeg':'empty','is niet leeg':'not_empty'};
 
 // Sprint 3, taak 3.4: defensive coding — NaN-checks op gt/lt
@@ -1625,9 +1673,8 @@ function setGlobalNameFilter(val){
   render();
 }
 
-// ============================================================
-// SORT
-// ============================================================
+// ══ DERIVE: Sorting ═══════════════════════════════════════════
+// Input: data[], AppState.sortRules → Output: sortedRows[]
 function sortData(data){
   if(!AppState.sortRules.length) return data;
   return data.slice().sort(function(a,b){
@@ -1644,11 +1691,8 @@ function sortData(data){
   });
 }
 
-// ============================================================
-// GROUP
-// ============================================================
-// collapsedGroups verplaatst naar AppState
-
+// ══ DERIVE: Grouping ══════════════════════════════════════════
+// Input: data[], AppState.groupFields → Output: nested tree {_rows[], _children{}}
 function groupData(data){
   if(!AppState.groupFields.length) return null;
   // Build nested tree: {_rows:[], _children:{key: node}}
@@ -1664,9 +1708,7 @@ function groupData(data){
   return root;
 }
 
-// ============================================================
-// CONDITIONAL FORMATTING
-// ============================================================
+// ══ DERIVE: Conditional Formatting ════════════════════════════
 function condClass(r){
   if(!AppState.condEnabled) return '';
   if(r.priority==='Hoog'||r.status==='On Hold') return 'cond-red';
@@ -1675,9 +1717,7 @@ function condClass(r){
   return '';
 }
 
-// ============================================================
-// ROW HEIGHT
-// ============================================================
+// ══ DERIVE: Row Height ════════════════════════════════════════
 function getRowH(){return AppState.rowHeight==='tall'?52:AppState.rowHeight==='medium'?42:32;}
 
 // #42: Debounce voor zoekfunctie — voorkomt render bij elke toetsaanslag
@@ -1698,11 +1738,10 @@ function clearSearch(){
   render();
 }
 
-// ============================================================
-// COMPUTE FUNCTIONS (afgeleide data)
-// ============================================================
+// ══ DERIVE: Compute Functions (afgeleide data) ════════════════
+// Elke compute-functie schrijft naar AppState._derived en is apart testbaar.
 
-// A1: Compute filtered data (only when data dirty)
+// Compute filtered data (only when data dirty)
 function computeFilteredData(searchOverride) { // D.2: searchOverride voor testbaarheid zonder DOM
   var tab = AppState.currentTab;
   var data = getData(tab);
@@ -1732,11 +1771,8 @@ function computeVisibleCols() {
   return _derived.visibleCols;
 }
 
-// ============================================================
-// AGGREGATION MODEL (one-pass)
-// ============================================================
-
-// B1: Compute aggregation model in ONE pass over the data
+// ══ DERIVE: Aggregation Model (one-pass) ══════════════════════
+// Input: _derived.sortedData, _derived.visibleCols → Output: aggModel{}
 function computeAggModel() {
   var data = _derived.sortedData || _derived.filteredData || [];
   var cols = _derived.visibleCols || computeVisibleCols();
@@ -1855,14 +1891,23 @@ function _invalidateUniqueCache() {
 }
 
 // ████████████████████████████████████████████████████████████████
-// [7/11] RENDERERS
+// [7/11] RENDERERS — ENGINE CORE: Render Layer
 // Alle DOM-output op basis van state en config
 // Bevat: render pipeline, virtual scroll, grouped rendering, aggregatie-render
+//
+// ══ Render adapters: ═════════════════════════════════════════
+//   renderHeader()          — thead opbouwen (sticky, drag-handle, sort-btn)
+//   renderVirtualBody()     — flat virtual scroll body
+//   _renderGroupedVirtual() — grouped virtual scroll body
+//   renderAgg()             — aggregatierij
+//   render()                — orchestratie: dirty-flag check → derive → render
+//
+// DOM-ownership:
+//   Renderers beheren: thead, tbody, aggregatie-tr, tab-bar, meta/footer
+//   UX overlays (drag-preview, corridor, panel): buiten renderer-ownership
 // ████████████████████████████████████████████████████████████████
 
-// ============================================================
-// RENDER — G5: cached pipeline, geen data-kopieën
-// ============================================================
+// ══ RENDER: Orchestration & Cache ═════════════════════════════
 var _cachedData=null;   // laatst gefilterd+gesorteerd resultaat
 var _cachedCols=null;   // laatst zichtbare kolommen
 var _cachedTab=null;    // laatst actieve tab
@@ -1962,6 +2007,7 @@ function _renderInternal() {
   }
 }
 
+// ══ RENDER: Header ════════════════════════════════════════════
 function renderHeader(tab,cols,hpx){
   var row=document.getElementById('thead-'+tab+'-row');
   // #67/#70/#72: Echte header-checkbox met drie states
@@ -2038,6 +2084,7 @@ var _lastVDataLen=-1;
 function _vRangeChanged(s,e,n){ return s!==_vRange.start||e!==_vRange.end||n!==_vRange.dataLen; }
 function _setVRange(s,e,n){ _vRange.start=s; _vRange.end=e; _vRange.dataLen=n; _lastVStart=s; _lastVEnd=e; _lastVDataLen=n; }
 
+// ══ RENDER: Virtual Body (flat) ════════════════════════════════
 function renderVirtualBody(){
   var tab=_cachedTab,cols=_cachedCols,data=_cachedData,hpx=_cachedHpx;
   if(!data||!cols) return;
@@ -2201,7 +2248,7 @@ function _groupItemHtml(item, cols, tab, hpx) {
   }
 }
 
-// Virtueel scrollen voor gegroepeerde weergave
+// ══ RENDER: Grouped Virtual Body ══════════════════════════════
 function _renderGroupedVirtual() {
   var flatList = _derived.flatGroupedItems;
   var tab = _cachedTab, cols = _cachedCols, hpx = _cachedHpx;
@@ -2318,14 +2365,24 @@ function renderAgg(tab,cols,data){
 }
 
 // ████████████████████████████████████████████████████████████████
-// [8/11] EVENTS
+// [8/11] EVENTS — ENGINE CORE: Controllers & Actions
 // Centrale event handling, panels, toolbar-acties, drag-drop,
 // context menu, modal, export, toast, reset
+//
+// ══ Acties (state-mutaties via herkenbare functies): ══════════
+//   clickSort(key)          — sort toggle op headerkolom
+//   switchTab(tabIdOrIndex) — tab wisselen + viewState save/restore
+//   applyFiltersAction()    — filter toepassen + invalidate pipeline
+//   clearAllFilters()       — alle filters wissen
+//   _commitSortDraft()      — sort-draft toepassen + render
+//   toggleGroupCollapse()   — groep in/uitklappen
+//   onSearchInput()         — zoekterm wijzigen + debounced render
+//   tagFilter(field, value) — snelfilter via tag-klik
+//
+// Alle acties volgen het patroon: muteer state → _invalidate([...]) → render()
 // ████████████████████████████████████████████████████████████████
 
-// ============================================================
-// SORT (header click)
-// ============================================================
+// ══ EVENTS: Sort (header click) ═══════════════════════════════
 // E.4: gedeelde helper — sort-richting wisselen op één plek
 function _toggleSortDir(dir){ return dir==='asc'?'desc':'asc'; }
 
@@ -2942,11 +2999,8 @@ function toggleFreeze(){
   toast(AppState.freezeCol?'Eerste kolom bevroren':'Bevriezen uitgeschakeld');
 }
 
-// ============================================================
-// ADD / DELETE / TABS
-// ============================================================
-// [Template-refactoring sprint 1] addRow() en deleteSelected() verwijderd — dashboard is read-only
-// Sprint 5, taak 5.2: switchTab met save/restore viewState
+// ══ EVENTS: Tab Switch (actie: switchTab) ═════════════════════
+// Patroon: saveTabViewState → activeTabId mutatie → restoreTabViewState → _invalidateAll → render
 function switchTab(tabIdOrIndex){
   // Accepteer zowel index (legacy) als tabId (string)
   var newId;
@@ -3796,8 +3850,19 @@ function runTests(){
 }
 
 // ████████████████████████████████████████████████████████████████
-// [10/11] INIT
+// [10/11] INIT — ENGINE CORE: Bootstrap
 // Tab-containers, event delegation, browser-check, opstartflow
+//
+// Opstartsequentie:
+//   1. Browser support check
+//   2. renderTabContainers() — dynamische tab-containers
+//   3. initTableDelegation() — event handlers op alle tabellen
+//   4. showLoadingState() — skelet tijdens data-laden
+//   5. _validateContractsOnInit() — contract-validatie (WP-C)
+//   6. initTabDataFromConfig() — data genereren/laden per tab
+//   7. render() — eerste volledige render
+//   8. initGlobalNameFilter() — zoekbalk initialiseren
+//   9. _startFpsMonitor() — performance monitoring
 // ████████████████████████████████████████████████████████████████
 
 // ============================================================

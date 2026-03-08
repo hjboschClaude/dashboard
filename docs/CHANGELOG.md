@@ -6,6 +6,37 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.46.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1), Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: porting notes naar engine en engine core explicitering. Start Fase 2b.
+
+**Layer 1 WP6 — Porting notes naar engine (ux-reference.html v1.3):**
+- Elke PORT THIS sectie (8 CSS, 11 JS) voorzien van PORTING NOTE met engine-mapping
+- CSS porting notes: zoekbox→setSearchTerm, toast→undo-callback, corridor→getColumnGeometry, etc.
+- JS porting notes: announce→engine utility, sort→toggleSort(key)+getSortState(), panel→setColumnOrder(), etc.
+- Bestaand porting notes blok vervangen door volledige PORTING MAP tabel (21 rijen):
+  Layer 1 element → Engine actie (Layer 2) → Engine selector
+- 8 vervangingen bij porting gedocumenteerd (render→renderVirtualBody, formatCell→cellRenderers, etc.)
+
+**Layer 2 WP-B — Engine Core expliciteren (dashboard.html):**
+- AppState gecategoriseerd in 9 state-categorieën: Dashboard, Selection, Filter, Sort, Group, Display, Panel, Export, Search
+- Architectuuroverzicht toegevoegd in [5/11] header: AppState, _dirty, _derived, tabs relaties
+- Dirty-flag systeem gedocumenteerd met invalidatie-mapping: welke actie → welke flags
+- Derive-pipeline volgorde gedocumenteerd: data→sort→group→agg→visibleCols
+- 16 ENGINE CORE sectie-comments toegevoegd (State, Computed Properties, ViewState, Sort Actions, Performance, Dirty Flags, Derived Cache)
+- 8 DERIVE sectie-comments: Filtering, Sorting, Grouping, Conditional Formatting, Row Height, Compute Functions, Aggregation
+- 5 RENDER sectie-comments: Orchestration, Header, Virtual Body, Grouped Virtual Body, Cell Renderers
+- 2 EVENTS sectie-comments: Sort, Tab Switch — met acties-overzicht in [8/11] header
+- DOM-ownership gedocumenteerd: renderers vs. UX overlays
+- Bootstrap-sequentie gedocumenteerd in [10/11] header (9 stappen)
+- `DASHBOARD_VERSION` → 0.46.0
+- Fase 2b gestart: WP-B ✅
+
+---
+
 ## v0.45.0 — 2026-03-08
 
 **Type:** Architectuur

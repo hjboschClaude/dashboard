@@ -125,7 +125,7 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 | WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ✅ v0.45.0 |
 | WP4 | Design tokens isoleren en alignen | P2 | WP3 | ○ Open |
 | WP5 | Interaction pattern catalog | P2 | WP4 | ○ Open |
-| WP6 | Porting notes naar engine | P1 | WP3 | ○ Open |
+| WP6 | Porting notes naar engine | P1 | WP3 | ✅ v0.46.0 |
 | WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
 | WP8 | Accessibility reference verdiepen | P2 | WP3 | ○ Open |
 | WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ○ Open |

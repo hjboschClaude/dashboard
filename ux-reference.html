@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ═══════════════════════════════════════════════════════════════════
      UX REFERENCE LAYER — CSV Dashboard Template Platform
-     Versie: 1.2 | Datum: 2026-03-08
+     Versie: 1.3 | Datum: 2026-03-08
 
      Dit bestand is de bron van waarheid voor UX-patronen:
      hintbar, drag preview, drop corridor, kolommenpaneel,
@@ -52,6 +52,7 @@
     .footer-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--border-light);background:var(--surface);font-size:12px;color:var(--muted)}.footer-bar .col-count{font-weight:600;color:var(--text)}
 
     /* ══ TOOLBAR PATTERNS ══ — PORT THIS: layout en spacing van toolbar-container, zoekbox, separators */
+    /* PORTING NOTE: zoekbox → engine setSearchTerm(); result-count → getFilteredCount(); CSS layout overnemen */
     .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border-light)}
     .toolbar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
     .toolbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -62,17 +63,20 @@
     .result-count{font-size:12px;color:var(--muted);white-space:nowrap;padding:0 4px}
 
     /* ══ UNDO-TOAST ══ — PORT THIS: fixed-bottom feedback-toast met undo-knop, slide-in animatie */
+    /* PORTING NOTE: toast wordt getriggerd via engine undo-callback, niet via directe DOM-mutatie; timing (4s) en animatie zijn normatief */
     .undo-toast{position:fixed;bottom:24px;left:50%;z-index:10000;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px 0 16px;border-radius:12px;background:var(--text);color:#fff;font-size:13px;font-weight:500;box-shadow:var(--shadow-xl);transform:translateX(-50%) translateY(80px);opacity:0;transition:all 280ms cubic-bezier(.34,1.56,.64,1);pointer-events:none}
     .undo-toast.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
     .undo-toast button{height:28px;padding:0 10px;border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;font-size:12px;font-weight:700}.undo-toast button:hover{background:rgba(255,255,255,.28)}
 
     /* ══ HINTBAR ══ — PORT THIS: keyboard-shortcut hints onder toolbar, kbd-styling */
+    /* PORTING NOTE: statische hints; tekst aanpassen per dashboard via dashboard-spec; geen engine hook nodig */
     .hintbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);font-size:13px;color:var(--muted)}
     .hintbar .hint-item{display:flex;align-items:center;gap:6px}
     .hintbar .hint-icon{width:20px;height:20px;border-radius:5px;background:var(--bg);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
     .hintbar kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font:inherit;font-size:11px;font-weight:600;color:var(--text);box-shadow:0 1px 0 var(--border)}
 
     /* ══ TABLE & HEADER STYLES ══ — PORT THIS: sticky thead, drag-handle, sort-btn, hide-col-btn, td-layout */
+    /* PORTING NOTE: thead via engine renderHeader(); drag-handle → beginColumnDrag(); sort-btn → toggleSort(); hide-col-btn → hideColumn(); td via renderVirtualBody() */
     .table-wrap{overflow:auto;position:relative;scroll-behavior:smooth;max-height:480px}
     table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed}
     thead th{position:sticky;top:0;z-index:3;height:var(--header-h);padding:0;text-align:left;vertical-align:middle;background:#fff;border-bottom:2px solid var(--border);border-right:1px solid var(--border-light);user-select:none;white-space:nowrap;transition:opacity var(--transition-med),transform var(--transition-med),background-color var(--transition-med)}
@@ -92,6 +96,7 @@
     .progress-cell{display:flex;align-items:center;gap:8px}.progress-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:40px;max-width:80px}.progress-bar-fill{height:100%;border-radius:3px;transition:width 300ms ease}.progress-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.budget-val{font-variant-numeric:tabular-nums;font-weight:500}
 
     /* ══ DRAG & DROP STATES ══ — PORT THIS: source-opacity, shift-left/right animaties, focus/flash states */
+    /* PORTING NOTE: classes gezet door engine drag controller via getColumnGeometry(); alleen op viewport-zichtbare rijen, niet op gehele tbody */
     th.th-drag-source{opacity:.35;background:var(--surface)!important}th.th-drag-source .th-title,th.th-drag-source .sort-btn,th.th-drag-source .hide-col-btn{visibility:hidden}th.th-drag-source .drag-handle{opacity:.15}
     td.col-drag-source{opacity:.3;background:var(--surface)!important}td.col-drag-source>*{visibility:hidden!important}
     thead th:focus{background:var(--surface);z-index:4}thead th:focus .drag-handle{color:var(--muted)}thead th:focus .th-title{color:var(--accent)}
@@ -100,15 +105,18 @@
     .shift-left{transform:translateX(calc(var(--drop-gap)*-.5))}.shift-right{transform:translateX(calc(var(--drop-gap)*.5))}
 
     /* ══ OVERLAY PATTERNS ══ — PORT THIS: drop overlay + drop corridor */
+    /* PORTING NOTE: corridor-positie berekend door engine drag controller via getColumnGeometry(); overlay zit buiten virtual scroll DOM */
     .drop-overlay{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 90ms ease}.drop-overlay.active{opacity:1}
     .drop-corridor{position:absolute;top:0;width:var(--drop-gap);transform:translateX(-50%);transition:left 100ms ease}.drop-corridor::before{content:'';position:absolute;inset:0;border-left:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.18;border-radius:2px}.drop-corridor::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:var(--accent);border-radius:1px;opacity:.5}
 
     /* ══ DRAG PREVIEW ══ — PORT THIS: floating column card */
+    /* PORTING NOTE: preview-content via engine cellRenderers; positie via pointer events; preview is overlay, geen body-clone */
     .drag-preview{position:fixed;left:0;top:0;transform:translate(-9999px,-9999px);width:200px;border:1px solid var(--border);border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-xl);pointer-events:none;z-index:9999;color:var(--text);opacity:0;transition:opacity 90ms ease;overflow:hidden}.drag-preview.visible{opacity:.92}
     .drag-preview-header{display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;font-weight:700}.drag-preview-header .mini-handle{color:var(--border);display:grid;place-items:center;flex:0 0 auto}.drag-preview-header .preview-badge{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.drag-preview-body{background:#fff}
     .drag-preview-cell{display:flex;align-items:center;height:34px;padding:0 10px;border-bottom:1px solid var(--border-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.drag-preview-cell:nth-child(even){background:#fafcfc}.drag-preview-cell:last-child{border-bottom:none}
 
     /* ══ COLUMN PANEL PATTERNS ══ — PORT THIS: slide-in paneel rechts, toggle-switch, drag-reorder in lijst */
+    /* PORTING NOTE: paneel leest engine getPanelItems(); schrijft via setColumnOrder()/setHiddenColumns()/setAllColumnsVisible() */
     .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;opacity:0;pointer-events:none;transition:opacity 200ms ease}.panel-overlay.open{opacity:1;pointer-events:auto}
     .col-panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);max-width:90vw;background:#fff;z-index:101;box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform 250ms cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}.col-panel.open{transform:translateX(0)}
     .panel-header{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--border-light);flex-shrink:0}.panel-header h2{font-size:16px;font-weight:700;flex:1}
@@ -189,10 +197,12 @@ function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRo
 
 // ── REFERENCE INTERACTION: Screenreader Announce ── PORT THIS ─────
 // Contract: elke state-wijziging die de gebruiker niet visueel kan volgen, wordt aangekondigd via aria-live region
+// PORTING NOTE: announce() wordt een engine utility; elke engine-actie roept announce() aan als laatste stap
 function announce(m){srAnnounce.textContent='';requestAnimationFrame(()=>{srAnnounce.textContent=m})}
 
 // ── REFERENCE INTERACTION: Undo & Feedback ── PORT THIS ───────────
 // Contract: destructieve acties tonen een toast met undo-optie (4s timeout), screenreader melding bij undo
+// PORTING NOTE: toast hangt aan engine undo-callback, niet aan DOM-mutaties; engine biedt canUndo() selector en undo() actie
 let undoToastTimer=null;
 function showUndoToast(m){undoToastMsg.textContent=m;undoToast.classList.add('visible');clearTimeout(undoToastTimer);undoToastTimer=setTimeout(()=>undoToast.classList.remove('visible'),4000)} // PORT THIS: toast-timing en animatie
 function pushHistory(l){history.push({columns:structuredClone(columns),rows:structuredClone(rows),sort:structuredClone(sortState),hidden:new Set(hiddenColumns),label:l});if(history.length>MAX_HISTORY)history.shift();undoBtn.disabled=false} // DEMO ONLY: snapshot-based undo — vervangen door engine action replay
@@ -200,20 +210,24 @@ function undo(){if(!history.length)return;const s=history.pop();columns=s.column
 
 // ── REFERENCE INTERACTION: Sort ── PORT THIS ──────────────────────
 // Contract: klik op sort-btn toggled asc→desc, indicator in footer, screenreader melding
+// PORTING NOTE: engine toggleSort(key) muteert sortRules + invalidates sort/group/agg/body/meta; selector: getSortState()
 function toggleSort(k){pushHistory('sortering');if(sortState.key===k)sortState.dir=sortState.dir==='asc'?'desc':'asc';else{sortState.key=k;sortState.dir='asc'}applySortToRows();render();updateSortIndicator()} // PORT THIS: toggle-logica en indicator
 function applySortToRows(){if(!sortState.key||!sortState.dir)return;const k=sortState.key,d=sortState.dir==='asc'?1:-1;rows.sort((a,b)=>{let va=a[k],vb=b[k];if(typeof va==='number'&&typeof vb==='number')return(va-vb)*d;va=String(va).toLowerCase();vb=String(vb).toLowerCase();return va<vb?-d:va>vb?d:0})} // DEMO ONLY: directe array-mutatie — in engine via sortData()
 function updateSortIndicator(){const el=$('sortIndicator');if(!sortState.key){el.textContent='';return}const c=columns.find(x=>x.key===sortState.key);el.textContent=`Gesorteerd: ${c?c.label:sortState.key} ${sortState.dir==='asc'?'↑':'↓'}`} // PORT THIS: footer-indicator patroon
 
 // ── REFERENCE INTERACTION: Column Visibility ── PORT THIS ─────────
 // Contract: verberg kolom met undo-toast + announce, minimaal 1 kolom blijft zichtbaar
+// PORTING NOTE: engine hideColumn(key) schrijft col.visible=false + invalidates header/body/meta; selector: getHiddenColumns()
 function hideColumn(k){if(hiddenColumns.size>=columns.length-1)return;pushHistory(`kolom verborgen`);hiddenColumns.add(k);render();renderPanel();showUndoToast('Kolom verborgen');announce(`Kolom ${columns.find(c=>c.key===k)?.label} verborgen`)}
 
 // ── REFERENCE INTERACTION: Column Move ── PORT THIS ───────────────
 // Contract: verplaats kolom met before/after placement, undo-toast + announce, return boolean succes
+// PORTING NOTE: engine commitColumnMove() muteert columnOrder via _tabCols; geen directe splice op columns array
 function moveColumn(s,t,p){if(!s||!t||s===t)return false;const si=getColumnIndex(s),ti=getColumnIndex(t);if(si<0||ti<0)return false;const c=columns.find(x=>x.key===s);pushHistory(`"${c?.label}" verplaatst`);const[m]=columns.splice(si,1);let ii=getColumnIndex(t);if(p==='after')ii++;columns.splice(ii,0,m);showUndoToast(`"${c?.label}" verplaatst`);announce(`Kolom ${c?.label} verplaatst`);return true} // DEMO ONLY: directe splice — in engine via columnOrder mutatie
 
 // ── REFERENCE INTERACTION: Drag & Drop ── PORT THIS ───────────────
 // Contract: column drag met corridor-indicator, shift-animatie op buren, preview-kaart bij cursor
+// PORTING NOTE: engine biedt beginColumnDrag/updateColumnDrag/commitColumnMove/cancelColumnDrag; drag classes alleen op viewport-zichtbare cellen
 function clearDropClasses(){table.querySelectorAll('th,td').forEach(e=>e.classList.remove('th-drag-source','col-drag-source','shift-left','shift-right'))} // PORT THIS: visuele state cleanup
 function getBoundaryColumns(){if(!dragState.active||!dragState.targetKey||!dragState.placement)return{leftKey:null,rightKey:null};const ti=getColumnIndex(dragState.targetKey);if(ti<0)return{leftKey:null,rightKey:null};return dragState.placement==='before'?{leftKey:columns[ti-1]?.key||null,rightKey:columns[ti]?.key||null}:{leftKey:columns[ti]?.key||null,rightKey:columns[ti+1]?.key||null}} // PORT THIS: boundary-berekening voor shift
 function applyColumnShift(k,d){if(!k||!d)return;const c=d==='left'?'shift-left':'shift-right',i=getColumnIndex(k)+1;if(i<=0)return;table.querySelectorAll(`thead th:nth-child(${i}),tbody td:nth-child(${i})`).forEach(e=>e.classList.add(c))} // PORT THIS: shift-class op buurkolommen
@@ -230,6 +244,7 @@ tableWrap.addEventListener('scroll',()=>{if(dragState.active)syncOverlay()});win
 
 // ── REFERENCE INTERACTION: Focus Management ── PORT THIS ──────────
 // Contract: na kolom-verplaatsing blijft focus op verplaatste kolom, flash-animatie als bevestiging
+// PORTING NOTE: focus return via render adapter; engine renderHeader() behoudt data-col-key voor focus-restore
 let lastFocusedColKey=null;
 table.addEventListener('focusin',e=>{const th=e.target.closest('th[data-col-key]');if(th)lastFocusedColKey=th.dataset.colKey});
 function focusCol(k){if(!k)return;const el=table.querySelector(`th[data-col-key="${k}"]`);if(!el)return;el.focus();el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});lastFocusedColKey=k}
@@ -238,6 +253,7 @@ function resolveColKey(e){let th=e.target.closest('th[data-col-key]');if(th)retu
 
 // ── REFERENCE INTERACTION: Keyboard ── PORT THIS ──────────────────
 // Contract: Shift+←→ verplaatst kolom, Enter/Space sorteert, H verbergt, ←→ navigeert focus
+// PORTING NOTE: keyboard controller roept dezelfde engine-acties aan als muis/panel (moveColumn, toggleSort, hideColumn)
 table.addEventListener('keydown',e=>{
   const key=resolveColKey(e);if(!key)return;
   const idx=getColumnIndex(key),vc=getVisibleColumns(),vi=vc.findIndex(c=>c.key===key);
@@ -251,6 +267,7 @@ table.addEventListener('keydown',e=>{
 
 // ── REFERENCE INTERACTION: Column Panel ── PORT THIS ──────────────
 // Contract: slide-in paneel met zoek, toggle-visibility, drag-reorder, Escape sluit
+// PORTING NOTE: panel-acties schrijven alleen naar columnOrder/hiddenColumns state; engine biedt togglePanel(), getPanelItems(), setColumnOrder()
 let panelSearchTerm='';
 function openPanel(){colPanel.classList.add('open');panelOverlay.classList.add('open');renderPanel();panelSearchInput.focus()}
 function closePanel(){colPanel.classList.remove('open');panelOverlay.classList.remove('open')}
@@ -276,10 +293,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&colPanel.classList.
 
 // ── REFERENCE INTERACTION: Search ── PORT THIS ────────────────────
 // Contract: live-filter op invoer, resultaatteller in toolbar, lege zoekterm = alle rijen
+// PORTING NOTE: engine setSearchTerm(term) invalidates data/sort/group/agg/body/meta; debounced via debouncedRender()
 searchInput.addEventListener('input',()=>{searchTerm=searchInput.value.trim();render()});
 
 // ── REFERENCE INTERACTION: Global Undo Shortcut ── PORT THIS ──────
 // Contract: Ctrl/Cmd+Z triggert undo op documentniveau, ongeacht focus
+// PORTING NOTE: engine undo() via action replay (niet snapshot); canUndo() als guard; keyboard handler op document-niveau
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo()}});
 undoBtn.addEventListener('click',()=>undo());
 undoToastBtn.addEventListener('click',()=>{undo();undoToast.classList.remove('visible')});
@@ -318,16 +337,46 @@ $('shuffleBtn').addEventListener('click',()=>{pushHistory('shuffle');rows=[...ro
 // ── INIT ──────────────────────────────────────────────────────────
 render();
 
-// ── PORTING NOTES ─────────────────────────────────────────────────
-// Bij migratie naar Layer 2 (dashboard.html):
-// - Alle functies gelabeld PORT THIS moeten als UX controller hooks
-//   worden aangesloten op de engine acties (zie LAYER2_PLAN.md WP-G).
-// - Drag & drop: vervang directe DOM mutatie door engine moveColumn actie.
-// - Column panel: schrijf naar engine columnOrder en hiddenColumns.
-// - Undo: vervang snapshot-based undo door engine action replay.
-// - render(): vervang door engine virtual scroll (renderVirtualBody).
-// - formatCell/formatCellPlain: vervang door engine cellRenderers.
-// - Tokens: align met RODS-tokenset (zie WP4).
+// ══════════════════════════════════════════════════════════════
+// PORTING MAP — Layer 1 → Layer 2 (Dashboard Engine)
+// Deze tabel is de input voor Layer 2 WP-G (UX controller hooks)
+// ══════════════════════════════════════════════════════════════
+//
+// ┌──────────────────────────┬──────────────────────────────────────────┬──────────────────────────┐
+// │ Layer 1 element          │ Engine actie (Layer 2)                   │ Engine selector          │
+// ├──────────────────────────┼──────────────────────────────────────────┼──────────────────────────┤
+// │ drag-preview (floating)  │ beginColumnDrag(), updateColumnDrag()    │ getColumnGeometry()      │
+// │ drop-corridor (overlay)  │ updateColumnDrag() → corridor positie   │ getColumnGeometry()      │
+// │ shift-left / shift-right │ updateColumnDrag() → CSS classes        │ getBoundaryColumns()     │
+// │ column drop / commit     │ commitColumnMove(src, target, placement) │ —                        │
+// │ drag cancel              │ cancelColumnDrag()                       │ —                        │
+// │ col-panel open/close     │ togglePanel('columns')                   │ getActivePanel()         │
+// │ panel toggle visibility  │ setHiddenColumns(keys)                   │ getHiddenColumns()       │
+// │ panel reorder            │ setColumnOrder(orderedKeys)              │ getPanelItems()          │
+// │ panel show all / hide    │ setAllColumnsVisible(bool)               │ getVisibleColumns()      │
+// │ keyboard Shift+←→       │ moveColumn(key, direction)               │ getVisibleColumns()      │
+// │ keyboard Enter/Space     │ toggleSort(key)                          │ getSortState()           │
+// │ keyboard H               │ hideColumn(key)                          │ getHiddenColumns()       │
+// │ keyboard ←→ navigeer    │ — (focus management, geen engine-actie)  │ getVisibleColumns()      │
+// │ sort-btn klik            │ toggleSort(key)                          │ getSortState()           │
+// │ hide-col-btn klik        │ hideColumn(key)                          │ getHiddenColumns()       │
+// │ search input             │ setSearchTerm(term)                      │ getFilteredCount()       │
+// │ undo-toast / Ctrl+Z      │ undo()                                   │ canUndo()                │
+// │ srAnnounce               │ announce(message)                        │ —                        │
+// │ sort-indicator (footer)  │ — (render adapter leest sortState)       │ getSortState()           │
+// │ focus return na move     │ — (render adapter behoudt data-col-key)  │ —                        │
+// │ flash animatie           │ — (CSS class via render adapter)          │ —                        │
+// └──────────────────────────┴──────────────────────────────────────────┴──────────────────────────┘
+//
+// Vervangingen bij porting:
+// - render()             → engine renderVirtualBody() + renderHeader()
+// - formatCell()         → engine cellRenderers registry
+// - pushHistory()        → engine action replay (geen snapshot)
+// - columns[].splice()   → engine columnOrder via _tabCols
+// - rows[].sort()        → engine sortData() via _derived.sortedData
+// - hiddenColumns Set    → engine col.visible flag per kolom
+// - searchTerm variabele → engine globalNameFilter + debouncedRender
+// - Tokens               → align met RODS-tokenset (zie LAYER1_PLAN WP4)
 </script>
 </body>
 </html>

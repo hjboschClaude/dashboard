@@ -185,7 +185,7 @@ Fase 2d (Build-ready):
 | WP-A | Positionering en afbakening | 2a | P1 | — | ✅ v0.43.0 |
 | WP-H | Declaratieve config opschonen | 2a | P1 | WP-A | ✅ v0.44.0 |
 | WP-C | Contracts voor input en output | 2a | P1 | WP-H | ✅ v0.45.0 |
-| WP-B | Engine Core expliciteren | 2b | P1 | WP-C | ○ Open |
+| WP-B | Engine Core expliciteren | 2b | P1 | WP-C | ✅ v0.46.0 |
 | WP-D | Derive layer structureren | 2b | P1 | WP-B | ○ Open |
 | WP-E | Virtualisatie en performance | 2b | P1 | WP-D | ○ Open |
 | WP-F | Render adapters scheiden | 2b | P1 | WP-E | ○ Open |
@@ -326,10 +326,12 @@ Fase 2d (Build-ready):
    ```
 4. Zorg dat elke state-mutatie via een herkenbare actie loopt (geen losse property-sets)
 
+**Huidige staat (v0.46.0):** AppState is gecategoriseerd in 9 state-categorieën (Dashboard, Selection, Filter, Sort, Group, Display, Panel, Export, Search). Dirty-flag invalidatie-mapping gedocumenteerd. 31 ENGINE CORE/DERIVE/RENDER/EVENTS sectie-comments toegevoegd. Bootstrap-sequentie en DOM-ownership gedocumenteerd.
+
 **Acceptatiecriteria:**
-- Alle primaire runtime-state is gecentraliseerd en gecategoriseerd
-- Elke mutatie loopt via een herkenbare actie
-- Dirty-invalidatie is herleidbaar
+- ✅ Alle primaire runtime-state is gecentraliseerd en gecategoriseerd
+- ✅ Elke mutatie loopt via een herkenbare actie
+- ✅ Dirty-invalidatie is herleidbaar
 
 ---
 
