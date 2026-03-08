@@ -524,7 +524,7 @@ Fase 2d (Build-ready):
 
 ---
 
-### WP-J — Export standaardiseren
+### WP-J — Export standaardiseren ✅ v0.51.0
 
 **Doel:** Exportmogelijkheden engine-owned maken.
 
@@ -545,12 +545,18 @@ Fase 2d (Build-ready):
 4. Koppel exportrechten aan feature flags uit config
 
 **Acceptatiecriteria:**
-- Exportgedrag is consistent en spec-gedreven
-- Export volgt dezelfde kolom- en filterlogica als de engineweergave
+- ✅ Exportgedrag is consistent en spec-gedreven
+- ✅ Export volgt dezelfde kolom- en filterlogica als de engineweergave
+
+**Huidige staat (v0.51.0):**
+- EXPORT: Contract blok met data-resolutie pipeline, 6 formatters, type-conversie, feature flags
+- 6 EXPORT sectie-comments: CSV, JSON, XLSX, Markdown, HTML, PNG — elk met idempotentie-notitie
+- Alle formatters delen getExportData() contract: cols (zichtbaar) + data (gefilterd+gesorteerd)
+- Feature flags gelinkt: dashboardConfig.tabs[].exports.allow/defaultScope/allowSelectionExport
 
 ---
 
-### WP-K — Accessibility en interaction parity
+### WP-K — Accessibility en interaction parity ✅ v0.51.0
 
 **Doel:** Toegankelijkheid ingebouwd in engineinterfaces.
 
@@ -564,8 +570,15 @@ Fase 2d (Build-ready):
 5. Maak accessibility-contract tussen UX controllers en render layer
 
 **Acceptatiecriteria:**
-- Toegankelijkheid is ingebouwd, niet ad-hoc
-- Elke interactie is bereikbaar via keyboard en gemeld aan screenreaders
+- ✅ Toegankelijkheid is ingebouwd, niet ad-hoc
+- ✅ Elke interactie is bereikbaar via keyboard en gemeld aan screenreaders
+
+**Huidige staat (v0.51.0):**
+- ACCESSIBILITY: Contract blok met 15 rijen: live region, focus mgmt, focus trap, keyboard nav, 8 ARIA-attributen
+- 7 actie-types met screenreader announcements geëxpliciteerd (toast → announce flow)
+- Focus-herstel matrix: closePanel, Escape, modal sluiten
+- Keyboard parity: Enter/Space headers, Ctrl+A, Escape, Tab trap in panels
+- Tests gelinkt: A-A11Y, B-I22, B-I20
 
 ---
 

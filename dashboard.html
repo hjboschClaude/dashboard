@@ -601,7 +601,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.50.0';
+const DASHBOARD_VERSION = '0.51.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -3498,9 +3498,38 @@ function syncAggWidths(){
   }
 }
 
-// ============================================================
-// EXPORT HELPERS
-// ============================================================
+// ══ EXPORT: Contract ═══════════════════════════════════════════
+// Export-architectuur: alle formaten delen hetzelfde data-contract.
+//
+// Data-resolutie (getExportData()):
+//   1. Selection-mode → alleen AppState.selectedRows
+//   2. Cached pipeline → _cachedData + _cachedCols (gefilterd + gesorteerd + zichtbare kolommen)
+//   3. Fallback → getData() + filters + sort (herberekening)
+//
+// Contract: elke formatter ontvangt { cols: Column[], data: Row[] }
+//   cols = alleen zichtbare kolommen (col.visible === true)
+//   data = gefilterd + gesorteerd (respecteert zoek, colFilters, filterRules, sortRules)
+//
+// Formatters:
+//   _formatCSV(ed)      — RFC 4180 CSV, quotes, plainVal() per type
+//   _formatJSON(ed)     — JSON array of objects, raw values, indent=2
+//   _formatMarkdown(ed) — GitHub-style markdown tabel, pipe-escaped
+//   _formatHTML(ed)     — Standalone HTML5 document met inline CSS
+//   _doExportXLSX()     — Excel via SheetJS (lazy-loaded CDN), typed cells
+//   exportPNG()         — Canvas render, max 100 rijen
+//
+// Type-conversie (plainVal):
+//   boolean → 'Ja'/'Nee' | date → dateFmt() | budget → budgetFmt() | rest → String()
+//   XLSX wijkt af: budget/progress/capaciteit → Number (voor formules)
+//
+// Feature flags (dashboardConfig.tabs[].exports):
+//   allow: ['csv','json','xlsx','html','markdown','png']  — beschikbare formaten
+//   defaultScope: 'filtered'                               — respecteert actieve filters
+//   allowSelectionExport: true                              — multi-select export
+//
+// Dispatch: exportAs(formatter, filename, mime, successMsg)
+//   Error handling + toast + closePanel('export')
+// ═══════════════════════════════════════════════════════════════
 function getExportData(){
   // Selectie-export: alleen geselecteerde rijen
   if(AppState._exportMode==='selection'){
@@ -3549,7 +3578,9 @@ function exportAs(formatter,filename,mime,successMsg){
   }
 }
 
-// 11. CSV
+// ══ EXPORT: CSV ════════════════════════════════════════════════
+// Idempotent: ja — zelfde (cols, data) → zelfde output
+// RFC 4180: alle velden in quotes, dubbele quotes ge-escaped
 function _formatCSV(ed){
   var header=ed.cols.map(function(c){return '"'+c.label+'"';}).join(',');
   var rows=ed.data.map(function(r){return ed.cols.map(function(c){return '"'+plainVal(c,r).replace(/"/g,'""')+'"';}).join(',');});
@@ -3557,14 +3588,16 @@ function _formatCSV(ed){
 }
 function exportCSV(){exportAs(_formatCSV,'export.csv','text/csv','CSV geëxporteerd');}
 
-// 12. JSON
+// ══ EXPORT: JSON ═══════════════════════════════════════════════
+// Idempotent: ja — raw values (geen plainVal conversie), key-based
 function _formatJSON(ed){
   var out=ed.data.map(function(r){var o={};ed.cols.forEach(function(c){o[c.key]=r[c.key];});return o;});
   return JSON.stringify(out,null,2);
 }
 function exportJSON(){exportAs(_formatJSON,'export.json','application/json','JSON geëxporteerd');}
 
-// 13. Excel (.xlsx) — apart vanwege lazy-loading
+// ══ EXPORT: XLSX ══════════════════════════════════════════════
+// Lazy-loaded: SheetJS CDN met SRI hash, apart vanwege lazy-loading
 // #51: XLSX lazy loading — library wordt pas geladen bij eerste export
 function _doExportXLSX(){
   try{
@@ -3613,7 +3646,8 @@ function exportXLSX(){
   document.head.appendChild(s);
 }
 
-// 14. Markdown
+// ══ EXPORT: Markdown ══════════════════════════════════════════
+// Idempotent: ja — GitHub-style tabel, pipe-escaped via plainVal()
 function _formatMarkdown(ed){
   var header='| '+ed.cols.map(function(c){return c.label;}).join(' | ')+' |';
   var sep='| '+ed.cols.map(function(){return '---';}).join(' | ')+' |';
@@ -3622,14 +3656,16 @@ function _formatMarkdown(ed){
 }
 function exportMarkdown(){exportAs(_formatMarkdown,'export.md','text/markdown','Markdown geëxporteerd');}
 
-// 15. HTML
+// ══ EXPORT: HTML ══════════════════════════════════════════════
+// Idempotent: ja — standalone HTML5 doc, XSS-safe via escapeHtml()
 function _formatHTML(ed){
   var rows=ed.data.map(function(r){return '<tr>'+ed.cols.map(function(c){return '<td>'+escapeHtml(String(plainVal(c,r)??''))+'</td>';}).join('')+'</tr>';}).join(''); // A.3: plainVal geëscaped
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Export</title><style>body{font-family:sans-serif;padding:20px;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:8px 12px;}th{background:#f5f5f5;font-weight:700;}tr:nth-child(even){background:#fafafa;}</style></head><body><h2>'+escapeHtml(getTabLabel(AppState.currentTab))+'</h2><table><thead><tr>'+ed.cols.map(function(c){return '<th>'+c.label+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></body></html>';
 }
 function exportHTML(){exportAs(_formatHTML,'export.html','text/html','HTML geëxporteerd');}
 
-// 16. PNG — apart vanwege canvas-logica
+// ══ EXPORT: PNG ═══════════════════════════════════════════════
+// Canvas render, max 100 rijen, apart vanwege canvas-logica
 function exportPNG(){
   try{
     var ed=getExportData();
@@ -3751,9 +3787,53 @@ function resetViewState(){
   toast('Weergave gereset');
 }
 
-// ============================================================
-// ACCESSIBILITY — Live region announcer (Sprint 4, taak 4.2)
-// ============================================================
+// ══ ACCESSIBILITY: Contract ════════════════════════════════════
+// Toegankelijkheid is ingebouwd in de engine, niet ad-hoc toegevoegd.
+//
+// ┌─────────────────────────┬──────────────────────────────────────────────────────┐
+// │ Onderdeel               │ Implementatie                                         │
+// ├─────────────────────────┼──────────────────────────────────────────────────────┤
+// │ Live region             │ #live-region (aria-live=polite, aria-atomic=true)     │
+// │ Announcements           │ announce(msg) — toast + actie-feedback               │
+// │ Focus management        │ _panelPrevFocus → restore na closePanel()            │
+// │ Focus trap              │ trapFocusInPanel() — Tab cycling binnen panel         │
+// │ Keyboard navigation     │ Enter/Space op headers, Ctrl+A, Escape              │
+// │ ARIA-sort               │ renderHeader() → aria-sort=ascending/descending/none │
+// │ ARIA-selected           │ Tab buttons → aria-selected=true/false               │
+// │ ARIA-checked            │ Column toggles → aria-checked=true/false             │
+// │ ARIA-label              │ Rijen, knoppen, checkboxen — dynamisch per context    │
+// │ aria-hidden             │ Decoratieve emoji's (toolbar iconen)                 │
+// │ role=columnheader       │ <th> elementen in renderHeader()                     │
+// │ role=row                │ <tr> elementen in rowHtml()                          │
+// │ role=checkbox           │ Header select-all div                                │
+// │ role=tab + tablist      │ Tab-bar navigatie                                    │
+// │ .sr-only                │ Screen-reader-only tekst (visueel verborgen)         │
+// └─────────────────────────┴──────────────────────────────────────────────────────┘
+//
+// Screenreader announcements per actie:
+//   toast(msg) → announce(msg)  — elke toast wordt aangekondigd
+//   Sort toggle    → toast('Gesorteerd op ...')     → announce
+//   Filter apply   → toast('... resultaten')        → announce
+//   Tab switch     → toast('Tab: ...')              → announce
+//   Export         → toast('... geëxporteerd')      → announce
+//   Group          → toast('Gegroepeerd op ...')    → announce
+//   Reset          → toast('Weergave hersteld')     → announce
+//
+// Focus-herstel na acties:
+//   closePanel()   → AppState._panelPrevFocus.focus()
+//   Escape         → closePanel() of deselecteer
+//   Modal sluiten  → focus terug naar trigger-element
+//
+// Keyboard-interactie parity:
+//   Elke muis-interactie is ook bereikbaar via keyboard:
+//   - Sort: Enter/Space op kolom-header
+//   - Select all: Ctrl+A
+//   - Context: Enter op rij (opent modal)
+//   - Paneel sluiten: Escape
+//   - Tab navigatie: Tab/Shift+Tab binnen panels (focus trap)
+//
+// Tests: A-A11Y (announce), B-I22 (live-region), B-I20 (keyboard handler)
+// ═══════════════════════════════════════════════════════════════
 function announce(msg){
   var el=document.getElementById('live-region');
   if(el){el.textContent='';requestAnimationFrame(function(){el.textContent=msg;});}

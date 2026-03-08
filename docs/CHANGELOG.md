@@ -6,6 +6,28 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.51.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Twee werkpakketten uitgevoerd: export standaardiseren en accessibility contract.
+
+**Layer 2 WP-J — Export standaardiseren (dashboard.html):**
+- EXPORT: Contract blok met data-resolutie (selection/cached/fallback), formatter-overzicht, type-conversie, feature flags
+- 6 EXPORT sectie-comments: CSV (RFC 4180), JSON (raw values), XLSX (lazy-loaded, typed cells), Markdown (pipe-escaped), HTML (standalone doc), PNG (canvas)
+- Idempotentie per formatter gedocumenteerd
+- Export respecteert dezelfde kolom- en filterlogica als de engineweergave
+
+**Layer 2 WP-K — Accessibility en interaction parity (dashboard.html):**
+- ACCESSIBILITY: Contract blok met 15-rij overzicht: live region, focus management, focus trap, keyboard nav, ARIA-attributen per element
+- Screenreader announcements per actie geëxpliciteerd: 7 actie-types die toast → announce triggeren
+- Focus-herstel matrix: closePanel, Escape, modal sluiten
+- Keyboard-interactie parity: elke muis-interactie bereikbaar via keyboard
+- Tests gelinkt: A-A11Y, B-I22, B-I20
+
+---
+
 ## v0.50.0 — 2026-03-08
 
 **Type:** Architectuur
