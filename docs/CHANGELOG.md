@@ -6,6 +6,29 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.53.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P2 gestart: design tokens aligned met RODS en accessibility reference verdiept.
+
+**Layer 1 WP4 — Design tokens isoleren en alignen (ux-reference.html):**
+- Token-mapping documentatie: 28 tokens gecategoriseerd als Gedeeld of L1-only
+- 7 tokens hernoemd naar RODS-naamgeving: --muted→--text-muted, --danger→--color-danger, --warning→--color-warning, --success→--color-success, --danger-light→--color-danger-light, --warning-light→--color-warning-light, --row-h→--row-height
+- Gedeelde tokenwaarden aligned met RODS: --bg, --surface, --border, --accent, --text, --shadow-md
+- :root herformateerd van single-line naar leesbare multi-line met gedeeld/L1-only secties
+- Alle CSS var()-verwijzingen bijgewerkt naar nieuwe tokennamen
+
+**Layer 1 WP8 — Accessibility reference verdiepen (ux-reference.html):**
+- ACCESSIBILITY sectie-comment uitgebreid: normatieve ARIA-rollen, keyboard-contract (8 toetsen), focus management contract
+- aria-sort="ascending/descending/none" toegevoegd op thead th (dynamisch per sorteerstate)
+- Focus return bij panel sluiten: _panelTrigger opgeslagen bij openPanel(), hersteld bij closePanel()
+- Focus trap in kolommenpaneel: Tab/Shift+Tab cycled binnen panel wanneer open
+- Keyboard-contract volledig gedocumenteerd: ←→, Shift+←→, Enter/Space, H, Escape, Ctrl+Z, Tab
+
+---
+
 ## v0.52.0 — 2026-03-08
 
 **Type:** Architectuur

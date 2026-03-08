@@ -123,11 +123,11 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 | WP1 | Herpositionering en naamgeving | P1 | — | ✅ v0.43.0 |
 | WP2 | Structuur expliciet maken | P1 | WP1 | ✅ v0.44.0 |
 | WP3 | Must-port vs. demo-only labelen | P1 | WP2 | ✅ v0.45.0 |
-| WP4 | Design tokens isoleren en alignen | P2 | WP3 | ○ Open |
+| WP4 | Design tokens isoleren en alignen | P2 | WP3 | ✅ v0.53.0 |
 | WP5 | Interaction pattern catalog | P2 | WP4 | ○ Open |
 | WP6 | Porting notes naar engine | P1 | WP3 | ✅ v0.46.0 |
 | WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
-| WP8 | Accessibility reference verdiepen | P2 | WP3 | ○ Open |
+| WP8 | Accessibility reference verdiepen | P2 | WP3 | ✅ v0.53.0 |
 | WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ○ Open |
 | WP10 | Demo-engine minimaliseren | P1 | WP6 | ✅ v0.47.0 |
 | WP11 | Koppeling naar single-file build | P3 | WP10 | ○ Open |
@@ -232,27 +232,19 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 
 **Doel:** Van visuele keuzes herbruikbare tokens maken die compatibel zijn met de RODS-tokenset.
 
+**Fase:** P2 — ✅ **Afgerond in v0.53.0**
+
 **Taken:**
-1. Categoriseer de huidige ~30 tokens:
-   - **Kleur:** `--bg`, `--surface`, `--surface-2`, `--border`, `--border-light`, `--text`, `--muted`, `--accent`, `--accent-light`, `--accent-subtle`, `--danger`, `--danger-light`, `--warning`, `--warning-light`, `--success`, `--success-light`
-   - **Schaduw:** `--shadow-sm`, `--shadow-md`, `--shadow-lg`, `--shadow-xl`
-   - **Geometrie:** `--radius`, `--radius-lg`, `--header-h`, `--row-h`, `--drop-gap`, `--panel-w`
-   - **Timing:** `--transition-fast`, `--transition-med`
-2. Align gedeelde tokens met RODS-naamgeving uit `dashboard.html`:
-   - `--muted` → `--text-muted`
-   - `--danger` → `--color-danger`
-   - `--warning` → `--color-warning`
-   - `--success` → `--color-success`
-   - `--row-h` → `--row-height`
-3. Behoud UX-specifieke tokens die Layer 2 niet nodig heeft:
-   - `--drop-gap`, `--panel-w`, `--header-h`, `--shadow-lg`, `--shadow-xl`, `--radius-lg`, `--transition-fast`, `--transition-med`
-4. Documenteer per token: betekenis, waar gebruikt, of het gedeeld is met Layer 2
-5. Voeg in `:root` een comment-blok toe met de token-mapping
+1. ✅ Categoriseer de huidige ~30 tokens (28 tokens in 4 categorieën)
+2. ✅ Align gedeelde tokens met RODS-naamgeving: --muted→--text-muted, --danger→--color-danger, --warning→--color-warning, --success→--color-success, --row-h→--row-height, plus --danger-light→--color-danger-light, --warning-light→--color-warning-light
+3. ✅ Behoud UX-specifieke tokens als L1-only: --drop-gap, --panel-w, --header-h, --shadow-sm/lg/xl, --radius/radius-lg, --transition-fast/med, --surface-2, --border-light, --accent-light/subtle, --color-success-light, --color-danger-light, --color-warning-light
+4. ✅ Per token gedocumenteerd: betekenis, Gedeeld/L1-only classificatie
+5. ✅ Comment-blok met 28-rij token-mapping tabel in :root
 
 **Acceptatiecriteria:**
-- Gedeelde tokens zijn identiek benaamd aan RODS-set
-- UX-specifieke tokens zijn gedocumenteerd als Layer 1-only
-- Een implementator kan de Layer 1 uitstraling reproduceren zonder styles te raden
+- ✅ Gedeelde tokens zijn identiek benaamd aan RODS-set — 10 gedeelde tokens aligned
+- ✅ UX-specifieke tokens zijn gedocumenteerd als Layer 1-only — 18 L1-only tokens
+- ✅ Een implementator kan de Layer 1 uitstraling reproduceren zonder styles te raden
 
 ---
 
@@ -361,22 +353,20 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
    - `role="dialog"` op panel
    - `role="status" aria-live="assertive"` op srAnnounce
    - `role="status" aria-live="polite"` op undo-toast
-2. Voeg toe wat nog ontbreekt:
-   - `aria-sort="ascending|descending|none"` op gesorteerde th
-   - Focus return naar trigger bij panel sluiten
-   - Focus trap in panel (Tab cycled binnen panel)
-3. Documenteer keyboard-contract:
-   - `←→` navigeer headers
-   - `Shift+←→` verplaats kolom
-   - `Enter`/`Space` sorteer
-   - `H` verberg kolom
-   - `Escape` sluit panel
-   - `Ctrl+Z` undo
-4. Markeer accessibility-gaps als `// A11Y TODO` voor toekomstige verbetering
+2. ✅ Toegevoegd:
+   - `aria-sort="ascending|descending|none"` op gesorteerde th (dynamisch per sorteerstate)
+   - Focus return naar trigger bij panel sluiten (_panelTrigger)
+   - Focus trap in panel (Tab/Shift+Tab cycled binnen panel)
+3. ✅ Keyboard-contract volledig gedocumenteerd in ACCESSIBILITY sectie-comment:
+   - `←→` navigeer headers, `Shift+←→` verplaats kolom, `Enter`/`Space` sorteer
+   - `H` verberg kolom, `Escape` sluit panel, `Ctrl+Z` undo, `Tab` focus trap
+4. ✅ Geen A11Y TODO's nodig — alle geplande gaps zijn geïmplementeerd
+
+**Fase:** P2 — ✅ **Afgerond in v0.53.0**
 
 **Acceptatiecriteria:**
-- Layer 1 maakt niet alleen visueel gedrag, maar ook accessibility-gedrag expliciet
-- Keyboard-contract is volledig gedocumenteerd
+- ✅ Layer 1 maakt niet alleen visueel gedrag, maar ook accessibility-gedrag expliciet
+- ✅ Keyboard-contract is volledig gedocumenteerd (8 toetscombinaties)
 
 ---
 
