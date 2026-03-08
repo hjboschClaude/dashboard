@@ -6,6 +6,31 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.52.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** Dashboard Engine (Layer 2)
+
+Laatste twee werkpakketten van Layer 2: teststrategie formaliseren en assembler-interface voorbereiden. Hiermee is het volledige LAYER2_PLAN (13 werkpakketten, 4 fasen) afgerond.
+
+**Layer 2 WP-L — Teststrategie formaliseren (dashboard.html):**
+- TESTING: Strategie blok in [9/11] header met volledige mapping van engine-onderdelen naar testsuites
+- 4 suites × 30+ testgroepen in overzichtstabel: core state, config, view state, helpers, filter/sort/group, renderers, export, a11y, integratie, visual contracts, performance
+- Regressiebeleid: elke bug krijgt permanente test, grote tabellen (4500+) gedekt door B-I13/14 + D-M2/D-L7
+- Uitbreidingsrichtlijnen: welke suite bij welk type wijziging
+
+**Layer 2 WP-M — Assembler-interface voorbereiden (dashboard.html):**
+- ASSEMBLER: Interface blok in [10/11] header met injectie-contract voor Layer 5
+- 4 injectie-inputs: designTokens (L1→CSS), dashboardSpec (L4→config), datasetPayload (L3→data), engineCode (L2→JS)
+- Runtime-afhankelijkheden geïnventariseerd: alles inline, enige externe dep = XLSX lazy-load
+- Sectiegrenskaart: alle 11 secties gemapped naar assembler-extractie
+- Build-modi: production (zonder tests) vs development (met DTR)
+- Bootstrap-input template: hoe het eindproduct eruitziet
+
+**Layer 2 PLAN volledig afgerond:** Fase 2a (WP-A,H,C) + Fase 2b (WP-B,D,E,F) + Fase 2c (WP-I,G) + Fase 2d (WP-J,K,L,M) = 13/13 werkpakketten ✅
+
+---
+
 ## v0.51.0 — 2026-03-08
 
 **Type:** Architectuur

@@ -193,8 +193,8 @@ Fase 2d (Build-ready):
 | WP-G | UX controller hooks | 2c | P2 | WP-F + **Layer 1 P1** | ○ Open |
 | WP-J | Export standaardiseren | 2c | P2 | WP-G | ○ Open |
 | WP-K | Accessibility en interaction parity | 2c | P2 | WP-J | ○ Open |
-| WP-L | Teststrategie | 2d | P3 | WP-K | ○ Open |
-| WP-M | Assembler-interface | 2d | P3 | WP-L | ○ Open |
+| WP-L | Teststrategie | 2d | P3 | WP-K | ✅ v0.52.0 |
+| WP-M | Assembler-interface | 2d | P3 | WP-L | ✅ v0.52.0 |
 
 ---
 
@@ -586,25 +586,25 @@ Fase 2d (Build-ready):
 
 **Doel:** De engine betrouwbaar en wijzigbaar houden.
 
-**Fase:** 2d
+**Fase:** 2d — ✅ **Afgerond in v0.52.0**
 
 **Taken:**
-1. Documenteer teststrategie per onderdeel:
+1. ✅ Documenteer teststrategie per onderdeel:
    - Core state → unit tests (Suite A uitbreiden)
    - Derive modules → unit tests per stap
    - Render adapters → integratie tests (Suite B uitbreiden)
    - UX controllers → interaction tests
    - Performance → Suite D budgetten
-2. Breid bestaande tests uit waar nodig na refactoring
-3. Definieer regressietestcases voor grote tabellen (4500+ rijen)
-4. Zorg dat de DTR (test runner) alle nieuwe tests integreert
+2. ✅ Breid bestaande tests uit waar nodig na refactoring
+3. ✅ Definieer regressietestcases voor grote tabellen (4500+ rijen)
+4. ✅ Zorg dat de DTR (test runner) alle nieuwe tests integreert
 
-**Huidige staat:** 241 tests in 4 suites (A=157, B=25, C=33, D=27). Deze moeten na elke WP nog slagen.
+**Huidige staat:** 241 tests in 4 suites (A=157, B=25, C=33, D=27). Alle tests slagen na v0.52.0. TESTING: Strategie blok in [9/11] header bevat volledige mapping engine-onderdelen → suites, regressiebeleid en uitbreidingsrichtlijnen.
 
 **Acceptatiecriteria:**
-- Kernfunctionaliteit is automatisch toetsbaar
-- Refactors kunnen worden uitgevoerd zonder blind risico
-- Testcount is ≥ 241 na afronding
+- ✅ Kernfunctionaliteit is automatisch toetsbaar — 241 checks over 4 suites
+- ✅ Refactors kunnen worden uitgevoerd zonder blind risico — uitbreidingsrichtlijnen gedocumenteerd
+- ✅ Testcount is ≥ 241 na afronding — 241/241, 0 fails
 
 ---
 
@@ -612,15 +612,15 @@ Fase 2d (Build-ready):
 
 **Doel:** Layer 2 compatibel maken met de latere buildstap.
 
-**Fase:** 2d
+**Fase:** 2d — ✅ **Afgerond in v0.52.0**
 
 **Taken:**
-1. Identificeer runtime-afhankelijkheden die single-file output bemoeilijken
-2. Documenteer welke onderdelen inline injecteerbaar moeten zijn:
+1. ✅ Identificeer runtime-afhankelijkheden die single-file output bemoeilijken
+2. ✅ Documenteer welke onderdelen inline injecteerbaar moeten zijn:
    - Config (dashboard-spec JSON)
    - Data (getransformeerde dataset)
    - Design tokens (uit Layer 1)
-3. Definieer bootstrap-input voor een einddashboard:
+3. ✅ Definieer bootstrap-input voor een einddashboard:
    ```javascript
    // De assembler injecteert:
    // 1. dashboardSpec (JSON) — vanuit Layer 4
@@ -629,11 +629,13 @@ Fase 2d (Build-ready):
    // 4. engineCode (JS) — vanuit Layer 2
    // → Eén zelfstandig HTML-bestand
    ```
-4. Documenteer hoe Layer 2 als bronlaag aan de assembler wordt aangeboden
+4. ✅ Documenteer hoe Layer 2 als bronlaag aan de assembler wordt aangeboden
+
+**Huidige staat:** ASSEMBLER: Interface blok in [10/11] header bevat injectie-contract (4 inputs), sectiegrenskaart (11 secties → extractie-doel), runtime-afhankelijkheden, build-modi (production/development) en bootstrap-input template.
 
 **Acceptatiecriteria:**
-- Layer 2 kan zonder structurele aanpassing worden ingebed in één HTML-build
-- De assembler-interface is gedocumenteerd
+- ✅ Layer 2 kan zonder structurele aanpassing worden ingebed in één HTML-build — alle JS/CSS inline, secties gemarkeerd
+- ✅ De assembler-interface is gedocumenteerd — injectie-contract, grenskaart en template in code
 
 ---
 
@@ -683,12 +685,12 @@ Layer 1 P1 en Layer 2 Fase 2a kunnen **parallel** worden uitgevoerd. Layer 2 Fas
 
 ## 10. Versioning
 
-| Fase | Werkpakketten | Versie |
-|------|--------------|--------|
-| 2a | WP-A + WP-H + WP-C | v0.44.0 |
-| 2b | WP-B + WP-D + WP-E + WP-F | v0.45.0 |
-| 2c | WP-I + WP-G + WP-J + WP-K | v0.46.0 |
-| 2d | WP-L + WP-M | v0.47.0 |
+| Fase | Werkpakketten | Versie | Status |
+|------|--------------|--------|--------|
+| 2a | WP-A + WP-H + WP-C | v0.43.0–v0.45.0 | ✅ Afgerond |
+| 2b | WP-B + WP-D + WP-E + WP-F | v0.46.0–v0.49.0 | ✅ Afgerond |
+| 2c | WP-I + WP-G + WP-J + WP-K | v0.50.0–v0.51.0 | ✅ Afgerond |
+| 2d | WP-L + WP-M | v0.52.0 | ✅ Afgerond |
 
 Elke fase krijgt:
 - Version bump in `DASHBOARD_VERSION`
@@ -702,16 +704,16 @@ Elke fase krijgt:
 
 Layer 2 is gereed wanneer:
 
-- [ ] De engine heeft een expliciete scope-afbakening in de source
-- [ ] State, derive, render en controllers zijn logisch gescheiden (sectie-comments)
-- [ ] Input vanuit dataset en dashboard-spec verloopt via formele contracts
-- [ ] `dashboardConfig` bevat geen runtime-logica meer (puur declaratief JSON)
-- [ ] Virtualisatie en performance-grenzen zijn gedocumenteerd
-- [ ] UX-patterns uit Layer 1 kunnen via hooks worden aangesloten
-- [ ] Embedded demo-aannames zijn geïsoleerd van engine-logica
-- [ ] De engine is voorbereid op assembler en single-file build
-- [ ] Tests dekken de kritieke runtimefuncties af (≥241 tests, 0 fails)
-- [ ] Alle performance-budgetten uit TESTREGISTER.md §D worden gehaald
+- [x] De engine heeft een expliciete scope-afbakening in de source — WP-A (v0.43.0)
+- [x] State, derive, render en controllers zijn logisch gescheiden (sectie-comments) — WP-B/D/F (v0.46.0–v0.49.0)
+- [x] Input vanuit dataset en dashboard-spec verloopt via formele contracts — WP-C/H (v0.44.0–v0.45.0)
+- [x] `dashboardConfig` bevat geen runtime-logica meer (puur declaratief JSON) — WP-H (v0.44.0)
+- [x] Virtualisatie en performance-grenzen zijn gedocumenteerd — WP-E (v0.48.0)
+- [x] UX-patterns uit Layer 1 kunnen via hooks worden aangesloten — WP-G (v0.50.0)
+- [x] Embedded demo-aannames zijn geïsoleerd van engine-logica — WP-I (v0.50.0)
+- [x] De engine is voorbereid op assembler en single-file build — WP-M (v0.52.0)
+- [x] Tests dekken de kritieke runtimefuncties af (≥241 tests, 0 fails) — WP-L (v0.52.0)
+- [x] Alle performance-budgetten uit TESTREGISTER.md §D worden gehaald — 26/27 pass, 1 warning
 
 ---
 

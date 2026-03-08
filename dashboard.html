@@ -601,7 +601,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.51.0';
+const DASHBOARD_VERSION = '0.52.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -3842,6 +3842,70 @@ function announce(msg){
 // ████████████████████████████████████████████████████████████████
 // [9/11] TOOLING & TESTS
 // Inline test suite, accessibility helpers, perf overlay
+//
+// ══ TESTING: Strategie per engine-onderdeel ═══════════════════
+//
+// Testarchitectuur: 4 suites, 241 checks, 0 skips
+//
+// ┌─────────────────────────┬─────────┬────────────────────────────────────────────────┐
+// │ Engine-onderdeel        │ Suite   │ Wat wordt getest                               │
+// ├─────────────────────────┼─────────┼────────────────────────────────────────────────┤
+// │ Core state (AppState)   │ A-STATE │ Accessors, dirty flags, reset, clearCaches     │
+// │ Config model            │ A-CONFIG│ Tabs, kolommen, getters, _tabData/_tabCols     │
+// │ View state (per-tab)    │ A-VIEW  │ filterRules, sortRules, selection, round-trip  │
+// │ Escape/format helpers   │ A-ESC   │ escapeHtml, escapeAttr, XSS-preventie         │
+// │                         │ A-FMT   │ dateFmt, budgetFmt, plainVal                  │
+// │ Filter engine           │ A-MATCH │ matchRule: 9 operators (contains..not_empty)   │
+// │                         │ A-FILTER│ computeFilteredData end-to-end                │
+// │ Sort engine             │ A-SORT  │ sortData asc/desc/leeg                        │
+// │ Group engine            │ A-GROUP │ groupData, countLeafRows                      │
+// │ Conditional styling     │ A-COND  │ condClass: prioriteit, status, progress       │
+// │ Cell renderers          │ A-RENDER│ 15 renderer-types + kolom-schema validatie    │
+// │ Export formatters       │ A-EXPORT│ CSV, JSON, Markdown, HTML output              │
+// │ Accessibility           │ A-A11Y  │ Live-region element aanwezig                  │
+// │ Regressies              │ A-REGR  │ clickSort, toggleFreeze (BUG-016/017)         │
+// ├─────────────────────────┼─────────┼────────────────────────────────────────────────┤
+// │ Tab switching           │ B-I1/I2 │ activeTabId wisselt, state-isolatie            │
+// │ Filter integratie       │ B-I3–I5 │ Toepassen, verwijderen, AND/OR combinatie     │
+// │ Sort integratie         │ B-I6–I8 │ Asc, multi-sort, BUG-016 regressie            │
+// │ Grouping integratie     │ B-I9/I10│ Groepen vormen, inklappen                     │
+// │ Selectie integratie     │ B-I11/12│ Rij selecteren, persistent na filter          │
+// │ Virtualisatie           │ B-I13–16│ Data laden, DOM-rijen < data, scroll hoogte   │
+// │ Panels & context        │ B-I17/18│ Context menu, filter panel DOM aanwezig       │
+// │ Keyboard & a11y         │ B-I19–24│ closePanel, keydown, ARIA, console errors     │
+// ├─────────────────────────┼─────────┼────────────────────────────────────────────────┤
+// │ Design tokens           │ VC-1    │ 19 verplichte tokens, aliassen, waarden       │
+// │ Typografie              │ VC-2    │ Font-sizes, weights, body 14px, ≤6 uniek      │
+// │ Kleur                   │ VC-3    │ Verboden hex, accentkleuren, --row-hover      │
+// │ Borders                 │ VC-4    │ Geen verticale celgrenzen, radius ≥4px        │
+// │ Spacing                 │ VC-5    │ Rijhoogte 32px, toolbar 40px, 4px-grid        │
+// │ Schaduwen & animaties   │ VC-6    │ Geen slideOut, geen trage transitions         │
+// │ Iconen & regressie      │ VC-7    │ Monochroom avatars, th uppercase              │
+// ├─────────────────────────┼─────────┼────────────────────────────────────────────────┤
+// │ Laadtijd                │ D-P     │ first-paint <500ms, total-init <600ms         │
+// │ CSS metrics             │ D-C     │ Regelcount, grootte, token count ≤42          │
+// │ DOM & geheugen          │ D-M     │ Virtualisatie actief, heap <30MB, cache-groei │
+// │ Interactie-latency      │ D-L     │ 7 paden: filter→render <200ms (FAIL)         │
+// │ Stabiliteit             │ D-S     │ LongTasks=0, scroll FPS ≥45, 0 console errors│
+// └─────────────────────────┴─────────┴────────────────────────────────────────────────┘
+//
+// Regressiebeleid:
+//   Elke opgeloste bug krijgt een permanente regressietest (zie CLAUDE.md §Kwaliteit)
+//   Grote tabellen: 4500+ rijen → B-I13 (data laden), B-I14 (virtual scroll),
+//                   D-M2 (<200 DOM-rijen), D-L7 (full render <200ms)
+//
+// Uitbreidingsrichtlijnen:
+//   Core/derive wijziging  → voeg unit test toe in runTests() (Suite A)
+//   Render adapter wijziging → voeg integratie test toe in TESTS_INTEG (Suite B)
+//   UX controller wijziging  → voeg interaction test toe in TESTS_INTEG (Suite B)
+//   Visuele wijziging        → voeg visual contract toe in TESTS_VISUAL (Suite C)
+//   Performance-gevoelig     → voeg budget toe in TESTS_PERF (Suite D)
+//
+// Testrunner: DTR (Design Test Runner) — [11/11]
+//   Activatie: Alt+Shift+T of Test-knop (wanneer _perfDebug === true)
+//   Output: scorecard + per-suite detail + Markdown-export
+//   Integratie: runTests() (Suite A) + SUITE_MAP { visual, integ, perf }
+// ═══════════════════════════════════════════════════════════════
 // ████████████████████████████████████████████████████████████████
 
 // ============================================================
@@ -4253,6 +4317,75 @@ function runTests(){
 //   7. render() — eerste volledige render
 //   8. initGlobalNameFilter() — zoekbalk initialiseren
 //   9. _startFpsMonitor() — performance monitoring
+//
+// ══ ASSEMBLER: Interface naar Layer 5 ════════════════════════
+//
+// De assembler (Layer 5) combineert vier bronlagen tot één HTML-bestand.
+// Dit is het injectie-contract — wat de assembler levert en waar het landt:
+//
+// ┌─────────────────────┬──────────────────────────────────────────────────────┐
+// │ Injectie            │ Bron → Doelpositie in single-file HTML              │
+// ├─────────────────────┼──────────────────────────────────────────────────────┤
+// │ 1. designTokens     │ Layer 1 (UX Reference) → :root {} in [1/11]        │
+// │    (CSS custom      │ 42 tokens: 15 semantic + 27 palette                │
+// │     properties)     │ Vervangbaar zonder engine-wijziging                 │
+// │                     │                                                      │
+// │ 2. dashboardSpec    │ Layer 4 (AI-gegenereerd) → dashboardConfig in [4/11]│
+// │    (JSON)           │ tabs[], columns[], features, domain, tagColors      │
+// │                     │ Vervangt huidige hardcoded dashboardConfig          │
+// │                     │                                                      │
+// │ 3. datasetPayload   │ Layer 3 (CSV-adapter) → vervangt _dataGenerators   │
+// │    (JSON)           │ Array van records per tab, schema-validated         │
+// │                     │ type: 'dataset' i.p.v. 'embedded' in dataSource    │
+// │                     │                                                      │
+// │ 4. engineCode       │ Layer 2 (dit bestand) → [4/11] t/m [10/11]        │
+// │    (JS)             │ AppState, pipeline, renderers, controllers, init    │
+// │                     │ Component CSS uit [2/11] + HTML shell uit [3/11]   │
+// └─────────────────────┴──────────────────────────────────────────────────────┘
+//
+// Runtime-afhankelijkheden voor single-file output:
+//   ✔ Alle JS inline (geen module imports) — reeds het geval
+//   ✔ Alle CSS inline (geen externe stylesheets) — reeds het geval
+//   ✔ Geen externe afbeeldingen (avatars zijn emoji/initialen)
+//   ✔ Enige externe dep: cdnjs.cloudflare.com/xlsx (lazy-loaded bij export)
+//   ⚠ CSP meta-tag moet meebewegen met inline-strategie (regel 35)
+//
+// Sectiegrenskaart voor extractie:
+//   [1/11]  Design Tokens      → designTokens (CSS)
+//   [2/11]  Component CSS      → engineCode (CSS-deel)
+//   [3/11]  Document Shell     → engineCode (HTML-template)
+//   [4/11]  Config & Data      → dashboardSpec + datasetPayload
+//   [5/11]  App State          → engineCode (JS-deel)
+//   [6/11]  Helpers & Pipeline → engineCode (JS-deel)
+//   [7/11]  Renderers          → engineCode (JS-deel)
+//   [8/11]  Controllers        → engineCode (JS-deel)
+//   [9/11]  Tooling & Tests    → optioneel (alleen dev-builds)
+//   [10/11] Init / Bootstrap   → engineCode (JS-deel)
+//   [11/11] Test Runner (DTR)  → optioneel (alleen dev-builds)
+//
+// Build-modi:
+//   production  → [1/11] t/m [8/11] + [10/11] (geen tests)
+//   development → [1/11] t/m [11/11] (met DTR)
+//
+// Bootstrap-input (wat de assembler genereert):
+//   ```
+//   <!DOCTYPE html>
+//   <html lang="nl">
+//   <head>
+//     <style>:root { /* designTokens */ }</style>
+//     <style>/* component CSS */</style>
+//   </head>
+//   <body>
+//     <!-- document shell -->
+//     <script>
+//       const dashboardSpec = { /* Layer 4 output */ };
+//       const datasetPayload = { /* Layer 3 output */ };
+//       /* engineCode */
+//     </script>
+//   </body>
+//   </html>
+//   ```
+// ═══════════════════════════════════════════════════════════════
 // ████████████████████████████████████████████████████████████████
 
 // ============================================================
