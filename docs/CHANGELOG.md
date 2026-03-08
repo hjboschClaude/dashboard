@@ -6,6 +6,34 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.55.0 — 2026-03-08
+
+**Type:** Architectuur
+**Domein:** UX Reference (Layer 1)
+
+Layer 1 P3 afgerond: taal generieker, assembler-koppeling, review en validatie. **LAYER1_PLAN volledig afgerond (12/12 WPs).**
+
+**Layer 1 WP7 — Taal en inhoud generieker maken (ux-reference.html):**
+- DEMO DATA comment uitgebreid: "Illustratief, niet normatief — data dient alleen om UX-patronen te demonstreren"
+- Kolomtype-dekking bevestigd (tekst, status-chip, numeriek, voortgangsbalk, datum)
+- Toevoeging: "Data-inhoud is voorbeeldmatig; elk CSV-dashboard krijgt eigen data"
+
+**Layer 1 WP11 — Koppeling naar single-file build (ux-reference.html):**
+- ASSEMBLER BUILD NOTES commentblok: 16 componenten die assembler overneemt
+- "NIET naar builds" tabel: 7 demo-only onderdelen expliciet uitgesloten
+- 7-stappen consumptieproces beschreven (lezen → extraheren → samenvoegen)
+- Kruisverwijzing naar dashboard.html [10/11] ASSEMBLER: Interface
+
+**Layer 1 WP12 — Review en validatie:**
+- 7/7 review-vragen beantwoord met JA
+- Token-tabel header verduidelijkt: "Gedeeld = identiek aan Layer 2 (RODS)"
+- Geen blokkerende bevindingen; Layer 1 geschikt als UX Reference
+- Definition of Done: 10/10 criteria voldaan
+
+**Status LAYER1_PLAN:** ✅ Compleet (12/12 WPs, v0.43.0–v0.55.0)
+
+---
+
 ## v0.54.0 — 2026-03-08
 
 **Type:** Architectuur

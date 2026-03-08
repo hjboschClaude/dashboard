@@ -33,6 +33,7 @@
   <style>
     /* ══ DESIGN TOKENS ══
      * Token-alignment met RODS (Rotterdam Design System) — zie dashboard.html :root
+     * Gedeeld = identiek aan Layer 2 (RODS); L1-only = UX Reference specifiek
      *
      * ┌─────────────────────┬───────────────┬─────────────────────────────────────┐
      * │ Token               │ Gedeeld/L1    │ Toelichting                         │
@@ -265,7 +266,11 @@
   <div id="srAnnounce" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></div>
 <script>
 // ── DEMO DATA (DEMO ONLY) ─────────────────────────────────────────
-// Hardcoded voorbeeld-data; in productie komt data via Layer 3 CSV-adapter
+// Illustratief, niet normatief — deze data dient alleen om de UX-patronen
+// werkend te demonstreren. In productie komt data via Layer 3 CSV-adapter.
+// De kolomtypes (tekst, status-chip, numeriek, voortgangsbalk, datum)
+// dekken de belangrijkste celrenderer-varianten af.
+// Data-inhoud is voorbeeldmatig; elk CSV-dashboard krijgt eigen data.
 const defaultColumns=[{key:'project',label:'Project',width:190},{key:'status',label:'Status',width:130},{key:'owner',label:'Eigenaar',width:160},{key:'budget',label:'Budget',width:140,align:'right'},{key:'progress',label:'Voortgang',width:150},{key:'updated',label:'Bijgewerkt',width:170}];
 const defaultRows=[
   {project:'Warmtenet Noord',status:'Op schema',owner:'A. de Boer',budget:4200000,progress:73,updated:'2026-03-08 09:12'},
@@ -653,6 +658,61 @@ render();
 // - hiddenColumns Set    → engine col.visible flag per kolom
 // - searchTerm variabele → engine globalNameFilter + debouncedRender
 // - Tokens               → align met RODS-tokenset (zie LAYER1_PLAN WP4)
+//
+// ══════════════════════════════════════════════════════════════
+// ASSEMBLER BUILD NOTES — Layer 1 als bronlaag voor Layer 5
+// Hoe de assembler (Layer 5) dit bestand consumeert
+// ══════════════════════════════════════════════════════════════
+//
+// De assembler bouwt single-file HTML-dashboards door componenten uit
+// Layer 1 (UX), Layer 2 (Engine), Layer 3 (Data) en Layer 4 (Spec)
+// samen te voegen. Dit bestand levert de volgende componenten:
+//
+// ┌─────────────────────────────┬──────────────┬─────────────────────────────────────────┐
+// │ Component                   │ Sectie       │ Wat de assembler overneemt              │
+// ├─────────────────────────────┼──────────────┼─────────────────────────────────────────┤
+// │ Design tokens               │ :root {}     │ Gedeelde tokens (--bg, --surface, etc.) │
+// │                             │              │ L1-only tokens als UX-defaults          │
+// │ Toolbar CSS                 │ TOOLBAR      │ Layout, search-box, separator styling   │
+// │ Undo-toast CSS              │ UNDO-TOAST   │ Fixed-bottom toast, animatie, knop      │
+// │ Hintbar CSS                 │ HINTBAR      │ Keyboard hints, kbd styling             │
+// │ Table & header CSS          │ TABLE/HEADER │ Sticky thead, drag-handle, sort-btn     │
+// │ Drag & drop CSS             │ DRAG & DROP  │ Source-opacity, shift-animaties, flash  │
+// │ Overlay CSS                 │ OVERLAY      │ Drop corridor, overlay container        │
+// │ Drag preview CSS            │ DRAG PREVIEW │ Floating column card                    │
+// │ Column panel CSS            │ COL PANEL    │ Slide-in panel, toggle, drag-reorder    │
+// │ Accessibility CSS           │ ACCESSIBILITY│ Reduced-motion, focus-visible, sr-only  │
+// │ Responsive CSS              │ RESPONSIVE   │ Breakpoints, mobiel layout              │
+// │ Hintbar HTML                │ <body>       │ Keyboard hints structuur                │
+// │ Panel HTML                  │ <body>       │ Panel container, search, toggle lijst   │
+// │ Toast HTML                  │ <body>       │ Undo-toast container                    │
+// │ Preview HTML                │ <body>       │ Drag preview container                  │
+// │ SR announce HTML            │ <body>       │ aria-live region                        │
+// │ Keyboard contracts (JS)     │ INTERACTION  │ Toetscombinaties als specificatie       │
+// │ Accessibility contracts (JS)│ INTERACTION  │ ARIA-attributen, focus management       │
+// └─────────────────────────────┴──────────────┴─────────────────────────────────────────┘
+//
+// NIET naar builds (assembler negeert deze):
+// ┌─────────────────────────────┬──────────────────────────────────────────────────────────┐
+// │ Demo data                   │ defaultColumns[], defaultRows[] — vervangen door L3 data │
+// │ Demo state                  │ columns, rows, sortState, history[] — via Engine AppState │
+// │ Demo history                │ pushHistory(), undo() snapshot — via Engine action replay │
+// │ Demo actions                │ shuffle, reset — geen equivalent in productie             │
+// │ Demo render                 │ render(), formatCell() — via Engine renderVirtualBody()   │
+// │ Demo tools UI               │ <details class="demo-tools"> — niet in productie         │
+// │ Google Fonts CDN            │ DM Sans link — productie gebruikt system-ui/RODS fonts   │
+// └─────────────────────────────┴──────────────────────────────────────────────────────────┘
+//
+// Consumptieproces:
+// 1. Assembler leest ux-reference.html als bron
+// 2. Extraheert :root {} tokens → voegt samen met L4 spec overrides
+// 3. Extraheert PORT THIS CSS secties → plaatst in [1/11] style block
+// 4. Extraheert PORT THIS HTML structuren → plaatst in [3/11] body
+// 5. Interaction contracts → geïmplementeerd door Engine (L2), niet gekopieerd
+// 6. DEMO ONLY secties worden genegeerd
+// 7. Resultaat: single-file HTML met UX-patterns + Engine + Data + Spec
+//
+// Zie ook: dashboard.html [10/11] ASSEMBLER: Interface naar Layer 5
 </script>
 </body>
 </html>

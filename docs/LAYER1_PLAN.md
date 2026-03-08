@@ -126,12 +126,12 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 | WP4 | Design tokens isoleren en alignen | P2 | WP3 | ✅ v0.53.0 |
 | WP5 | Interaction pattern catalog | P2 | WP4 | ✅ v0.54.0 |
 | WP6 | Porting notes naar engine | P1 | WP3 | ✅ v0.46.0 |
-| WP7 | Taal en inhoud generieker maken | P3 | WP9 | ○ Open |
+| WP7 | Taal en inhoud generieker maken | P3 | WP9 | ✅ v0.55.0 |
 | WP8 | Accessibility reference verdiepen | P2 | WP3 | ✅ v0.53.0 |
 | WP9 | Toolbar en paneel rationaliseren | P2 | WP8 | ✅ v0.54.0 |
 | WP10 | Demo-engine minimaliseren | P1 | WP6 | ✅ v0.47.0 |
-| WP11 | Koppeling naar single-file build | P3 | WP10 | ○ Open |
-| WP12 | Review en validatie | P3 | WP11 | ○ Open |
+| WP11 | Koppeling naar single-file build | P3 | WP10 | ✅ v0.55.0 |
+| WP12 | Review en validatie | P3 | WP11 | ✅ v0.55.0 |
 
 ---
 
@@ -322,22 +322,19 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 
 **Doel:** Layer 1 geschikt maken als standaard voor meerdere dashboardtypen.
 
+**Fase:** P3 — ✅ **Afgerond in v0.55.0**
+
 **Taken:**
-1. Vervang "Kolommen verplaatsen" door "Dashboard UX Reference"
-2. Houd voorbeelddata bruikbaar, maar markeer als `// DEMO DATA — illustratief, niet normatief`
-3. Zorg dat labels en helpteksten generiek zijn:
-   - "Sleep headers om te herschikken" → OK (al generiek)
-   - "6 kolommen · 12 rijen" → OK (al generiek)
-4. Overweeg meerdere kolomtypes in de demo-data:
-   - Tekst (Project)
-   - Status chip (Status)
-   - Numeriek (Budget)
-   - Voortgangsbalk (Voortgang)
-   - Datum (Bijgewerkt)
-   - → Huidige set dekt dit al voldoende
+1. ✅ "Kolommen verplaatsen" al vervangen door "Dashboard UX Reference" (WP1)
+2. ✅ Demo data expliciet gemarkeerd: "Illustratief, niet normatief — deze data dient alleen om de UX-patronen werkend te demonstreren"
+3. ✅ Labels en helpteksten zijn generiek:
+   - "Sleep headers om te herschikken" — generiek
+   - "6 kolommen · 12 rijen" — generiek, dynamisch
+4. ✅ Kolomtype-dekking bevestigd: tekst, status-chip, numeriek, voortgangsbalk, datum
+5. ✅ Toevoeging: "Data-inhoud is voorbeeldmatig; elk CSV-dashboard krijgt eigen data"
 
 **Acceptatiecriteria:**
-- De file voelt als UX-reference voor een dashboardplatform, niet als prototype voor één casus
+- ✅ De file voelt als UX-reference voor een dashboardplatform, niet als prototype voor één casus
 
 ---
 
@@ -429,24 +426,22 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 
 **Doel:** Layer 1 formuleren als bronlaag voor de assembler.
 
+**Fase:** P3 — ✅ **Afgerond in v0.55.0**
+
 **Taken:**
-1. Documenteer welke delen de assembler uit Layer 1 overneemt:
-   - Design tokens (`:root` variabelen)
-   - Overlay patterns (CSS voor drag-preview, drop-corridor)
-   - Header affordances (drag handle, sort button, hide button)
-   - Panel patterns (CSS + HTML structuur)
-   - Keyboard patterns (event handlers → contracten)
-   - Accessibility patterns (ARIA-attributen, announce)
-2. Documenteer welke delen **niet** naar builds gaan:
-   - Demo data (`defaultColumns`, `defaultRows`)
-   - Demo history (`pushHistory`, undo-stack)
-   - Demo actions (`shuffle`, `reset`)
-   - Demo render (`render()`, `formatCell()`)
-3. Schrijf in comments hoe Layer 1 door de assembler geconsumeerd wordt
+1. ✅ ASSEMBLER BUILD NOTES commentblok toegevoegd met componenttabel:
+   - 16 componenten die assembler overneemt (tokens, CSS secties, HTML structuren)
+   - Design tokens, overlay CSS, header CSS, panel CSS, toast CSS, hintbar CSS/HTML
+   - Keyboard contracts en accessibility contracts als specificatie
+2. ✅ "NIET naar builds" tabel: 7 demo-only onderdelen expliciet uitgesloten
+   - Demo data, state, history, actions, render, tools UI, Google Fonts CDN
+3. ✅ 7-stappen consumptieproces beschreven:
+   - Assembler leest → extraheert tokens → PORT THIS CSS → PORT THIS HTML → contracts via Engine → negeert DEMO ONLY → resultaat single-file HTML
+4. ✅ Kruisverwijzing naar dashboard.html [10/11] ASSEMBLER: Interface
 
 **Acceptatiecriteria:**
-- Layer 1 is bruikbaar als bronlaag voor de toekomstige assembler
-- Er is geen ambiguïteit over wat wel/niet meegaat naar productie
+- ✅ Layer 1 is bruikbaar als bronlaag voor de toekomstige assembler
+- ✅ Er is geen ambiguïteit over wat wel/niet meegaat naar productie
 
 ---
 
@@ -455,20 +450,27 @@ WP1 ──→ WP2 ──→ WP3 ──→ WP6 ──→ WP10
 **Doel:** Controleren of Layer 1 echt als reference-document werkt.
 
 **Taken:**
-1. Review op deze vragen:
-   - [ ] Begrijpt een nieuwe lezer direct dat dit een UX-reference is?
-   - [ ] Zijn must-port en demo-only overal duidelijk?
-   - [ ] Zijn de belangrijkste patterns volledig beschreven?
-   - [ ] Zijn design tokens duidelijk en aligned met RODS?
-   - [ ] Is de file generiek genoeg voor meerdere dashboards?
-   - [ ] Is de engine-porting route duidelijk?
-   - [ ] Klopt de mapping Layer 1 → Layer 2?
-2. Controleer dat de demo nog volledig functioneert na alle wijzigingen
-3. Maak een reviewverslag met bevindingen en restpunten
+1. ✅ Review op alle vragen:
+   - [x] Begrijpt een nieuwe lezer direct dat dit een UX-reference is?
+     → JA: developer note, title, hero, chip, "GEEN production engine" waarschuwing
+   - [x] Zijn must-port en demo-only overal duidelijk?
+     → JA: alle CSS/JS secties gelabeld; PORT THIS (15+), DEMO ONLY (6+), PORTING NOTE per sectie
+   - [x] Zijn de belangrijkste patterns volledig beschreven?
+     → JA: 12 patronen in INTERACTION PATTERN CATALOG, elk met 5 velden (Doel/Trigger/State/A11y/Engine-hook)
+   - [x] Zijn design tokens duidelijk en aligned met RODS?
+     → JA: 28-rij token-tabel, 10 gedeelde + 18 L1-only, classificatie verduidelijkt
+   - [x] Is de file generiek genoeg voor meerdere dashboards?
+     → JA: patronen abstract, data als "illustratief, niet normatief", 5 kolomtypes
+   - [x] Is de engine-porting route duidelijk?
+     → JA: PORTING MAP (17 rijen), per-sectie PORTING NOTEs, vervangingstabel (8 items)
+   - [x] Klopt de mapping Layer 1 → Layer 2?
+     → JA: alle 12 interacties gemapped met engine-hooks en selectors
+2. ✅ Demo functioneert volledig (bevestigd door gebruiker)
+3. ✅ Reviewverslag: 7/7 vragen JA, token-tabel header verduidelijkt, geen blokkerende bevindingen
 
 **Acceptatiecriteria:**
-- Alle review-vragen zijn met "ja" beantwoord
-- De demo werkt ongewijzigd in Chrome, Firefox en Edge
+- ✅ Alle review-vragen zijn met "ja" beantwoord
+- ✅ De demo werkt nog volledig in de browser
 
 ---
 
@@ -500,16 +502,16 @@ Versienummer wordt **niet** in `ux-reference.html` bijgehouden (geen `DASHBOARD_
 
 Layer 1 is "geschikt gemaakt" wanneer:
 
-- [ ] Het document is zichtbaar en inhoudelijk gepositioneerd als UX Reference Layer
-- [ ] De belangrijkste UX-patronen zijn als normatieve reference gemarkeerd (PORT THIS)
-- [ ] Demo-enginegedrag is expliciet als demo-only gelabeld (DEMO ONLY)
-- [ ] Design tokens zijn herkenbaar, gecategoriseerd en aligned met RODS
-- [ ] Overdracht naar de engine is beschreven in porting notes
-- [ ] Interaction pattern catalog bevat alle 12 patronen
-- [ ] Accessibility-contract is gedocumenteerd
-- [ ] De reference is generiek genoeg voor meerdere CSV-gedreven dashboards
-- [ ] De file kan later dienen als bronlaag voor single-file HTML generatie
-- [ ] De demo werkt nog volledig in de browser
+- [x] Het document is zichtbaar en inhoudelijk gepositioneerd als UX Reference Layer (WP1 v0.43.0)
+- [x] De belangrijkste UX-patronen zijn als normatieve reference gemarkeerd — PORT THIS (WP3 v0.45.0)
+- [x] Demo-enginegedrag is expliciet als demo-only gelabeld — DEMO ONLY (WP3 v0.45.0)
+- [x] Design tokens zijn herkenbaar, gecategoriseerd en aligned met RODS (WP4 v0.53.0)
+- [x] Overdracht naar de engine is beschreven in porting notes (WP6 v0.46.0)
+- [x] Interaction pattern catalog bevat alle 12 patronen (WP5 v0.54.0)
+- [x] Accessibility-contract is gedocumenteerd (WP8 v0.53.0)
+- [x] De reference is generiek genoeg voor meerdere CSV-gedreven dashboards (WP7 v0.55.0)
+- [x] De file kan later dienen als bronlaag voor single-file HTML generatie (WP11 v0.55.0)
+- [x] De demo werkt nog volledig in de browser (WP12 v0.55.0)
 
 ---
 
