@@ -6,6 +6,23 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.43.0 — 2026-03-08
+
+**Type:** Documentatie
+**Domein:** Architectuur, planvorming
+
+Platformdocumentatie herschreven en twee uitvoeringsplannen toegevoegd:
+
+- **CLAUDE.md** herschreven met platformvisie, 5-lagenarchitectuur, roadmap met 3 breekpunten
+- **ARCHITECTUUR.md** verplaatst naar docs/ en uitgebreid met §13 Assembler Layer, §13.1 doelmappenstructuur, §13.2 generatieproces, §14 eindbeeld
+- **VERANDERPAD.md** verplaatst naar docs/ (SCREAMING_CASE conventie)
+- **INDEX.md** bijgewerkt naar v2.1 met architectuursectie en actieve plannen
+- **LAYER1_PLAN.md** nieuw — UX Reference Layer taakplan: 12 werkpakketten (WP1–WP12), 3 prioriteiten, token-alignment strategie, kruisafhankelijkheden met Layer 2
+- **LAYER2_PLAN.md** nieuw — Dashboard Engine Layer taakplan: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), in-place migratiestrategie, contracts-first aanpak, 241-tests-intact garantie
+- Oude planbestanden uit root verwijderd (layer-1-task-plan.md, layer-2-task-plan.md, veranderpad.md, architectuurdocument v1.md)
+
+---
+
 ## v0.42.0 — 2026-03-08
 
 **Type:** Refactor

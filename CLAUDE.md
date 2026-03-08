@@ -1,12 +1,69 @@
-# Dashboard — Gemeente Rotterdam
+# CSV Dashboard Template Platform — Gemeente Rotterdam
 
-## Project
+## Visie
 
-Interactief overzichtsdashboard voor projecten en teamleden binnen de Gemeente Rotterdam. Toont status, voortgang en KPI's in filterbare, sorteerbare tabellen met groepering en aggregatie.
+Een platformfamilie waarmee op basis van **CSV-bestanden** via **generatieve AI** automatisch maatwerk-dashboards worden gebouwd. Elk einddashboard is één enkel HTML-bestand (vanilla JS/CSS, zero dependencies) dat direct in de browser draait.
 
-Het dashboard is bewust opgebouwd als **één enkel HTML-bestand** (`dashboard.html`, ~4500 regels, vanilla JS/CSS) zonder externe dependencies. Dit bestand dient als **template**: door alleen `dashboardConfig` aan te passen kan het hergebruikt worden voor andere dashboards binnen de gemeente.
+**De keten:**
 
-Versie: pre-1.0 (actieve ontwikkeling).
+```
+CSV-bestanden → CSV-adapter → schema → AI → dashboard-spec → assembler → single HTML
+```
+
+Meerdere CSV-bestanden worden door AI geanalyseerd en omgezet in een compleet, tailor-made dashboard — zonder handmatig coderen van de configuratie.
+
+## Huidige staat
+
+Het eerste dashboard (`dashboard.html`, v0.42.0, ~5000 regels) is operationeel en dient als **proof-of-concept en bronarchitectuur** voor het platform. Het bevat:
+
+- **241 geautomatiseerde tests** (0 fails, 4 suites)
+- **42 RODS design tokens** (15 semantic + 27 palette)
+- **27 performance-metrics** met harde budgetten
+- Declaratief configuratiemodel (`dashboardConfig`)
+- Virtual scroll voor grote datasets (4500+ rijen)
+- Ingebouwde test runner (Alt+Shift+T)
+
+## Doelarchitectuur — 5 lagen
+
+De bronarchitectuur bestaat uit vijf lagen die samen één HTML-dashboard genereren:
+
+| Laag | Rol | Bron van waarheid voor |
+|------|-----|------------------------|
+| **UX Reference** | Gedrag, states, styling, tokens | Hoe dashboards eruitzien en zich gedragen |
+| **Dashboard Engine** | Runtime: filtering, sorting, grouping, virtualisatie, export, state | Schaalbare dataverwerking en rendering |
+| **CSV Adapter** | Parsing, normalisatie, schema inference, validatie | Betrouwbare en uniforme data |
+| **Dashboard Spec** | Per-dashboard configuratie (AI-gegenereerd) | Tabs, kolommen, labels, defaults, formattering |
+| **Assembler** | Bundelt alle lagen tot één HTML-bestand | Het bouwproces van bron naar eindproduct |
+
+**Centrale ontwerpregel:** Eén bron van waarheid per concern. Zodra twee lagen hetzelfde probleem oplossen, ontstaat drift.
+
+### Doelmappenstructuur
+
+```
+dashboard-template-platform/
+├── CLAUDE.md
+├── docs/
+├── src/
+│   ├── ux-reference/        # Design tokens, interaction patterns, overlays
+│   ├── dashboard-engine/    # AppState, pipeline, renderers, virtual scroll
+│   ├── csv-adapter/         # Parsing, typing, schema, validatie
+│   ├── dashboard-spec/      # AI-outputformaat, spec-schema, transformaties
+│   └── assembler/           # CSS/JS bundelen, config injecteren, minify
+├── dashboards/              # Per dashboard: spec.json + CSV-bronbestanden
+│   ├── project-monitor/
+│   ├── finance-overview/
+│   └── subsidy-dashboard/
+├── dist/                    # Geassembleerde single-file HTML dashboards
+└── archive/
+```
+
+### AI-generatieproces
+
+1. **CSV aanleveren** — een of meer bronbestanden per dashboard
+2. **CSV-adapter** — genormaliseerde velden, schema, datakwaliteitssignalen
+3. **AI analyseert** — schema + businessregels → genereert `dashboard-spec.json`
+4. **Assembler combineert** — UX reference + engine + data + spec → single HTML
+5. **Output** — één tailor-made `dashboard.html` per use case
 
 ## Conventies
 
@@ -48,26 +105,45 @@ Eén commit per versienummer.
 ## Workflow per sessie
 
 1. Kies taak uit actief plan (zie `docs/INDEX.md` voor overzicht)
-2. Implementeer in `dashboard.html`
+2. Implementeer in `dashboard.html` (of relevante bronlaag)
 3. Test in browser (visueel + `runTests()` + test runner Alt+Shift+T)
 4. Bump `DASHBOARD_VERSION` in `dashboard.html`
 5. Schrijf changelog-entry in `docs/CHANGELOG.md`
 6. Commit: `<type>(v<versie>): <samenvatting>`
 7. Optioneel: toets tegen `docs/TOETSINGSKADER.md` bij sprint-afronding
 
-## Architectuur
+## Architectuur — huidige implementatie (v0.42.0)
 
-- **`dashboardConfig`** — centrale configuratie: tabs (projecten/team), kolomdefinities, domeinen, kleuren
+De huidige `dashboard.html` bevat de engine-laag en UX-laag nog in één bestand:
+
+- **`dashboardConfig`** — declaratieve configuratie: tabs, kolomdefinities, domeinen, kleuren, features, exports
 - **`AppState`** — singleton state-object met dirty flags en derived-state cache; alle UI-state loopt via AppState
+- **Engine pipeline** — `computeFilteredData()` → `sortData()` → `groupData()` → `computeAggModel()` → `renderVirtualBody()`
 - **Virtual scroll** — `renderVirtualBody()` en `_renderGroupedVirtual()` met `_vBuf` buffer-rijen; DOM bevat alleen zichtbare rijen
 - **`cellRenderers`** — object met per-kolom render-functies voor tabelcellen
-- **Filter/sort/groepeer** — `computeFilteredData()` → `sortData()` → `groupData()` → `computeAggModel()` pipeline
-- **Test runner** — ingebouwd in dashboard, activeer met `runTests()` of Alt+Shift+T; suites: Unit, Integratie, Visual Contracts, Performance
+- **Design tokens** — 42 tokens in `:root` (15 semantic + 27 RODS palette)
+- **Test runner (DTR)** — ingebouwd, 4 suites: Unit (A), Integratie (B), Visual Contracts (C), Performance (D)
 - **Performance-instrumentatie** — `performance.mark/measure`, FPS-monitor, LongTask observer, heap-meting
+
+## Roadmap — drie breekpunten
+
+| # | Breekpunt | Wat | Resultaat |
+|---|-----------|-----|-----------|
+| 1 | **dashboardConfig extraheerbaar** | Runtime-logica (`generateData()`) uit config halen, puur declaratief JSON maken | Dashboard wordt AI-ready |
+| 2 | **CSV-adapter + eerste AI-spec** | Adapter bouwt schema uit CSV, AI genereert eerste `dashboard-spec.json` | Eerste AI-gegenereerd dashboard |
+| 3 | **Assembler + mappenstructuur** | Engine/tokens/UX extraheren naar src/, assembler bouwt single HTML | Platform operationeel |
 
 ## Documentenstructuur
 
 Zie `docs/INDEX.md` voor de volledige kruisverwijzing van alle plannen, sprint-IDs en documenten.
+
+### Kerndocumenten platformarchitectuur
+
+| Document | Doel |
+|----------|------|
+| [ARCHITECTUUR.md](docs/ARCHITECTUUR.md) | Doelarchitectuur: 5 lagen, contracten, interfaces, eindbeeld |
+| [VERANDERPAD.md](docs/VERANDERPAD.md) | Gefaseerd migratiepad van huidig naar doelarchitectuur |
+| [TEMPLATE_ONTWERP.md](docs/TEMPLATE_ONTWERP.md) | Technisch ontwerp single-file template structuur |
 
 ## Kwaliteitscriteria
 
@@ -75,3 +151,4 @@ Zie `docs/INDEX.md` voor de volledige kruisverwijzing van alle plannen, sprint-I
 - Performance-budgetten staan in `docs/TESTREGISTER.md`
 - Geen code committen met bekende test-failures
 - v1.0.0 vereist: gemiddelde toetsingsscore ≥ 7.5, geen domein < 6
+- Elke laag krijgt eigen testsoort (zie `docs/TESTREGISTER.md` §12)
