@@ -1,8 +1,8 @@
 # SCHEMA_CONTRACT_PLAN.md — Schema Contract & Feature Gating
 
-Versie: 1.2
-Datum: 2026-03-08
-Status: ○ Actief — Fase 1½ afgerond (v0.56.1), Fase 2 volgt
+Versie: 1.3
+Datum: 2026-03-09
+Status: ○ Actief — Fase 2 afgerond (v0.57.0), Fase 3 volgt
 Bronnen: `advies stable row identity.md` (v1.1), `Performance_Roadmap_Dashboard_v052.md` (v1.2)
 
 ---
@@ -87,13 +87,13 @@ Bron: `Performance_Roadmap_Dashboard_v052.md` — routes 1, 6 (prio 1/2, nul ris
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
-| WP-S7 | Semantic accessor-functies (9 functies): 6 bestaand + `normalizeRecordId(value)`, `makeRowKey(tabId, recordId)`, `parseRowKey(rowKey)` | ○ |
-| WP-S8 | Refactor applyFiltersToData() — dual mode + single-pass filtering: 3 `.filter()` passes → 1 samengesteld predikaat (Perf Route 2, 20–40% winst op filter) | ○ |
-| WP-S9 | Refactor condClass() — dual mode | ○ |
-| WP-S10 | Refactor rowHtml() — dual mode + `data-row-key` attribuut op elke `<tr>` via `makeRowKey()` | ○ |
-| WP-S11 | Refactor openModal() + expandRow() — dual mode + `_tabIndexById` Map per tab voor O(1) lookup, `getRecordByRowKey()`, `showCtx()` bewaart full rowKey | ○ |
-| WP-S12 | Refactor getAllUniqueNames() — semantic | ○ |
-| WP-S13 | Tests A-SEMANTIC suite (≥24 assertions): 16 bestaand + identity tests (`normalizeRecordId`, `makeRowKey`/`parseRowKey` round-trip, `data-row-key` op `<tr>`) | ○ |
+| WP-S7 | Semantic accessor-functies (9 functies): 6 bestaand + `normalizeRecordId(value)`, `makeRowKey(tabId, recordId)`, `parseRowKey(rowKey)` | ✅ |
+| WP-S8 | Refactor applyFiltersToData() — dual mode + single-pass filtering: 3 `.filter()` passes → 1 samengesteld predikaat (Perf Route 2, 20–40% winst op filter) | ✅ |
+| WP-S9 | Refactor condClass() — dual mode | ✅ |
+| WP-S10 | Refactor rowHtml() — dual mode + `data-row-key` attribuut op elke `<tr>` via `makeRowKey()` | ✅ |
+| WP-S11 | Refactor openModal() + expandRow() — dual mode + `_tabIndexById` Map per tab voor O(1) lookup, `getRecordByKey()`, `showCtx()` bewaart full rowKey | ✅ |
+| WP-S12 | Refactor getAllUniqueNames() — semantic | ✅ |
+| WP-S13 | Tests A-SEMANTIC suite (≥26 assertions): accessor bestaan (5), retourwaarden (6), identity (7), composite keys (2), DOM integratie (2), _tabIndexById (2), dual mode (2) | ✅ |
 
 ### Fase 3 — Feature gating actief (v0.58.0)
 

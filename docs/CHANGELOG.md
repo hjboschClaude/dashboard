@@ -6,6 +6,44 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.57.0 — 2026-03-09
+
+**Type:** Refactor
+**Domein:** Schema Contract Fase 2 — Semantic Accessors & Dual Mode (Layer 2)
+
+Engine-functies met hardcoded veldnamen omgezet naar semantische accessors via schemaContract, en fragiele row-identity parsing vervangen door stabiel makeRowKey/parseRowKey model. Alle wijzigingen zijn zero-behavioral-change: output is identiek aan v0.56.1.
+
+**WP-S7 — 9 semantic accessor-functies:**
+- `getSchemaContract()`, `getPrimaryKeyField()`, `getPrimaryLabelField()`, `getSemanticField()`, `getSearchTextFields()`, `getDetailTitleField()` — lezen uit schemaContract met legacy fallback
+- `normalizeRecordId()`, `makeRowKey()`, `parseRowKey()` — stabiel row-identity model; parseRowKey gebruikt indexOf (niet split) voor samengestelde IDs
+
+**WP-S8 — applyFiltersToData() single-pass + dual mode:**
+- 3 aparte `.filter()` passes samengevoegd tot 1 samengesteld predikaat (Perf Route 2, ~20-40% winst)
+- Global name filter via `getSearchTextFields()` i.p.v. hardcoded `r.directeur`/`r.aog`/`r.pm`/`currentTab===0`
+- ES5-schending gefixed: `const active=` → `var activeRules=`
+
+**WP-S9 — condClass() dual mode:**
+- Veldnamen `r.priority`/`r.status`/`r.actief`/`r.progress` vervangen door semantic lookups via `sc.semanticFields`
+- Null-mapping (bijv. `activeFlag: null` voor tab 0) resulteert in `undefined` — identiek gedrag
+
+**WP-S10 — rowHtml() dual mode + makeRowKey:**
+- `tab+'-'+r.id` → `makeRowKey(tab, r[pkField])` — single source of truth voor row keys
+- `r.name` → `r[labelField]` via `getPrimaryLabelField()`; `c.key==='name'` → `c.key===labelField`
+
+**WP-S11 — openModal/expandRow/initTableDelegation + _tabIndexById:**
+- `_tabIndexById` Map per tab: O(1) record lookup vervangt O(n) `data.find()`
+- `expandRow()`: `parseInt(split('-'))` → `parseRowKey()` — veilig voor string-keys
+- `openModal()`: `getRecordByKey()` + `getDetailTitleField()` + `getPrimaryKeyField()`
+- `initTableDelegation()` dblclick/keydown: `parseInt(split('-'))` → `parseRowKey()`
+
+**WP-S12 — getAllUniqueNames() semantic:**
+- Hardcoded per-tab veldlijsten → `getSearchTextFields(idx)` loop over alle tabs
+
+**WP-S13 — A-SEMANTIC testsuite (26 assertions):**
+- Accessor bestaan (5), retourwaarden (6), identity functies (7), composite keys (2), DOM integratie (2), _tabIndexById (2), dual mode (2)
+
+---
+
 ## v0.56.1 — 2026-03-09
 
 **Type:** Performance

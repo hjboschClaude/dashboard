@@ -601,7 +601,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.56.1';
+const DASHBOARD_VERSION = '0.57.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -706,6 +706,7 @@ function buildSearchIndex(data){
 // Template-refactoring sprint 3: data/kolommen-registry (sourceRows per tab)
 var _tabData=[];
 var _tabCols=[];
+var _tabIndexById={};  // WP-S11: O(1) record lookup per tab
 
 // Sprint 3, taak 3.3: initialisatie vanuit dashboardConfig (na data-generatie hieronder)
 // Wordt gevuld na cols0/cols1 definitie — zie initTabDataFromConfig()
@@ -871,6 +872,94 @@ function getTabLabel(tabIdOrIndex){
   if(typeof tabIdOrIndex==='number') tc=dashboardConfig.tabs[tabIdOrIndex];
   else tc=getTabConfig(tabIdOrIndex);
   return tc?tc.label:'';
+}
+
+// ── WP-S7: Semantic accessor-functies ────────────────────────
+// Dual-mode accessors: lezen uit schemaContract indien aanwezig,
+// vallen terug op legacy hardcoded waarden als contract ontbreekt.
+
+// S7-1: Retourneert schemaContract voor gegeven tab-index. Fallback: null.
+function getSchemaContract(tabIdx){
+  var tc=getTabConfigByIndex(tabIdx!==undefined?tabIdx:AppState.currentTab);
+  return tc&&tc.schemaContract?tc.schemaContract:null;
+}
+// S7-2: Veldnaam van de primary key. Fallback: 'id'.
+function getPrimaryKeyField(tabIdx){
+  var sc=getSchemaContract(tabIdx);
+  return sc&&sc.primaryKey?sc.primaryKey:'id';
+}
+// S7-3: Veldnaam van het primaire label. Fallback: 'name'.
+function getPrimaryLabelField(tabIdx){
+  var sc=getSchemaContract(tabIdx);
+  return sc&&sc.semanticFields&&sc.semanticFields.primaryLabel?sc.semanticFields.primaryLabel:'name';
+}
+// S7-4: Veldnaam voor een gegeven semantische rol. Fallback: null.
+function getSemanticField(tabIdx,role){
+  var sc=getSchemaContract(tabIdx);
+  if(!sc||!sc.semanticFields) return null;
+  var val=sc.semanticFields[role];
+  return val!==undefined?val:null;
+}
+// S7-5: Array van veldnamen voor zoek-tekst filtering. Legacy fallback per tab.
+function getSearchTextFields(tabIdx){
+  var tab=tabIdx!==undefined?tabIdx:AppState.currentTab;
+  var fields=getSemanticField(tab,'searchTextFields');
+  if(fields&&Array.isArray(fields)) return fields;
+  // Legacy fallback
+  return tab===0?['directeur','aog','pm']:['name'];
+}
+// S7-6: Veldnaam voor de detail/modal titel. Fallback: primaryLabel.
+function getDetailTitleField(tabIdx){
+  var field=getSemanticField(tabIdx,'detailTitle');
+  if(field) return field;
+  return getPrimaryLabelField(tabIdx);
+}
+// S7-7: Normaliseert een record-ID naar een stabiele string-representatie.
+function normalizeRecordId(value){
+  if(value===null||value===undefined) return '';
+  return String(value);
+}
+// S7-8: Construeert een unieke row-key string. Formaat: "tabIdx-normalizedId".
+function makeRowKey(tabIdx,recordId){
+  return tabIdx+'-'+normalizeRecordId(recordId);
+}
+// S7-9: Parseert een row-key terug naar {tabIdx, recordId}. Inverse van makeRowKey().
+// Gebruikt indexOf (niet split) zodat samengestelde IDs zoals "P-1042" correct werken.
+function parseRowKey(rowKey){
+  if(!rowKey||typeof rowKey!=='string') return {tabIdx:0,recordId:''};
+  var dashIdx=rowKey.indexOf('-');
+  if(dashIdx===-1) return {tabIdx:0,recordId:rowKey};
+  return {tabIdx:parseInt(rowKey.substring(0,dashIdx),10),recordId:rowKey.substring(dashIdx+1)};
+}
+
+// ── WP-S11: _tabIndexById — O(1) record lookup ──────────────
+// Bouwt of herbouwt de _tabIndexById index voor een specifieke tab.
+function _buildTabIndex(tabIdx){
+  var data=getData(tabIdx);
+  if(!data){_tabIndexById[tabIdx]=new Map();return;}
+  var pkField=getPrimaryKeyField(tabIdx);
+  var map=new Map();
+  for(var i=0;i<data.length;i++){
+    map.set(normalizeRecordId(data[i][pkField]),data[i]);
+  }
+  _tabIndexById[tabIdx]=map;
+}
+// O(1) record lookup via _tabIndexById. Fallback: lineaire zoektocht.
+function getRecordByKey(tabIdx,recordId){
+  var idx=tabIdx!==undefined?tabIdx:AppState.currentTab;
+  var map=_tabIndexById[idx];
+  if(map){
+    var rec=map.get(normalizeRecordId(recordId));
+    if(rec) return rec;
+  }
+  // Fallback: O(n) lineaire zoektocht (legacy compatibiliteit)
+  var data=getData(idx);
+  var pkField=getPrimaryKeyField(idx);
+  var normId=normalizeRecordId(recordId);
+  for(var i=0;i<data.length;i++){
+    if(normalizeRecordId(data[i][pkField])===normId) return data[i];
+  }
+  return null;
 }
 
 // ============================================================
@@ -1241,6 +1330,7 @@ function initTabDataFromConfig(onComplete) {
     schedule(function() {
       _tabData[tabIdx] = _dataGenerators[tab.id](tab.defaultRowCount);
       buildSearchIndex(_tabData[tabIdx]);
+      _buildTabIndex(tabIdx);  // WP-S11: bouw O(1) lookup index
       next();
     });
   }
@@ -1606,6 +1696,7 @@ function _invalidate(flags) {
   // Invalidate unique value cache bij data-wijziging
   if (_dirty.data) {
     _invalidateUniqueCache();
+    _buildTabIndex(AppState.currentTab);  // WP-S11: herbouw index
   }
 }
 
@@ -1754,30 +1845,55 @@ function matchRule(r,rule){
     default:             return true;
   }
 }
+// WP-S8: single-pass filtering met semantic accessors (dual mode)
 function applyFiltersToData(data){
-  // Apply global name filter first
-  if(AppState.globalNameFilter){
-    if(AppState.currentTab===0){
-      data=data.filter(function(r){return r.directeur===AppState.globalNameFilter||r.aog===AppState.globalNameFilter||r.pm===AppState.globalNameFilter;});
-    } else {
-      data=data.filter(function(r){return r.name===AppState.globalNameFilter;});
-    }
-  }
+  var tab=AppState.currentTab;
+  var sc=getSchemaContract(tab);
+  var searchFields=sc?getSearchTextFields(tab):null;
 
-  // Apply column filters (AND) — if colFilters[key] exists, only show matching values
-  Object.keys(AppState.colFilters).forEach(function(key){
-    var selectedVals=AppState.colFilters[key];
-    if(selectedVals){
-      data=data.filter(function(r){return selectedVals.has(String(r[key]===undefined||r[key]===null?'':r[key]));});
-    }
-  });
+  // Pre-compute filter state
+  var globalName=AppState.globalNameFilter;
+  var colKeys=Object.keys(AppState.colFilters);
+  var activeRules=AppState.filterRules.filter(function(r){return r.field&&r.op;});
+  var hasGlobal=!!globalName;
+  var hasCols=colKeys.length>0;
+  var hasRules=activeRules.length>0;
 
-  // Apply filter rules
-  const active=AppState.filterRules.filter(function(r){return r.field&&r.op;});
-  if(!active.length) return data;
+  // Shortcut: geen filters → retourneer ongewijzigd
+  if(!hasGlobal&&!hasCols&&!hasRules) return data;
+
+  var isAnd=AppState.filterLogic==='AND';
+
   return data.filter(function(r){
-    if(AppState.filterLogic==='AND') return active.every(function(rule){return matchRule(r,rule);});
-    return active.some(function(rule){return matchRule(r,rule);});
+    // 1. Global name filter — semantic pad of legacy fallback
+    if(hasGlobal){
+      var match=false;
+      if(searchFields){
+        for(var i=0;i<searchFields.length;i++){
+          if(r[searchFields[i]]===globalName){match=true;break;}
+        }
+      } else {
+        if(tab===0){
+          match=r.directeur===globalName||r.aog===globalName||r.pm===globalName;
+        } else {
+          match=r.name===globalName;
+        }
+      }
+      if(!match) return false;
+    }
+    // 2. Column filters (AND) — al generiek
+    if(hasCols){
+      for(var ci=0;ci<colKeys.length;ci++){
+        var sv=AppState.colFilters[colKeys[ci]];
+        if(sv&&!sv.has(String(r[colKeys[ci]]===undefined||r[colKeys[ci]]===null?'':r[colKeys[ci]]))) return false;
+      }
+    }
+    // 3. Filter rules — al generiek via matchRule
+    if(hasRules){
+      if(isAnd) return activeRules.every(function(rule){return matchRule(r,rule);});
+      return activeRules.some(function(rule){return matchRule(r,rule);});
+    }
+    return true;
   });
 }
 
@@ -1989,16 +2105,18 @@ function colFilterInvert(colKey){
 // ============================================================
 var _cachedUniqueNames=null;
 
+// WP-S12: getAllUniqueNames met semantic searchTextFields
 function getAllUniqueNames(){
   if(_cachedUniqueNames) return _cachedUniqueNames;
   var names=new Set();
-  getData(0).forEach(function(r){
-    if(r.directeur) names.add(r.directeur);
-    if(r.aog) names.add(r.aog);
-    if(r.pm) names.add(r.pm);
-  });
-  getData(1).forEach(function(r){
-    if(r.name) names.add(r.name);
+  dashboardConfig.tabs.forEach(function(tab,idx){
+    var fields=getSearchTextFields(idx);
+    var data=getData(idx);
+    data.forEach(function(r){
+      for(var i=0;i<fields.length;i++){
+        if(r[fields[i]]) names.add(r[fields[i]]);
+      }
+    });
   });
   _cachedUniqueNames=Array.from(names).sort();
   return _cachedUniqueNames;
@@ -2071,11 +2189,25 @@ function groupData(data){
 //   Output: CSS class string ('cond-red'|'cond-green'|'cond-yellow'|'')
 //   Cache:  — (inline per rij, geen cache)
 //   Test:   condClass({priority:'Hoog'}) → 'cond-red' — puur, geen DOM
+// WP-S9: condClass met semantic accessors (dual mode)
 function condClass(r){
   if(!AppState.condEnabled) return '';
-  if(r.priority==='Hoog'||r.status==='On Hold') return 'cond-red';
-  if(r.status==='Voltooid'||(r.actief===true&&r.status==='Actief')) return 'cond-green';
-  if(r.status==='In Review'||(r.progress!==undefined&&r.progress<30)) return 'cond-yellow';
+  var tab=AppState.currentTab;
+  var sc=getSchemaContract(tab);
+  var priorityVal,statusVal,activeFlagVal,progressVal;
+  if(sc&&sc.semanticFields){
+    var sf=sc.semanticFields;
+    priorityVal=sf.priority?r[sf.priority]:undefined;
+    statusVal=sf.status?r[sf.status]:undefined;
+    activeFlagVal=sf.activeFlag?r[sf.activeFlag]:undefined;
+    progressVal=sf.progress?r[sf.progress]:undefined;
+  } else {
+    // Legacy fallback: hardcoded veldnamen
+    priorityVal=r.priority;statusVal=r.status;activeFlagVal=r.actief;progressVal=r.progress;
+  }
+  if(priorityVal==='Hoog'||statusVal==='On Hold') return 'cond-red';
+  if(statusVal==='Voltooid'||(activeFlagVal===true&&statusVal==='Actief')) return 'cond-green';
+  if(statusVal==='In Review'||(progressVal!==undefined&&progressVal<30)) return 'cond-yellow';
   return '';
 }
 
@@ -2477,23 +2609,27 @@ function getSortIcon(key){
   return '↑↓'; // #33: duidelijker sorteerpijlen
 }
 
+// WP-S10: rowHtml met makeRowKey + semantic labels (dual mode)
 function rowHtml(r,rn,cols,tab,hpx){
-  var key=tab+'-'+r.id;
+  var sc=getSchemaContract(tab);
+  var pkField=sc&&sc.primaryKey?sc.primaryKey:'id';
+  var key=makeRowKey(tab,r[pkField]);
   var sel=AppState.selectedRows.has(key)?'selected':'';
   var cc=condClass(r);
   // #69: rij-selectie checkbox
   var cbClass='row-select-cb'+(AppState.selectedRows.has(key)?' checked':'');
   var cbIcon=AppState.selectedRows.has(key)?'✓':'';
+  var labelField=sc&&sc.semanticFields&&sc.semanticFields.primaryLabel?sc.semanticFields.primaryLabel:'name';
   // 1.2: data-attributen i.p.v. inline event handlers — delegation via initTableDelegation()
   return '<tr class="'+sel+' '+cc+'" style="height:'+hpx+'px"'+
     ' data-row-key="'+escapeAttr(key)+'" data-tab="'+tab+'"'+
-    ' tabindex="0" role="row" aria-label="'+escapeAttr(r.name||key)+' — druk Enter voor details">'  // C.4
+    ' tabindex="0" role="row" aria-label="'+escapeAttr(r[labelField]||key)+' — druk Enter voor details">'  // C.4
     +'<td><div class="'+cbClass+'">'+cbIcon+'</div></td>'
     +cols.map(function(c){
-      var cls=c.key==='name'?'cell-primary':'';
+      var cls=c.key===labelField?'cell-primary':'';
       var cell=renderCell(c,r);
-      // #31: actie-knop in de name-kolom — delegation via data-action
-      if(c.key==='name') cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
+      // #31: actie-knop in de primary-label-kolom — delegation via data-action
+      if(c.key===labelField) cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
       return '<td class="'+cls+'">'+cell+'</td>'; /* BUG-017 fix: position:relative verplaatst naar .cell-primary CSS */
     }).join('')
     +'</tr>';
@@ -3662,18 +3798,21 @@ document.addEventListener('keydown',function(e){
     if(AppState.activePanel){closePanel(AppState.activePanel);}
   }
 });
-function expandRow(){if(!AppState.contextRow) return;var tab=parseInt(AppState.contextRow.split('-')[0]);var id=parseInt(AppState.contextRow.split('-')[1]);openModal(tab,id);}
+// WP-S11: expandRow via parseRowKey (vervangt fragiele parseInt/split)
+function expandRow(){if(!AppState.contextRow) return;var parsed=parseRowKey(AppState.contextRow);openModal(parsed.tabIdx,parsed.recordId);}
 // [Template-refactoring sprint 1] duplicateRow() verwijderd — dashboard is read-only
 
 // ============================================================
 // MODAL
 // ============================================================
+// WP-S11: openModal met getRecordByKey (O(1)) + semantic title (dual mode)
 function openModal(tab,id){
-  var data=getData(tab);
-  var r=data.find(function(x){return x.id===id;});
+  var r=getRecordByKey(tab,id);
   if(!r) return;
   var cols=getCols(tab);
-  document.getElementById('modal-title').textContent=r.name||String(r.id);
+  var titleField=getDetailTitleField(tab);
+  var pkField=getPrimaryKeyField(tab);
+  document.getElementById('modal-title').textContent=r[titleField]||String(r[pkField]);
   document.getElementById('modal-body').innerHTML=cols.map(function(c){
     var v=r[c.key];
     var disp=v===true?'✓ Ja':v===false?'✗ Nee':(v===undefined||v===null?'—':escapeHtml(String(v)));
@@ -4637,6 +4776,80 @@ function runTests(){
     return Array.isArray(result) && result.length > 0;
   })());
 
+  // ── WP-S13: A-SEMANTIC — Semantic accessors en identity tests ──
+  group('A-SEMANTIC');
+
+  // Cat 1: Accessor functies bestaan
+  assert('S7: getSchemaContract is een functie', typeof getSchemaContract === 'function');
+  assert('S7: getPrimaryKeyField is een functie', typeof getPrimaryKeyField === 'function');
+  assert('S7: getPrimaryLabelField is een functie', typeof getPrimaryLabelField === 'function');
+  assert('S7: getSemanticField is een functie', typeof getSemanticField === 'function');
+  assert('S7: getSearchTextFields is een functie', typeof getSearchTextFields === 'function');
+
+  // Cat 2: Accessor retourwaarden
+  assert('S7: getSchemaContract(0) retourneert object', getSchemaContract(0) !== null && typeof getSchemaContract(0) === 'object');
+  assert('S7: getPrimaryKeyField(0) === "id"', getPrimaryKeyField(0) === 'id');
+  assert('S7: getPrimaryLabelField(0) === "name"', getPrimaryLabelField(0) === 'name');
+  assert('S7: getSemanticField(0,"status") === "status"', getSemanticField(0, 'status') === 'status');
+  assert('S7: getSemanticField(1,"activeFlag") === "actief"', getSemanticField(1, 'activeFlag') === 'actief');
+  assert('S7: getSearchTextFields(0) bevat "directeur"', getSearchTextFields(0).indexOf('directeur') !== -1);
+
+  // Cat 3: Identity functies
+  assert('S7: normalizeRecordId is een functie', typeof normalizeRecordId === 'function');
+  assert('S7: makeRowKey is een functie', typeof makeRowKey === 'function');
+  assert('S7: parseRowKey is een functie', typeof parseRowKey === 'function');
+  assert('S7: normalizeRecordId(42) === "42"', normalizeRecordId(42) === '42');
+  assert('S7: normalizeRecordId(null) === ""', normalizeRecordId(null) === '');
+  assert('S7: makeRowKey(0,42) === "0-42"', makeRowKey(0, 42) === '0-42');
+  assert('S7: parseRowKey round-trip numeriek', (function() {
+    var k = makeRowKey(1, 99); var p = parseRowKey(k);
+    return p.tabIdx === 1 && p.recordId === '99';
+  })());
+
+  // Cat 4: Composite keys
+  assert('S7: makeRowKey met string-ID', makeRowKey(1, 'P-1042') === '1-P-1042');
+  assert('S7: parseRowKey round-trip samengesteld', (function() {
+    var k = makeRowKey(0, 'P-1042'); var p = parseRowKey(k);
+    return p.tabIdx === 0 && p.recordId === 'P-1042';
+  })());
+
+  // Cat 5: DOM integratie — data-row-key
+  assert('S10: <tr> elementen hebben data-row-key', (function() {
+    var tbody = document.getElementById('tbody-' + AppState.currentTab);
+    if (!tbody) return false;
+    var tr = tbody.querySelector('tr[data-row-key]');
+    return !!tr;
+  })());
+  assert('S10: data-row-key volgt makeRowKey formaat', (function() {
+    var tbody = document.getElementById('tbody-' + AppState.currentTab);
+    if (!tbody) return false;
+    var tr = tbody.querySelector('tr[data-row-key]');
+    if (!tr) return false;
+    var key = tr.dataset.rowKey;
+    var parsed = parseRowKey(key);
+    return parsed.tabIdx === AppState.currentTab && parsed.recordId.length > 0;
+  })());
+
+  // Cat 6: _tabIndexById Map
+  assert('S11: _tabIndexById[0] is een Map', _tabIndexById[0] instanceof Map);
+  assert('S11: getRecordByKey retourneert record', (function() {
+    var data = getData(0);
+    if (!data || !data.length) return false;
+    var r = getRecordByKey(0, data[0][getPrimaryKeyField(0)]);
+    return r === data[0];
+  })());
+
+  // Cat 7: Dual mode werkt correct
+  assert('S8: getSearchTextFields retourneert array', Array.isArray(getSearchTextFields(0)) && getSearchTextFields(0).length > 0);
+  assert('S9: condClass met semantic accessors', (function() {
+    var savedCond = AppState.condEnabled; AppState.condEnabled = true;
+    var savedTab = AppState.currentTab; AppState.currentTab = 0;
+    var r = { priority: 'Hoog', status: 'Actief', progress: 50 };
+    var result = condClass(r);
+    AppState.condEnabled = savedCond; AppState.currentTab = savedTab;
+    return result === 'cond-red';
+  })());
+
   var elapsed=Math.round(performance.now()-t0);
   var summary=passed+'/'+(passed+failed)+' tests geslaagd ('+elapsed+'ms)';
   if(failed>0) summary+='\n'+results.join('\n');
@@ -4777,13 +4990,12 @@ function initTableDelegation(){
       var tr=e.target.closest('tr[data-row-key]');
       if(tr) toggleRow(e,tr.dataset.rowKey);
     });
-    // Dubbelklik → openModal
+    // WP-S11: Dubbelklik → openModal via parseRowKey
     tc.addEventListener('dblclick',function(e){
       var tr=e.target.closest('tr[data-row-key]');
       if(tr){
-        var t=parseInt(tr.dataset.tab);
-        var id=parseInt(tr.dataset.rowKey.split('-')[1]);
-        openModal(t,id);
+        var parsed=parseRowKey(tr.dataset.rowKey);
+        openModal(parsed.tabIdx,parsed.recordId);
       }
     });
     // Rechtermuisklik → contextmenu
@@ -4791,15 +5003,14 @@ function initTableDelegation(){
       var tr=e.target.closest('tr[data-row-key]');
       if(tr) showCtx(e,tr.dataset.rowKey);
     });
-    // C.4: Enter op gefocuste rij → openModal (toetsenbord-navigatie)
+    // WP-S11: C.4: Enter op gefocuste rij → openModal via parseRowKey
     tc.addEventListener('keydown',function(e){
       if(e.key!=='Enter') return;
       var tr=e.target.closest('tr[data-row-key]');
       if(tr){
         e.preventDefault();
-        var t=parseInt(tr.dataset.tab);
-        var id=parseInt(tr.dataset.rowKey.split('-')[1]);
-        openModal(t,id);
+        var parsed=parseRowKey(tr.dataset.rowKey);
+        openModal(parsed.tabIdx,parsed.recordId);
       }
     });
   });

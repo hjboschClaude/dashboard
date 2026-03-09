@@ -27,7 +27,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 |----------|-------|--------|
 | [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: 12 werkpakketten (WP1–WP12), herpositionering, structuur, PORT THIS/DEMO ONLY, token-alignment, pattern catalog, porting notes | ○ Open — P1 eerst |
 | [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
-| [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ○ Actief — Fase 1½ afgerond (v0.56.1), Fase 2 volgt |
+| [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ○ Actief — Fase 2 afgerond (v0.57.0), Fase 3 volgt |
 | [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
 
 ---
@@ -70,7 +70,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference: herpositionering, structuur, labels, tokens, patterns, porting, a11y, review | ○ Open |
 | **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
 | **WP-P1–P2** | SCHEMA_CONTRACT_PLAN.md | Performance quickfixes: _perfDebug guard, computeVisibleCols() cache | ✅ v0.56.1 |
-| **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ○ Fase 1 afgerond (v0.56.0) |
+| **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ○ Fase 2 afgerond (v0.57.0), Fase 3 volgt |
 
 ---
 
