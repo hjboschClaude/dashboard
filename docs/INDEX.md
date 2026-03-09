@@ -25,7 +25,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 
 | Document | Scope | Status |
 |----------|-------|--------|
-| [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: 12 werkpakketten (WP1–WP12), herpositionering, structuur, PORT THIS/DEMO ONLY, token-alignment, pattern catalog, porting notes | ○ Open — P1 eerst |
+| [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: Fase 1 (WP1–WP12) + Fase 2 Refresh (WP-R1–R6), tokens, 24 patronen, CSS-stubs, porting map | ✅ Fase 1 (v0.55.0) + Fase 2 (v1.5) afgerond |
 | [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
 | [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ✅ Fase 3 afgerond (v0.58.0) — Engine volledig generiek |
 | [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
@@ -67,7 +67,8 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **B-I1–I24** | TESTREGISTER.md | Integratietests: tabs, filter, sort, groep, selectie, virtualisatie, a11y | ✅ v0.38.0 |
 | **VC-1–VC-7** | TESTREGISTER.md | Visual Contracts (samenvoeging T+GATE), 33 checks | ✅ v0.36.0 (bijgewerkt v0.42.0) |
 | **D-P/M/C/L/S** | TESTREGISTER.md | Performance-budgetten: timing, DOM, heap, CSS, latency, stabiliteit, 27 metrics | ✅ v0.39.0 |
-| **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference: herpositionering, structuur, labels, tokens, patterns, porting, a11y, review | ○ Open |
+| **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference Fase 1: herpositionering, structuur, labels, tokens, 12 patterns, porting, a11y, review | ✅ v0.55.0 |
+| **L1-WP-R1–R6** | LAYER1_PLAN.md | UX Reference Fase 2 Refresh: RODS tokens, 24 patronen, CSS-stubs, porting map, assembler notes | ✅ v1.5 |
 | **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
 | **WP-P1–P2** | SCHEMA_CONTRACT_PLAN.md | Performance quickfixes: _perfDebug guard, computeVisibleCols() cache | ✅ v0.56.1 |
 | **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ✅ Fase 3 afgerond (v0.58.0) |

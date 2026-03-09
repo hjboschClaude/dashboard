@@ -529,3 +529,26 @@ Layer 1 is "geschikt gemaakt" wanneer:
 | 8 | Opgeschoonde toolbar (demo-tools ondergeschikt) | WP9 |
 | 9 | Build-notities voor assembler | WP11 |
 | 10 | Reviewverslag | WP12 |
+
+---
+
+## 11. Fase 2 — UX Reference Refresh (v1.5)
+
+**Aanleiding:** Na afronding Fase 1 (WP1–WP12, v0.55.0) is dashboard.html sterk geëvolueerd (v0.56–v0.59) met RODS kleurenpalet, feature gating, conditional formatting, multi-select, panels en modal/freeze. Layer 1 was daardoor niet meer actueel als normatieve bron.
+
+**Doel:** Token-alignment herstellen, patrooncatalogus uitbreiden van 12 → 24, CSS-stubs voor assembler toevoegen.
+
+| WP | Omschrijving | Status |
+|----|-------------|--------|
+| WP-R1 | RODS palette (27 tokens) + 9 nieuwe semantische tokens + light-variant re-mapping | ✅ v1.5 |
+| WP-R2 | Patrooncatalogus 12 → 24 (12 specification-only commentblokken) | ✅ v1.5 |
+| WP-R3 | PORTING MAP uitbreiden (17 → 30 rijen) + 7 nieuwe porting items | ✅ v1.5 |
+| WP-R4 | CSS-stubs: generalized panel, export grid, context menu, modal, freeze | ✅ v1.5 |
+| WP-R5 | ASSEMBLER BUILD NOTES componenttabel bijgewerkt | ✅ v1.5 |
+| WP-R6 | Versie bump 1.4 → 1.5, STRUCTUUR, catalogustitel, CHANGELOG, dit addendum | ✅ v1.5 |
+
+**Resultaat:**
+- Bestand: 718 → ~920 regels (compact, demo blijft werkend)
+- Tokens: ~55 (27 RODS + 18 semantisch + 10 L1-only)
+- Patronen: 24 (12 met werkende demo + 12 specification-only)
+- Porting map: 30 rijen (was 17)

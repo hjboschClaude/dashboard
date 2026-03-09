@@ -6,6 +6,38 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## UX Reference v1.5 — 2026-03-09
+
+**Type:** Onderhoud / Alignment
+**Domein:** Layer 1 — UX Reference Refresh
+
+Token-alignment met RODS, patrooncatalogus uitbreiding 12→24, CSS-stubs voor assembler, porting map uitgebreid.
+
+**WP-R1 — RODS palette en nieuwe semantische tokens:**
+- 27 RODS palette tokens toegevoegd (--green-50 t/m --gray-700)
+- 9 nieuwe semantische tokens (--text-body, --text-dim, --cta, --row-hover, --selected, --header-bg, --color-info, --font-size-xs)
+- L1 light-variants herleidt naar RODS var() referenties waar kleuren matchen
+- Token-mapping tabel uitgebreid (28 → ~55 rijen)
+
+**WP-R2 — Patrooncatalogus uitbreiding:**
+- 12 nieuwe patronen (#13-#24) als specification-only commentblokken
+- Feature gating, conditional formatting, multi-select, context menu, modal, filter/sort/group/export panels, freeze, panel system, toolbar inventory
+
+**WP-R3 — PORTING MAP uitbreiding:**
+- 13 nieuwe rijen in mapping-tabel (17 → 30 rijen)
+- 7 nieuwe items in "Vervangingen bij porting" sectie
+
+**WP-R4 — CSS-stubs voor nieuwe patronen:**
+- 5 nieuwe PORT THIS CSS secties: generalized panel, export grid, context menu, modal, freeze columns
+
+**WP-R5 — ASSEMBLER BUILD NOTES bijgewerkt:**
+- Componenttabel uitgebreid met RODS tokens, CSS-stubs, patronen #13-#24
+
+**WP-R6 — Versie bump:**
+- Versie 1.4 → 1.5, STRUCTUUR-overzicht bijgewerkt, headers actueel
+
+---
+
 ## v0.59.0 — 2026-03-09
 
 **Type:** Architectuur / Feature

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ═══════════════════════════════════════════════════════════════════
      UX REFERENCE LAYER — CSV Dashboard Template Platform
-     Versie: 1.4 | Datum: 2026-03-08
+     Versie: 1.5 | Datum: 2026-03-09
 
      Dit bestand is de bron van waarheid voor UX-patronen:
      hintbar, drag preview, drop corridor, kolommenpaneel,
@@ -16,9 +16,12 @@
 
      STRUCTUUR
      ─────────
-     CSS:  Tokens → Base → Toolbar → Undo-toast → Hintbar →
-           Table & Header → Drag & Drop states → Overlay patterns →
-           Drag preview → Column panel → Accessibility → Responsive
+     CSS:  Tokens (RODS + semantisch + L1-only) → Base → Toolbar →
+           Undo-toast → Hintbar → Table & Header → Drag & Drop states →
+           Overlay patterns → Drag preview → Column panel →
+           Generalized panel → Export grid → Context menu →
+           Modal / detail view → Freeze columns →
+           Accessibility → Responsive
      JS:   Demo data → State & history → DOM refs & utilities →
            Interaction patterns (drag, keyboard, panel, search, undo) →
            Demo engine (render, formatters, shuffle, reset) → Init
@@ -31,62 +34,97 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <style>
-    /* ══ DESIGN TOKENS ══
+    /* ══ DESIGN TOKENS ══  (v1.5 — gesynchroniseerd met dashboard.html v0.59.0)
      * Token-alignment met RODS (Rotterdam Design System) — zie dashboard.html :root
-     * Gedeeld = identiek aan Layer 2 (RODS); L1-only = UX Reference specifiek
+     * Gedeeld = identiek aan Layer 2; RODS = palette-schaal; L1-only = UX Reference specifiek
      *
-     * ┌─────────────────────┬───────────────┬─────────────────────────────────────┐
-     * │ Token               │ Gedeeld/L1    │ Toelichting                         │
-     * ├─────────────────────┼───────────────┼─────────────────────────────────────┤
-     * │ --bg                │ Gedeeld       │ Pagina-achtergrond                  │
-     * │ --surface           │ Gedeeld       │ Kaart/toolbar achtergrond           │
-     * │ --surface-2         │ L1-only       │ Diepere surface (progress-bar)      │
-     * │ --border            │ Gedeeld       │ Primaire rand                       │
-     * │ --border-light      │ L1-only       │ Subtiele rand (cellen, hintbar)     │
-     * │ --text              │ Gedeeld       │ Body-tekst                          │
-     * │ --text-muted        │ Gedeeld (RODS)│ Secundaire tekst (was: --muted)     │
-     * │ --accent            │ Gedeeld       │ Primaire accentkleur (groen)        │
-     * │ --accent-light      │ L1-only       │ Lichte accent-achtergrond           │
-     * │ --accent-subtle     │ L1-only       │ Hover-achtergrond (transparant)     │
-     * │ --color-danger      │ Gedeeld (RODS)│ Foutkleur (was: --danger)           │
-     * │ --color-danger-light│ L1-only       │ Lichte fout-achtergrond             │
-     * │ --color-warning     │ Gedeeld (RODS)│ Waarschuwingskleur (was: --warning) │
-     * │ --color-warning-light│ L1-only      │ Lichte waarschuwing-achtergrond     │
-     * │ --color-success     │ L1-only       │ Succeskleur (was: --success)        │
-     * │ --color-success-light│ L1-only      │ Lichte succes-achtergrond           │
-     * │ --shadow-sm         │ L1-only       │ Kaart-schaduw (subtiel)             │
-     * │ --shadow-md         │ Gedeeld       │ Standaard schaduw                   │
-     * │ --shadow-lg         │ L1-only       │ Paneel-schaduw                      │
-     * │ --shadow-xl         │ L1-only       │ Toast/preview-schaduw               │
-     * │ --radius            │ L1-only       │ Standaard border-radius             │
-     * │ --radius-lg         │ L1-only       │ Grote border-radius (kaart/preview) │
-     * │ --header-h          │ L1-only       │ Hoogte thead th                     │
-     * │ --row-height        │ Gedeeld (RODS)│ Rijhoogte tbody (was: --row-h)      │
-     * │ --drop-gap          │ L1-only       │ Breedte drop-corridor               │
-     * │ --transition-fast   │ L1-only       │ Snelle UI-transitie (100ms)         │
-     * │ --transition-med    │ L1-only       │ Normale UI-transitie (180ms)        │
-     * │ --panel-w           │ L1-only       │ Breedte kolommenpaneel              │
-     * └─────────────────────┴───────────────┴─────────────────────────────────────┘
+     * ┌──────────────────────┬───────────┬──────────────────────────────────────────┐
+     * │ Token                │ Categorie │ Toelichting                              │
+     * ├──────────────────────┼───────────┼──────────────────────────────────────────┤
+     * │ --bg                 │ Gedeeld   │ Pagina-achtergrond                       │
+     * │ --surface            │ Gedeeld   │ Kaart/toolbar achtergrond                │
+     * │ --border             │ Gedeeld   │ Primaire rand                            │
+     * │ --accent             │ Gedeeld   │ Primaire accentkleur (groen)             │
+     * │ --text-body          │ Gedeeld   │ Primaire tekst (zwart)                   │
+     * │ --text               │ Gedeeld   │ Body-tekst (donkergrijs)                 │
+     * │ --text-muted         │ Gedeeld   │ Secundaire tekst                         │
+     * │ --text-dim           │ Gedeeld   │ Tertiaire tekst                          │
+     * │ --shadow-md          │ Gedeeld   │ Standaard schaduw                        │
+     * │ --row-height         │ Gedeeld   │ Rijhoogte tbody                          │
+     * │ --cta                │ Gedeeld   │ Call-to-action kleur (magenta)            │
+     * │ --cta-hover          │ Gedeeld   │ CTA hover-state                          │
+     * │ --row-hover          │ Gedeeld   │ Rij-hover achtergrond                    │
+     * │ --selected           │ Gedeeld   │ Geselecteerde rij achtergrond            │
+     * │ --header-bg          │ Gedeeld   │ Tabel-header achtergrond                 │
+     * │ --color-warning      │ Gedeeld   │ Waarschuwingskleur                       │
+     * │ --color-danger       │ Gedeeld   │ Foutkleur                                │
+     * │ --color-info         │ Gedeeld   │ Informatiekleur (blauw)                  │
+     * │ --font-size-xs       │ Gedeeld   │ Kleine tekst (11px)                      │
+     * │ --green-50 … -800    │ RODS      │ Groenschaal (6 stappen)                  │
+     * │ --red-50 … -700      │ RODS      │ Roodschaal (4 stappen)                   │
+     * │ --blue-50 … -700     │ RODS      │ Blauwschaal (3 stappen)                  │
+     * │ --orange-50 … -500   │ RODS      │ Oranjeschaal (3 stappen)                 │
+     * │ --yellow-50           │ RODS      │ Geelschaal (1 stap)                      │
+     * │ --magenta-600        │ RODS      │ Magentaschaal (1 stap)                   │
+     * │ --gray-50 … -700     │ RODS      │ Grijsschaal (5 stappen)                  │
+     * │ --surface-2          │ L1-only   │ Diepere surface → var(--gray-200)        │
+     * │ --border-light       │ L1-only   │ Subtiele rand → var(--gray-100)          │
+     * │ --accent-light       │ L1-only   │ Lichte accent-achtergrond                │
+     * │ --accent-subtle      │ L1-only   │ Hover-achtergrond (transparant)          │
+     * │ --color-danger-light │ L1-only   │ Lichte fout-achtergrond → var(--red-50)  │
+     * │ --color-warning-light│ L1-only   │ Lichte waarschuwing → var(--orange-50)   │
+     * │ --color-success      │ L1-only   │ Succeskleur                              │
+     * │ --color-success-light│ L1-only   │ Lichte succes-achtergrond                │
+     * │ --shadow-sm          │ L1-only   │ Kaart-schaduw (subtiel)                  │
+     * │ --shadow-lg          │ L1-only   │ Paneel-schaduw                           │
+     * │ --shadow-xl          │ L1-only   │ Toast/preview-schaduw                    │
+     * │ --radius             │ L1-only   │ Standaard border-radius                  │
+     * │ --radius-lg          │ L1-only   │ Grote border-radius (kaart/preview)      │
+     * │ --header-h           │ L1-only   │ Hoogte thead th                          │
+     * │ --drop-gap           │ L1-only   │ Breedte drop-corridor                    │
+     * │ --transition-fast    │ L1-only   │ Snelle UI-transitie (100ms)              │
+     * │ --transition-med     │ L1-only   │ Normale UI-transitie (180ms)             │
+     * │ --panel-w            │ L1-only   │ Breedte kolommenpaneel                   │
+     * └──────────────────────┴───────────┴──────────────────────────────────────────┘
      */
     :root{
-      /* Gedeelde tokens — identiek aan RODS (dashboard.html) */
+      /* Gedeelde semantische tokens — identiek aan dashboard.html (RODS) */
       --bg:#FFFFFF;
       --surface:#F5F7F8;
       --border:#CAD6DA;
       --accent:#00811F;
+      --text-body:#000000;
       --text:#404B4F;
       --text-muted:#617179;
+      --text-dim:#536165;
       --shadow-md:0 4px 12px rgba(0,0,0,.10);
       --row-height:32px;
+      --cta:#C93675;
+      --cta-hover:#B52B65;
+      --row-hover:var(--gray-100);
+      --selected:var(--green-100);
+      --header-bg:var(--gray-50);
       --color-warning:#EB7900;
       --color-danger:#D70D0D;
+      --color-info:#00689E;
+      --font-size-xs:11px;
+      /* RODS kleurenpalet — gedeeld met Layer 2 (27 tokens) */
+      --green-50:#EDFAF5;--green-100:rgb(218 242 232);--green-200:#A8E0C5;
+      --green-400:#32A85C;--green-700:#006113;--green-800:#004F0E;
+      --red-50:#FCF6F0;--red-100:#FAEEE3;--red-400:#E3644D;--red-700:#A10606;
+      --blue-50:rgb(237 248 250);--blue-100:rgb(220 240 245);--blue-700:#004275;
+      --orange-50:#FFF3E5;--orange-400:#EB7900;--orange-500:#A65600;
+      --yellow-50:#FFFDF2;
+      --magenta-600:#B52B65;
+      --gray-50:#F5F7F8;--gray-100:#E4EEF1;--gray-200:#DBE7EA;
+      --gray-400:#B6C4C8;--gray-700:#7C8B90;
       /* L1-only tokens — UX Reference specifiek */
-      --surface-2:#eaeff1;
-      --border-light:#e4eaec;
+      --surface-2:var(--gray-200);
+      --border-light:var(--gray-100);
       --accent-light:#e6f5ed;
       --accent-subtle:rgba(0,128,62,.07);
-      --color-danger-light:#fef0f0;
-      --color-warning-light:#fff6e8;
+      --color-danger-light:var(--red-50);
+      --color-warning-light:var(--orange-50);
       --color-success:#0d7a2e;
       --color-success-light:#e8f6ec;
       --shadow-sm:0 1px 3px rgba(0,0,0,.06);
@@ -210,6 +248,60 @@
     .toggle input:checked+.slider{background:var(--accent)}.toggle input:checked+.slider::before{transform:translateX(16px)}.toggle input:focus-visible+.slider{box-shadow:0 0 0 3px rgba(0,128,62,.2)}
     .panel-item.pi-dragging{opacity:.4;background:var(--surface)}.panel-item.pi-dragover{box-shadow:inset 0 2px 0 var(--accent)}
 
+    /* ══ GENERALIZED PANEL SYSTEM ══ — PORT THIS: herbruikbaar paneel-patroon voor filter/sort/group/export
+     * PORTING NOTE: engine togglePanel(name)/closePanel(name); panel heeft header+body+footer structuur;
+     * L1 col-panel is een specifieke instantie van dit patroon; assembler neemt het generieke patroon over */
+    .panel{position:fixed;background:var(--bg);border:1px solid var(--gray-400);border-radius:8px;padding:0;z-index:51;box-shadow:var(--shadow-md);min-width:320px;max-width:440px;animation:popIn .15s ease;overflow:hidden;display:none}
+    .panel.is-open{display:block}
+    @keyframes popIn{from{opacity:0;transform:scale(.95) translateY(-6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .panel-header-gen{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .panel-title{font-size:14px;line-height:24px;font-weight:600;color:var(--text)}
+    .panel-body-gen{padding:8px 16px;max-height:420px;overflow-y:auto;overflow-x:hidden}
+    .panel-footer-gen{padding:8px 16px;border-top:1px solid var(--border);display:flex;gap:8px}
+
+    /* ══ EXPORT GRID ══ — PORT THIS: 2-koloms grid voor exportopties (CSV, XLSX, JSON, PNG, Markdown, HTML)
+     * PORTING NOTE: engine exportCSV()/exportXLSX() etc.; items zijn knoppen met icoon+label+beschrijving */
+    .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0}
+    .export-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--gray-200);cursor:pointer;transition:all .2s}
+    .export-item:hover{border-color:var(--accent);background:var(--green-50)}
+    .export-icon{font-size:20px}
+    .export-label{font-size:12px;font-weight:500;color:var(--text-dim)}
+    .export-desc{font-size:12px;color:var(--text-muted);text-align:center}
+    .export-item:hover .export-label{color:var(--green-800)}
+
+    /* ══ CONTEXT MENU ══ — PORT THIS: floating context-menu bij row-acties (⋯ knop)
+     * PORTING NOTE: engine showCtx()/showCtxAt(); menu verschijnt bij klik op row-action-btn;
+     * items zijn acties op de geselecteerde rij (bekijken, exporteren, etc.) */
+    .ctx-menu{position:fixed;background:var(--bg);border:1px solid var(--gray-400);border-radius:8px;padding:4px;min-width:165px;z-index:200;box-shadow:var(--shadow-md);display:none;animation:popIn .1s ease}
+    .ctx-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:4px;font-size:12px;color:var(--text-dim);cursor:pointer;transition:background .1s}
+    .ctx-item:hover{background:var(--surface);color:var(--text)}
+    .ctx-item.danger{color:var(--color-danger)}
+    .ctx-item.danger:hover{background:var(--red-50)}
+    .ctx-sep{height:1px;background:var(--border);margin:4px}
+
+    /* ══ MODAL / DETAIL VIEW ══ — PORT THIS: zijpaneel met rijdetails, slide-in van rechts
+     * PORTING NOTE: engine openModal(); slide-in animatie 200ms; Escape sluit;
+     * velden worden opgebouwd vanuit schemaContract semantic fields */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:100;display:none}
+    .modal-overlay.is-open{display:block}
+    .modal{background:var(--bg);border-left:1px solid var(--gray-400);width:420px;max-width:90vw;height:100vh;overflow-y:auto;padding:24px;position:fixed;top:0;right:0;animation:slideIn .2s ease;box-shadow:var(--shadow-md)}
+    @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .modal-title{font-size:20px;line-height:28px;font-weight:600}
+    .modal-close{width:26px;height:26px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+    .modal-close:hover{color:var(--text)}
+    .modal-field{margin-bottom:12px}
+    .modal-label{font-size:12px;line-height:20px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+    .modal-value{font-size:14px;line-height:24px;color:var(--text-dim);padding:8px;background:var(--bg);border-radius:4px;border:1px solid var(--border)}
+
+    /* ══ FREEZE COLUMNS ══ — PORT THIS: sticky kolom met schaduwrand voor visuele scheiding
+     * PORTING NOTE: engine toggleFreeze(); 2e kolom wordt sticky; shadow rechts van bevroren kolom;
+     * hover/selected states moeten op bevroren cellen werken */
+    .freeze-active table thead th:nth-child(2){position:sticky;left:44px;z-index:11;background:var(--header-bg);box-shadow:4px 0 6px -2px rgba(0,0,0,.08)}
+    .freeze-active table tbody td:nth-child(2){position:sticky;left:44px;z-index:4;background:var(--bg);box-shadow:4px 0 6px -2px rgba(0,0,0,.06)}
+    .freeze-active table tbody tr:nth-child(even) td:nth-child(2){background:var(--surface)}
+    .freeze-active table tbody tr:hover td:nth-child(2){background:var(--row-hover)!important}
+
     /* ══ ACCESSIBILITY ══ — PORT THIS: reduced-motion, focus-visible, sr-only
      * Normatieve ARIA-rollen (zie ook HTML):
      *   role="grid"          → #demoTable (tabel met navigeerbare headers)
@@ -313,25 +405,38 @@ function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRo
 // ╚══════════════════════════════════════════════════════════════╝
 //
 // ══ INTERACTION PATTERN CATALOG ══════════════════════════════════
-// 12 normatieve patronen — contract tussen Layer 1 (UX) en Layer 2 (Engine)
-// Elk patroon hieronder definieert WAT er moet gebeuren; de HOW staat in Layer 2.
+// 24 normatieve patronen — contract tussen Layer 1 (UX) en Layer 2 (Engine)
+// Patronen 1-12 hebben een werkende demo; 13-24 zijn specification-only.
+// Elk patroon definieert WAT er moet gebeuren; de HOW staat in Layer 2.
 //
-// ┌────┬──────────────────────┬───────────────────────────────────────┐
-// │ #  │ Patroon              │ Samenvatting                          │
-// ├────┼──────────────────────┼───────────────────────────────────────┤
-// │  1 │ Column drag start    │ Gebruiker pakt kolomheader op         │
-// │  2 │ Column drag move     │ Gebruiker sleept over andere headers  │
-// │  3 │ Column drag commit   │ Gebruiker laat los op doelpositie     │
-// │  4 │ Column drag cancel   │ Drag wordt afgebroken                 │
-// │  5 │ Drop corridor        │ Visuele indicator waar kolom landt    │
-// │  6 │ Header shift         │ Buurkolommen schuiven opzij           │
-// │  7 │ Column panel         │ Slide-in paneel voor kolombeheer      │
-// │  8 │ Show all / hide all  │ Bulk-toggle kolom-zichtbaarheid       │
-// │  9 │ Keyboard reorder     │ Kolom verplaatsen via toetsenbord     │
-// │ 10 │ Hide column          │ Enkele kolom verbergen                │
-// │ 11 │ Undo feedback        │ Toast met ongedaan-maken optie        │
-// │ 12 │ Screen reader announce│ Statusmelding voor screenreaders     │
-// └────┴──────────────────────┴───────────────────────────────────────┘
+// ┌────┬─────────────────────────┬───────────────────────────────────────┐
+// │ #  │ Patroon                 │ Samenvatting                          │
+// ├────┼─────────────────────────┼───────────────────────────────────────┤
+// │  1 │ Column drag start       │ Gebruiker pakt kolomheader op         │
+// │  2 │ Column drag move        │ Gebruiker sleept over andere headers  │
+// │  3 │ Column drag commit      │ Gebruiker laat los op doelpositie     │
+// │  4 │ Column drag cancel      │ Drag wordt afgebroken                 │
+// │  5 │ Drop corridor           │ Visuele indicator waar kolom landt    │
+// │  6 │ Header shift            │ Buurkolommen schuiven opzij           │
+// │  7 │ Column panel            │ Slide-in paneel voor kolombeheer      │
+// │  8 │ Show all / hide all     │ Bulk-toggle kolom-zichtbaarheid       │
+// │  9 │ Keyboard reorder        │ Kolom verplaatsen via toetsenbord     │
+// │ 10 │ Hide column             │ Enkele kolom verbergen                │
+// │ 11 │ Undo feedback           │ Toast met ongedaan-maken optie        │
+// │ 12 │ Screen reader announce  │ Statusmelding voor screenreaders      │
+// │ 13 │ Feature gating          │ Toolbar-elementen declaratief tonen   │
+// │ 14 │ Conditional formatting  │ Celkleuren op basis van regels        │
+// │ 15 │ Multi-select checkboxes │ 3-state header + rij-selectie         │
+// │ 16 │ Context menu            │ Rij-actiemenu bij ⋯ knop              │
+// │ 17 │ Modal / detail view     │ Zijpaneel met rijdetails              │
+// │ 18 │ Filter panel            │ Regelgebaseerd filteren (AND/OR)      │
+// │ 19 │ Sort panel              │ Multi-sort regels                     │
+// │ 20 │ Group panel             │ Groeperen op veld                     │
+// │ 21 │ Export panel             │ 6 formaten in grid-layout            │
+// │ 22 │ Freeze columns          │ Sticky kolom met schaduwrand          │
+// │ 23 │ Generalized panel       │ Herbruikbaar paneel-patroon           │
+// │ 24 │ Toolbar inventory       │ Volledig toolbar-knoppenset           │
+// └────┴─────────────────────────┴───────────────────────────────────────┘
 //
 // ── PATROON 1: Column drag start ────────────────────────────────
 //   Doel:       Kolomheader oppakken om te herschikken
@@ -448,6 +553,152 @@ function updateResultCount(){resultCount.textContent=searchTerm?`${getFilteredRo
 //               te forceren bij dezelfde melding
 //   Engine-hook: announce(message) als engine utility; elke engine-actie
 //               roept announce() aan als laatste stap
+//
+// ── PATRONEN 13–24: REFERENCE ONLY (geen demo-implementatie) ────
+// Deze patronen zijn gedocumenteerd als specificatie. De CSS-stubs
+// staan hierboven in het <style>-blok. Werkende implementaties
+// staan in dashboard.html (Layer 2).
+//
+// ── PATROON 13: Feature gating ────────────────────────────────────
+//   Doel:       Toolbar-elementen declaratief tonen/verbergen op
+//               basis van schemaContract-features per tab
+//   Trigger:    Automatisch bij tab-switch en init
+//   State:      FEATURE_UI_MAP mapt featurenaam → element-IDs;
+//               elementen krijgen class .feature-gated (display:none)
+//               wanneer feature niet beschikbaar is
+//   A11y:       Verborgen elementen zijn onbereikbaar via Tab;
+//               geen announce (geen gebruikersactie)
+//   Engine-hook: applyFeatureGates() past gates toe;
+//               isFeatureEnabled(feat, tab) als guard in handlers
+//
+// ── PATROON 14: Conditional formatting ────────────────────────────
+//   Doel:       Cellen visueel markeren op basis van data-waarden
+//               (rood/geel/groen achtergrond)
+//   Trigger:    Automatisch bij render; regels in condFormattingRules[]
+//   State:      Cel krijgt class cond-red/cond-yellow/cond-green
+//               op basis van evaluateCondRule() (eq/lt/gt/contains/
+//               empty/not_empty operatoren, compound AND/OR)
+//   A11y:       Kleur is niet de enige indicator; combineren met
+//               tekst of icoon voor kleurenblinde gebruikers
+//   Engine-hook: condClass(row, tab) retourneert CSS class;
+//               evaluateCondRule(row, rule) evalueert enkele regel
+//
+// ── PATROON 15: Multi-select checkboxes ───────────────────────────
+//   Doel:       Meerdere rijen selecteren voor bulk-acties
+//   Trigger:    Klik op rij-checkbox of header-checkbox
+//   State:      Header-checkbox kent 3 toestanden: unchecked,
+//               checked (alle zichtbaar), indeterminate (deels);
+//               geselecteerde rijen krijgen class .selected +
+//               groene linkerborder; bulk-toolbar verschijnt
+//   A11y:       aria-checked op checkboxes; announce bij
+//               selectiewijziging ("{n} rijen geselecteerd")
+//   Engine-hook: toggleRow(rowKey) / toggleSelectAll();
+//               updateSelectionUI() synchroniseert header-state;
+//               selectedRowKeys (Set) als selector
+//
+// ── PATROON 16: Context menu / row action ─────────────────────────
+//   Doel:       Rij-specifieke acties aanbieden (bekijken, export)
+//   Trigger:    Klik op ⋯ knop (verschijnt bij row hover) of
+//               rechtermuisklik op rij
+//   State:      Floating menu (.ctx-menu) bij cursor/knop-positie;
+//               items: Bekijken, Exporteren, Kopiëren, etc.;
+//               danger-items voor destructieve acties
+//   A11y:       Menu krijgt focus bij openen; Escape sluit;
+//               aria-haspopup op trigger-knop
+//   Engine-hook: showCtx(rowKey) / showCtxAt(x, y);
+//               contextRowKey als actieve rij-selector
+//
+// ── PATROON 17: Modal / detail view ───────────────────────────────
+//   Doel:       Alle velden van een rij tonen in een zijpaneel
+//   Trigger:    Klik op rij-label of "Bekijken" in context menu
+//   State:      Zijpaneel schuift in van rechts (slideIn 200ms);
+//               overlay (20% zwart); velden als label+waarde paren;
+//               sluit bij Escape, klik overlay, of ✕-knop
+//   A11y:       Focus trap in modal; Escape sluit;
+//               focus return naar trigger
+//   Engine-hook: openModal(rowKey); velden uit schemaContract
+//               semantic fields; parseRowKey() voor rij-lookup
+//
+// ── PATROON 18: Filter panel ──────────────────────────────────────
+//   Doel:       Data filteren op basis van kolomregels
+//   Trigger:    Klik op Filter-knop in toolbar
+//   State:      Panel met filterregels (.filter-rule): kolom +
+//               operator (bevat/is/>/</leeg) + waarde; AND/OR
+//               toggle; badge op knop toont aantal actieve filters;
+//               live preview van resultaten
+//   A11y:       Paneel als dialog; focus op eerste regel;
+//               announce bij filter toepassen ("{n} resultaten")
+//   Engine-hook: renderFilterPanel(); applyFiltersAction();
+//               filterRules[] + filterLogic als state
+//
+// ── PATROON 19: Sort panel ────────────────────────────────────────
+//   Doel:       Multi-sort regels instellen (primair + secundair)
+//   Trigger:    Klik op Sorteren-knop in toolbar
+//   State:      Panel met sort-regels (.sort-rule): kolom +
+//               richting (asc ↑ / desc ↓); drag-reorder regels;
+//               draft-commit patroon (wijzigingen pas bij "Toepassen")
+//   A11y:       Paneel als dialog; announce bij toepassen
+//   Engine-hook: renderSortPanel(); applySortAction();
+//               sortRules[] + _draftSortRules als state
+//
+// ── PATROON 20: Group panel ───────────────────────────────────────
+//   Doel:       Data groeperen op een of meer velden
+//   Trigger:    Klik op Groeperen-knop in toolbar
+//   State:      Panel met groepveld-selectie (.group-item): kolom
+//               kiezen uit dropdown; gegroepeerde weergave met
+//               inklapbare groepsheaders; groep-aggregaties
+//   A11y:       Groepsheaders zijn focusbaar; Enter/Space klapt
+//               in/uit; announce bij groepeerwijziging
+//   Engine-hook: renderGroupPanel(); groupFields[];
+//               _renderGroupedVirtual() voor gegroepeerde body
+//
+// ── PATROON 21: Export panel ──────────────────────────────────────
+//   Doel:       Data exporteren in meerdere formaten
+//   Trigger:    Klik op Export-knop in toolbar
+//   State:      Panel met 2-koloms grid (.export-grid): 6 formaten
+//               (CSV, XLSX, JSON, PNG, Markdown, HTML) met icoon +
+//               label + beschrijving; hover highlight; directe download
+//   A11y:       Items zijn focusbaar; Enter activeert export;
+//               announce bij succesvolle export
+//   Engine-hook: exportCSV(), exportXLSX(), exportJSON(),
+//               exportPNG(), exportMarkdown(), exportHTML();
+//               _exportMode als scope-selector (all/filtered/selected)
+//
+// ── PATROON 22: Freeze columns ────────────────────────────────────
+//   Doel:       Eerste kolom(men) vastzetten bij horizontaal scrollen
+//   Trigger:    Klik op Bevriezen-knop in toolbar (toggle)
+//   State:      2e kolom wordt sticky (position:sticky); schaduwrand
+//               rechts als visuele scheiding; hover/selected states
+//               blijven werken op bevroren cellen
+//   A11y:       Geen specifieke a11y-vereiste (puur visueel);
+//               announce "Kolommen bevroren" / "Bevriezing opgeheven"
+//   Engine-hook: toggleFreeze(); freezeCol als state;
+//               CSS class .freeze-active op table-container
+//
+// ── PATROON 23: Generalized panel system ──────────────────────────
+//   Doel:       Herbruikbaar paneel-patroon voor alle panel-types
+//   Trigger:    togglePanel(name) via toolbar-knop
+//   State:      Overlay (.panel-overlay) + panel (.panel) met
+//               header/body/footer structuur; popIn-animatie (150ms);
+//               alleen één panel tegelijk open; Escape sluit;
+//               focus trap in panel
+//   A11y:       Panel als dialog; focus op eerste interactief element;
+//               Escape sluit; focus return naar trigger-knop
+//   Engine-hook: togglePanel(name) / closePanel(name);
+//               activePanel als selector; panel-specifieke render*()
+//
+// ── PATROON 24: Toolbar button inventory ──────────────────────────
+//   Doel:       Volledig overzicht van toolbar-knoppen en hun
+//               feature-gate status
+//   Trigger:    Statisch (geen interactie — documentatie-patroon)
+//   State:      Toolbar-knoppen in dashboard.html (v0.59.0):
+//               Zoeken (search), Filter (filter), Sorteren (sort),
+//               Kolommen (columns), Groeperen (group), Opmaak (cond),
+//               Bevriezen (freeze), Export (n.v.t.), Tests (n.v.t.)
+//               Elk gegated via FEATURE_UI_MAP + isFeatureEnabled()
+//   A11y:       Verborgen knoppen onbereikbaar via Tab-volgorde
+//   Engine-hook: FEATURE_UI_MAP (mapping feature → element-IDs);
+//               applyFeatureGates() synchroniseert UI-state
 //
 // ═════════════════════════════════════════════════════════════════
 
@@ -647,6 +898,20 @@ render();
 // │ sort-indicator (footer)  │ — (render adapter leest sortState)       │ getSortState()           │
 // │ focus return na move     │ — (render adapter behoudt data-col-key)  │ —                        │
 // │ flash animatie           │ — (CSS class via render adapter)          │ —                        │
+// ├──────────────────────────┼──────────────────────────────────────────┼──────────────────────────┤
+// │ feature gating           │ applyFeatureGates()                      │ isFeatureEnabled(feat)   │
+// │ cond. formatting         │ condClass(row, tab)                      │ condFormattingRules[]    │
+// │ multi-select header      │ toggleSelectAll()                        │ selectedRowKeys (Set)    │
+// │ multi-select rij         │ toggleRow(rowKey)                        │ selectedRowKeys (Set)    │
+// │ context menu (⋯)         │ showCtx(key) / showCtxAt(x,y)           │ contextRowKey            │
+// │ modal detail view        │ openModal(rowKey)                        │ parseRowKey()            │
+// │ filter panel             │ renderFilterPanel(), applyFiltersAction() │ filterRules[]           │
+// │ sort panel               │ renderSortPanel(), applySortAction()     │ sortRules[]              │
+// │ group panel              │ renderGroupPanel()                       │ groupFields[]            │
+// │ export panel             │ exportCSV(), exportXLSX() etc.           │ _exportMode              │
+// │ freeze columns           │ toggleFreeze()                           │ freezeCol                │
+// │ panel system             │ togglePanel(name), closePanel(name)      │ activePanel              │
+// │ toolbar inventory        │ applyFeatureGates()                      │ FEATURE_UI_MAP           │
 // └──────────────────────────┴──────────────────────────────────────────┴──────────────────────────┘
 //
 // Vervangingen bij porting:
@@ -657,7 +922,14 @@ render();
 // - rows[].sort()        → engine sortData() via _derived.sortedData
 // - hiddenColumns Set    → engine col.visible flag per kolom
 // - searchTerm variabele → engine globalNameFilter + debouncedRender
-// - Tokens               → align met RODS-tokenset (zie LAYER1_PLAN WP4)
+// - Tokens               → align met RODS-tokenset (zie LAYER1_PLAN WP4/WP-R1)
+// - Feature gating       → FEATURE_UI_MAP + .feature-gated CSS class
+// - Cond. formatting     → condFormattingRules[] + evaluateCondRule()
+// - Checkboxes           → rowHtml() checkbox gating via isFeatureEnabled('multiSelect')
+// - Context menu         → .ctx-menu + .row-action-btn op primary-label cel
+// - Modal                → .modal + .modal-overlay + slideIn animatie
+// - Panels (generiek)    → togglePanel(name) + .panel.is-open + popIn animatie
+// - Freeze               → .freeze-active + sticky td:nth-child(2)
 //
 // ══════════════════════════════════════════════════════════════
 // ASSEMBLER BUILD NOTES — Layer 1 als bronlaag voor Layer 5
@@ -671,8 +943,9 @@ render();
 // ┌─────────────────────────────┬──────────────┬─────────────────────────────────────────┐
 // │ Component                   │ Sectie       │ Wat de assembler overneemt              │
 // ├─────────────────────────────┼──────────────┼─────────────────────────────────────────┤
-// │ Design tokens               │ :root {}     │ Gedeelde tokens (--bg, --surface, etc.) │
-// │                             │              │ L1-only tokens als UX-defaults          │
+// │ RODS palette tokens         │ :root {}     │ 27 palette tokens (--green-50…--gray-700)│
+// │ Semantische tokens          │ :root {}     │ Gedeelde tokens (--bg, --text-body etc.)│
+// │ L1-only tokens              │ :root {}     │ UX-specifieke tokens als defaults       │
 // │ Toolbar CSS                 │ TOOLBAR      │ Layout, search-box, separator styling   │
 // │ Undo-toast CSS              │ UNDO-TOAST   │ Fixed-bottom toast, animatie, knop      │
 // │ Hintbar CSS                 │ HINTBAR      │ Keyboard hints, kbd styling             │
@@ -681,6 +954,11 @@ render();
 // │ Overlay CSS                 │ OVERLAY      │ Drop corridor, overlay container        │
 // │ Drag preview CSS            │ DRAG PREVIEW │ Floating column card                    │
 // │ Column panel CSS            │ COL PANEL    │ Slide-in panel, toggle, drag-reorder    │
+// │ Generalized panel CSS       │ GEN PANEL    │ .panel, header/body/footer structuur    │
+// │ Export grid CSS             │ EXPORT GRID  │ .export-grid, .export-item layout       │
+// │ Context menu CSS            │ CONTEXT MENU │ .ctx-menu, .ctx-item, .ctx-sep          │
+// │ Modal / detail view CSS     │ MODAL        │ .modal-overlay, .modal, velden          │
+// │ Freeze columns CSS          │ FREEZE       │ .freeze-active sticky rules + shadow    │
 // │ Accessibility CSS           │ ACCESSIBILITY│ Reduced-motion, focus-visible, sr-only  │
 // │ Responsive CSS              │ RESPONSIVE   │ Breakpoints, mobiel layout              │
 // │ Hintbar HTML                │ <body>       │ Keyboard hints structuur                │
@@ -690,6 +968,7 @@ render();
 // │ SR announce HTML            │ <body>       │ aria-live region                        │
 // │ Keyboard contracts (JS)     │ INTERACTION  │ Toetscombinaties als specificatie       │
 // │ Accessibility contracts (JS)│ INTERACTION  │ ARIA-attributen, focus management       │
+// │ Patronen #13-#24 (spec)     │ CATALOGUS    │ Specificatie als commentaar (geen code) │
 // └─────────────────────────────┴──────────────┴─────────────────────────────────────────┘
 //
 // NIET naar builds (assembler negeert deze):
@@ -701,6 +980,7 @@ render();
 // │ Demo render                 │ render(), formatCell() — via Engine renderVirtualBody()   │
 // │ Demo tools UI               │ <details class="demo-tools"> — niet in productie         │
 // │ Google Fonts CDN            │ DM Sans link — productie gebruikt system-ui/RODS fonts   │
+// │ Patroon #13-#24 demo code   │ Alleen specificatie; implementatie is Engine-verantw.     │
 // └─────────────────────────────┴──────────────────────────────────────────────────────────┘
 //
 // Consumptieproces:
