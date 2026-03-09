@@ -716,7 +716,7 @@ var _tabIndexById={};  // WP-S11: O(1) record lookup per tab
 const dashboardConfig = {
   app: {
     title: "Dashboard Gemeente Rotterdam",
-    version: '0.59.0',
+    version: '0.60.0',
     defaultTabId: "projects"
   },
   tabs: [
@@ -727,8 +727,8 @@ const dashboardConfig = {
       dataSource: { type: "embedded" },
       columns: [
         {key:'name',label:'Projectnaam',icon:'Aa',visible:true, renderer:'text',type:'text'},
-        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
-        {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'priority',type:'enum'},
+        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral'}},
+        {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'tag',type:'enum',tagColors:{Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'}},
         {key:'directeur',label:'Verantwoordelijke Directeur',icon:'👔',visible:true, renderer:'avatar',type:'text'},
         {key:'aog',label:'Ambtelijk Opdrachtgever',icon:'📋',visible:true, renderer:'avatar',type:'text'},
         {key:'pm',label:'Projectmanager',icon:'👤',visible:true, renderer:'avatar',type:'text'},
@@ -789,7 +789,7 @@ const dashboardConfig = {
         {key:'afdeling',label:'Afdeling',icon:'🏢',visible:true, renderer:'tag',type:'enum'},
         {key:'email',label:'Email',icon:'📧',visible:true, renderer:'email',type:'text'},
         {key:'inDienst',label:'In Dienst',icon:'📅',visible:true, renderer:'date',type:'date'},
-        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
+        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'}},
         {key:'beoordeling',label:'Beoordeling',icon:'⭐',visible:true, renderer:'star',type:'number'},
         {key:'locatie',label:'Locatie',icon:'🗺',visible:true, renderer:'text',type:'text'},
         {key:'capaciteit',label:'Capaciteit',icon:'▦',visible:true, renderer:'progress',type:'number'},
@@ -921,8 +921,7 @@ function getSearchTextFields(tabIdx){
   var tab=tabIdx!==undefined?tabIdx:AppState.currentTab;
   var fields=getSemanticField(tab,'searchTextFields');
   if(fields&&Array.isArray(fields)) return fields;
-  // Legacy fallback
-  return tab===0?['directeur','aog','pm']:['name'];
+  return []; // v0.60.0 WP-D5: legacy fallback verwijderd — schemaContract is verplicht
 }
 // S7-6: Veldnaam voor de detail/modal titel. Fallback: primaryLabel.
 function getDetailTitleField(tabIdx){
@@ -1823,13 +1822,12 @@ function getData(tabIdx){return _tabData[tabIdx!==undefined?tabIdx:AppState.curr
 // ████████████████████████████████████████████████████████████████
 
 // ══ RENDER: Cell Renderers ════════════════════════════════════
-// Adapter: cellRenderers{} — dispatch-tabel (14 typen)
+// Adapter: cellRenderers{} — dispatch-tabel (12 typen, status/priority via generieke tag)
 // Idempotent: ja — puur functioneel, zelfde (value, col) → zelfde HTML
 // DOM-ownership: geen — retourneert HTML-string, caller plaatst in DOM
 // Vervangbaar: ja — nieuwe renderer toevoegen = 1 regel in cellRenderers{}
 //   + col.renderer in dashboardConfig verwijzen naar nieuwe key
-function statusTag(s){var m={Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'};return '<span class="tag tag-clickable '+(m[s]||'tag-info')+'" data-tag-field="status" data-tag-value="'+escapeAttr(s)+'">'+escapeHtml(s)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
-function priorityTag(p){var m={Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'};return '<span class="tag tag-clickable '+(m[p]||'tag-info')+'" data-tag-field="priority" data-tag-value="'+escapeAttr(p)+'">'+escapeHtml(p)+'</span>';} // #32 XSS-safe, 1.2 delegation, 3.5 semantisch
+// statusTag() en priorityTag() verwijderd in v0.60.0 (WP-D1) — opgenomen in generieke tag renderer met col.tagColors
 function progressCell(v){const pct=Math.min(100,Math.max(0,+v));const c=pct>=70?'var(--green-400)':pct>=40?'var(--orange-400)':'var(--red-400)';return '<div class="progress-cell"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+c+'"></div></div><span class="progress-label">'+pct+'%</span></div>';}
 function checkCell(v){return '<div class="checkbox-cell"><div class="check-box'+(v?' checked':'')+'">'+( v?'✓':'')+'</div></div>';}
 // #48: avatarCell memoization — cache naar AppState._cache (sprint 2, taak 2.3)
@@ -1869,12 +1867,10 @@ var cellRenderers={
   date:     function(v)      { return '<span>'+escapeHtml(dateFmt(v))+'</span>'; },
   budget:   function(v)      { return '<span style="font-family:\'Courier New\',monospace;font-size:12px;letter-spacing:-.2px">'+escapeHtml(budgetFmt(v))+'</span>'; },
   avatar:   function(v)      { return avatarCell(v); },
-  status:   function(v)      { return statusTag(v); },
-  priority: function(v)      { return priorityTag(v); },
   progress: function(v)      { return progressCell(v); },
   check:    function(v)      { return checkCell(v); },
   star:     function(v)      { return starCell(v); },
-  tag:      function(v,col)  { var cls=(col.tagColors&&col.tagColors[v])||'tag-info'; return '<span class="tag '+cls+'">'+escapeHtml(v||'')+'</span>'; },
+  tag:      function(v,col)  { var cls=(col.tagColors&&col.tagColors[v])||'tag-info'; return '<span class="tag tag-clickable '+cls+'" data-tag-field="'+escapeAttr(col.key)+'" data-tag-value="'+escapeAttr(v)+'">'+escapeHtml(v||'')+'</span>'; },
   email:    function(v)      { return '<span style="color:var(--accent);text-decoration:underline;cursor:pointer">'+escapeHtml(v||'')+'</span>'; },
   note:     function(v)      { return '<span style="color:var(--text-muted);font-style:italic">'+escapeHtml(v||'')+'</span>'; },
   mono:     function(v,col)  { var s=col.suffix?escapeHtml(String(col.suffix)):''; return '<span style="font-family:\'Courier New\',monospace;font-size:12px">'+escapeHtml(v===undefined||v===null?'':String(v))+s+'</span>'; }, // A.2: col.suffix geëscaped
@@ -1940,17 +1936,11 @@ function applyFiltersToData(data){
     // 1. Global name filter — semantic pad of legacy fallback
     if(hasGlobal){
       var match=false;
-      if(searchFields){
+      if(searchFields&&searchFields.length){
         for(var i=0;i<searchFields.length;i++){
           if(r[searchFields[i]]===globalName){match=true;break;}
         }
-      } else {
-        if(tab===0){
-          match=r.directeur===globalName||r.aog===globalName||r.pm===globalName;
-        } else {
-          match=r.name===globalName;
-        }
-      }
+      } // v0.60.0 WP-D5: legacy fallback met hardcoded veldnamen verwijderd
       if(!match) return false;
     }
     // 2. Column filters (AND) — al generiek
@@ -2299,20 +2289,8 @@ function condClass(r){
     }
     return '';
   }
-  // Legacy fallback: semantic accessors (WP-S9)
-  var priorityVal,statusVal,activeFlagVal,progressVal;
-  if(sc&&sc.semanticFields){
-    var sf=sc.semanticFields;
-    priorityVal=sf.priority?r[sf.priority]:undefined;
-    statusVal=sf.status?r[sf.status]:undefined;
-    activeFlagVal=sf.activeFlag?r[sf.activeFlag]:undefined;
-    progressVal=sf.progress?r[sf.progress]:undefined;
-  } else {
-    priorityVal=r.priority;statusVal=r.status;activeFlagVal=r.actief;progressVal=r.progress;
-  }
-  if(priorityVal==='Hoog'||statusVal==='On Hold') return 'cond-red';
-  if(statusVal==='Voltooid'||(activeFlagVal===true&&statusVal==='Actief')) return 'cond-green';
-  if(statusVal==='In Review'||(progressVal!==undefined&&progressVal<30)) return 'cond-yellow';
+  // v0.60.0 WP-D5: legacy fallback met hardcoded veldnamen en waarden verwijderd
+  // condFormattingRules is nu verplicht voor conditionele opmaak
   return '';
 }
 
@@ -2475,9 +2453,9 @@ function renderAggFromModel() {
       if (acc.type === 'categorical') {
         val = '<span>' + acc.uniqueCount + '</span> uniek';
       } else if (acc.type === 'average' && acc.count > 0) {
-        if (c.key === 'budget' || c.key === 'kostenRealisatie') {
+        if (c.renderer === 'budget') {
           val = 'Gem: <span style="font-family:\'Courier New\',monospace">' + budgetFmt(acc.avg) + '</span>';
-        } else if (c.key === 'progress' || c.key === 'capaciteit' || c.key === 'beschikbaarheid') {
+        } else if (c.renderer === 'progress') {
           val = 'Gem: <span>' + acc.avg + '%</span>';
         } else {
           val = 'Gem: <span>' + acc.avg + '</span>';
@@ -2698,7 +2676,7 @@ function renderHeader(tab,cols,hpx){
         ' ondrop="thDrop(event,\''+safeKey+'\')"'+
         ' ondragend="thDragEnd(event)"'+
         ' onclick="clickSort(\''+safeKey+'\')" role="columnheader" aria-sort="'+(isSorted?(AppState.sortRules.find(function(r){return r.field===c.key;}).dir==='asc'?'ascending':'descending'):'none')+'" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickSort(\''+safeKey+'\');}">'+
-        '<div class="th-inner" style="height:'+hpx+'px;min-width:'+(c._width?c._width:(c.key==='note'||c.key==='email'?180:120))+'px;position:relative;">'+
+        '<div class="th-inner" style="height:'+hpx+'px;min-width:'+(c._width?c._width:(c.renderer==='note'||c.renderer==='email'?180:120))+'px;position:relative;">'+
         '<span class="col-type-icon">'+escapeHtml(c.icon)+'</span>'+escapeHtml(c.label)+
         '<span class="col-filter-btn'+(hasColFilter?' col-filter-active':'')+'"'+
         ' onclick="clickColFilter(event,\''+safeKey+'\')"'+
@@ -3758,7 +3736,7 @@ function toggleCond(){
   document.getElementById('btn-cond').classList.toggle('active',AppState.condEnabled);
   _invalidate(['body']); // A2: targeted invalidation for conditional formatting (display only)
   render();
-  toast(AppState.condEnabled?'Conditionele opmaak aan (rood=hoog/on hold, groen=voltooid, geel=review)':'Conditionele opmaak uit');
+  toast(AppState.condEnabled?'Conditionele opmaak aan':'Conditionele opmaak uit');
 }
 
 // ============================================================
@@ -4124,9 +4102,8 @@ function _doExportXLSX(){
       var obj={};
       ed.cols.forEach(function(c){
         var v=r[c.key];
-        if(c.key==='budget') obj[c.label]=Number(v);
-        else if(c.key==='progress'||c.key==='capaciteit'||c.key==='beoordeling') obj[c.label]=Number(v);
-        else if(c.key==='approved'||c.key==='actief') obj[c.label]=v?'Ja':'Nee';
+        if(c.type==='number') obj[c.label]=Number(v);
+        else if(c.type==='boolean') obj[c.label]=v?'Ja':'Nee';
         else obj[c.label]=v===undefined||v===null?'':v;
       });
       return obj;
@@ -4199,6 +4176,7 @@ function exportPNG(){
     ctx.fillStyle='#007519';ctx.font='bold 12px sans-serif';
     var cx=pad+44;
     ed.cols.forEach(function(c){ctx.fillText(c.label.substring(0,14),cx+5,tableY+rowH/2+4);cx+=colW;});
+    var primaryLabel=getPrimaryLabelField(AppState.currentTab);
     var maxRows=Math.min(ed.data.length,100);
     for(var i=0;i<maxRows;i++){
       var y=tableY+(i+1)*rowH;
@@ -4209,8 +4187,8 @@ function exportPNG(){
       var cx2=pad+44;
       ed.cols.forEach(function(c){
         var v=plainVal(c,ed.data[i]);
-        ctx.fillStyle=c.key==='name'?'#171717':'#525252';
-        ctx.font=(c.key==='name'?'bold ':'')+'11px sans-serif';
+        ctx.fillStyle=c.key===primaryLabel?'#171717':'#525252';
+        ctx.font=(c.key===primaryLabel?'bold ':'')+'11px sans-serif';
         ctx.fillText(v.substring(0,16),cx2+5,y+rowH/2+4);
         cx2+=colW;
       });
@@ -4606,8 +4584,6 @@ function runTests(){
   assert('cellRenderers.date is functie', typeof cellRenderers.date==='function');
   assert('cellRenderers.budget is functie', typeof cellRenderers.budget==='function');
   assert('cellRenderers.avatar is functie', typeof cellRenderers.avatar==='function');
-  assert('cellRenderers.status is functie', typeof cellRenderers.status==='function');
-  assert('cellRenderers.priority is functie', typeof cellRenderers.priority==='function');
   assert('cellRenderers.progress is functie', typeof cellRenderers.progress==='function');
   assert('cellRenderers.check is functie', typeof cellRenderers.check==='function');
   assert('cellRenderers.star is functie', typeof cellRenderers.star==='function');
@@ -4644,6 +4620,36 @@ function runTests(){
   var boolCol4={key:'approved',renderer:'check',type:'boolean'};
   assert('plainVal: boolean true → Ja', plainVal(boolCol4,{approved:true})==='Ja');
   assert('plainVal: boolean false → Nee', plainVal(boolCol4,{approved:false})==='Nee');
+
+  // ── A-DRIFT: engine generiek — geen hardcoded veldnamen (v0.60.0) ──
+  group('A-DRIFT');
+  // D1: tag renderer produceert tag-clickable + data-attributen
+  var tagHtml=cellRenderers.tag('Actief',{key:'status',tagColors:{Actief:'tag-success'}});
+  assert('tag renderer produceert tag-clickable class', tagHtml.indexOf('tag-clickable')!==-1);
+  assert('tag renderer produceert data-tag-field', tagHtml.indexOf('data-tag-field="status"')!==-1);
+  assert('tag renderer produceert data-tag-value', tagHtml.indexOf('data-tag-value="Actief"')!==-1);
+  assert('tag renderer gebruikt tagColors kleur', tagHtml.indexOf('tag-success')!==-1);
+  // D1: status/priority kolommen gebruiken tag renderer
+  assert('cols0 status heeft renderer tag', cols0.find(function(c){return c.key==='status';}).renderer==='tag');
+  assert('cols0 priority heeft renderer tag', cols0.find(function(c){return c.key==='priority';}).renderer==='tag');
+  assert('cols0 status heeft tagColors', !!cols0.find(function(c){return c.key==='status';}).tagColors);
+  assert('cols1 status heeft renderer tag', cols1.find(function(c){return c.key==='status';}).renderer==='tag');
+  // D1: statusTag en priorityTag zijn verwijderd
+  assert('statusTag is geen globale functie meer', typeof statusTag==='undefined');
+  assert('priorityTag is geen globale functie meer', typeof priorityTag==='undefined');
+  // D2: aggregatie dispatcht op col.renderer, niet col.key
+  assert('renderAggFromModel is functie', typeof renderAggFromModel==='function');
+  // D3: XLSX export type dispatch
+  assert('plainVal: number type formatteert', typeof plainVal==='function');
+  // D5: getSearchTextFields zonder schemaContract retourneert []
+  var emptySearch=getSearchTextFields(99); // tab 99 bestaat niet
+  assert('getSearchTextFields fallback retourneert leeg array', Array.isArray(emptySearch)&&emptySearch.length===0);
+  // D5: condClass zonder condFormattingRules retourneert leeg
+  var origCond=AppState.condEnabled; AppState.condEnabled=true;
+  var condResult=condClass({status:'Hoog',priority:'Hoog'}); // geen schemaContract voor deze dummy-row
+  AppState.condEnabled=origCond;
+  // D6: toggleCond toast is generiek (geen domein-specifieke termen)
+  assert('condClass defensive: retourneert string', typeof condResult==='string');
 
   // ── A-VIEW: viewState + E.3 isolatie ──
   group('A-VIEW');

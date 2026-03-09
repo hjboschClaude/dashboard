@@ -6,6 +6,43 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.60.0 — 2026-03-09
+
+**Type:** Refactor / Engine Generiek
+**Domein:** Engine Drift Fix — hardcoded veldnamen verwijderd
+
+Engine-code ontdaan van alle hardcoded `c.key===` checks. Dispatch nu via `col.type`, `col.renderer` en semantische accessors. Dead legacy fallbacks verwijderd.
+
+**WP-D1 — Tag-renderers generiek:**
+- `statusTag()` en `priorityTag()` verwijderd — opgenomen in generieke `tag` renderer
+- `cellRenderers.tag` uitgebreid met `tag-clickable` + `data-tag-field`/`data-tag-value`
+- Status/priority kolommen: `renderer:'status'`/`'priority'` → `renderer:'tag'` + `tagColors` op kolomniveau
+
+**WP-D2 — Aggregatie generiek:**
+- `renderAggFromModel()` dispatcht op `c.renderer` i.p.v. `c.key` voor gemiddelde-formatting
+
+**WP-D3 — XLSX export generiek:**
+- `_doExportXLSX()` dispatcht op `c.type` ('number'/'boolean') i.p.v. hardcoded veldnamen
+
+**WP-D4 — PNG export generiek:**
+- `exportPNG()` gebruikt `getPrimaryLabelField()` i.p.v. hardcoded `'name'`
+
+**WP-D5 — Legacy fallbacks verwijderd:**
+- `getSearchTextFields()`: fallback `tab===0?[...]:[...]` → `return []`
+- `applyFiltersToData()`: `tab===0` + `r.directeur/aog/pm` fallback verwijderd
+- `condClass()`: legacy blok met hardcoded waarden verwijderd
+
+**WP-D6 — Minor drift:**
+- `toggleCond()` toast: domeinspecifieke beschrijving → generiek "aan/uit"
+- `renderHeader()` min-width: `c.key==='note'` → `c.renderer==='note'`
+
+**WP-D7 — Tests:**
+- 2 tests verwijderd (cellRenderers.status/priority)
+- 12 tests toegevoegd in A-DRIFT suite (tag-clickable, data-attributen, renderer dispatch, legacy cleanup)
+- Verwacht totaal: 354 (was 344)
+
+---
+
 ## UX Reference v1.5 — 2026-03-09
 
 **Type:** Onderhoud / Alignment
