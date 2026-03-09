@@ -70,7 +70,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference: herpositionering, structuur, labels, tokens, patterns, porting, a11y, review | ○ Open |
 | **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
 | **WP-P1–P2** | SCHEMA_CONTRACT_PLAN.md | Performance quickfixes: _perfDebug guard, computeVisibleCols() cache | ✅ v0.56.1 |
-| **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ○ Fase 2 afgerond (v0.57.0), Fase 3 volgt |
+| **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ✅ Fase 3 afgerond (v0.58.0) |
 
 ---
 
@@ -78,8 +78,8 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 
 Locatie: `archive/testrapporten/testrapport-v{X.Y.Z}-{YYYY-MM-DD}.md`
 
-Totaal: 38 rapporten (v0.14.0–v0.57.0)
-Meest recente: [testrapport-v0.57.0-2026-03-09.md](../archive/testrapporten/testrapport-v0.57.0-2026-03-09.md)
+Totaal: 39 rapporten (v0.14.0–v0.58.0)
+Meest recente: [testrapport-v0.58.0-2026-03-09.md](../archive/testrapporten/testrapport-v0.58.0-2026-03-09.md)
 
 ---
 
