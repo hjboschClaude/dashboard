@@ -1,6 +1,6 @@
 # Index — Plannen, Sprint-IDs & Documenten
 
-Versie: 2.5
+Versie: 2.8
 Datum: 2026-03-09
 
 ---
@@ -26,7 +26,9 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | Document | Scope | Status |
 |----------|-------|--------|
 | [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: Fase 1 (WP1–WP12) + Fase 2 Refresh (WP-R1–R6), tokens, 24 patronen, CSS-stubs, porting map | ✅ Fase 1 (v0.55.0) + Fase 2 (v1.5) afgerond |
-| [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
+| [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ✅ Alle fasen afgerond (v0.43.0–v0.52.0) |
+| [LAYER5_PLAN.md](LAYER5_PLAN.md) | Assembler Layer: engine-injectie, browser-based assembler tool, mappenstructuur, dist output | ✅ Alle WPs afgerond (v0.65.0–v0.65.4) — **Breekpunt 3 voltooid** |
+| [LAYER4_PLAN.md](LAYER4_PLAN.md) | Dashboard Spec Layer: AI-spec generatie, spec-schema, prompt template, eerste gegenereerde spec | ✅ Alle WPs afgerond (v0.63.0–v0.64.0) — Breekpunt 2 voltooid |
 | [LAYER3_VISIE.md](LAYER3_VISIE.md) | Layer 3 visie: CSV Adapter positie, pipeline, inter-layer relaties, bouwstrategie | ✅ Visie + implementatie (v0.62.0) |
 | [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ✅ Fase 3 afgerond (v0.58.0) — Engine volledig generiek |
 | [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
@@ -70,10 +72,12 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **D-P/M/C/L/S** | TESTREGISTER.md | Performance-budgetten: timing, DOM, heap, CSS, latency, stabiliteit, 27 metrics | ✅ v0.39.0 |
 | **L1-WP1–WP12** | LAYER1_PLAN.md | UX Reference Fase 1: herpositionering, structuur, labels, tokens, 12 patterns, porting, a11y, review | ✅ v0.55.0 |
 | **L1-WP-R1–R6** | LAYER1_PLAN.md | UX Reference Fase 2 Refresh: RODS tokens, 24 patronen, CSS-stubs, porting map, assembler notes | ✅ v1.5 |
-| **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
+| **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ✅ Afgerond v0.43.0–v0.52.0 |
+| **L4-WP-A–D** | LAYER4_PLAN.md | Dashboard Spec: spec-schema, prompt template, generatie, integratie | ✅ Afgerond v0.63.0–v0.64.0 |
 | **WP-P1–P2** | SCHEMA_CONTRACT_PLAN.md | Performance quickfixes: _perfDebug guard, computeVisibleCols() cache | ✅ v0.56.1 |
 | **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ✅ Fase 3 afgerond (v0.58.0) |
 | **WP-L3-A–E** | LAYER3_VISIE.md | CSV Adapter: skeleton, parsing, types, schema, docs | ✅ v0.62.0 |
+| **L5-WP-A–D** | LAYER5_PLAN.md | Assembler: engine-injectie, assembler tool, mappenstructuur, dist output | ✅ v0.65.0–v0.65.4 |
 
 ---
 
@@ -81,8 +85,12 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 
 Locatie: `archive/testrapporten/testrapport-v{X.Y.Z}-{YYYY-MM-DD}.md`
 
-Totaal: 42 rapporten (v0.14.0–v0.61.0)
-Meest recente: [testrapport-v0.61.0-2026-03-09.md](../archive/testrapporten/testrapport-v0.61.0-2026-03-09.md)
+Totaal: 45 rapporten (v0.14.0–v0.65.2)
+Meest recente: [testrapport-v0.65.2-2026-03-09.md](../archive/testrapporten/testrapport-v0.65.2-2026-03-09.md)
+
+> **v0.65.3–v0.65.4:** Geen apart testrapport vereist — bugfixes (crashguard + DTR-guard); engine tests na v0.65.4 via Alt+Shift+T in dashboard.html.
+
+> **Noot:** v0.62.0–v0.64.0 hebben geen apart engine-testrapport — v0.62.0 heeft standalone `src/csv-adapter/test.html` (~65 tests); v0.63.0–v0.64.0 hebben `src/dashboard-spec/test-integration.html` (35 checks).
 
 ---
 

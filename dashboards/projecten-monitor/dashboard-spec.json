@@ -1,0 +1,283 @@
+{
+  "app": {
+    "title": "Projectenmonitor Gemeente Rotterdam",
+    "version": "1.0.0",
+    "defaultTabId": "projecten"
+  },
+  "tabs": [
+    {
+      "id": "projecten",
+      "label": "Projecten",
+      "dataSource": { "type": "dataset" },
+      "columns": [
+        {
+          "key": "projectnaam",
+          "label": "Projectnaam",
+          "visible": true,
+          "type": "text",
+          "renderer": "text"
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Actief": "tag-success",
+            "In Review": "tag-info",
+            "Voltooid": "tag-purple",
+            "On Hold": "tag-warning",
+            "Gepland": "tag-info"
+          }
+        },
+        {
+          "key": "prioriteit",
+          "label": "Prioriteit",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Hoog": "tag-danger",
+            "Middel": "tag-warning",
+            "Laag": "tag-success"
+          }
+        },
+        {
+          "key": "directeur",
+          "label": "Verantwoordelijke Directeur",
+          "visible": true,
+          "type": "enum",
+          "renderer": "avatar"
+        },
+        {
+          "key": "deadline",
+          "label": "Deadline",
+          "visible": true,
+          "type": "date",
+          "renderer": "date"
+        },
+        {
+          "key": "voortgang",
+          "label": "Voortgang",
+          "visible": true,
+          "type": "number",
+          "renderer": "progress"
+        },
+        {
+          "key": "budget",
+          "label": "Budget",
+          "visible": true,
+          "type": "number",
+          "renderer": "budget"
+        },
+        {
+          "key": "cluster",
+          "label": "Cluster",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Stedelijke Ontwikkeling": "tag-info",
+            "Stadsontwikkeling": "tag-info",
+            "Duurzaamheid": "tag-success",
+            "ICT & Innovatie": "tag-purple",
+            "Maatschappelijke Ontwikkeling": "tag-neutral",
+            "Haven & Economie": "tag-warning",
+            "Mobiliteit": "tag-neutral"
+          }
+        },
+        {
+          "key": "goedgekeurd",
+          "label": "Goedgekeurd",
+          "visible": true,
+          "type": "boolean",
+          "renderer": "check"
+        },
+        {
+          "key": "fase",
+          "label": "Fase",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Initiatief": "tag-info",
+            "Definitie": "tag-neutral",
+            "Ontwerp": "tag-warning",
+            "Realisatie": "tag-success",
+            "Afsluiting": "tag-purple"
+          }
+        },
+        {
+          "key": "risiconiveau",
+          "label": "Risiconiveau",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Laag": "tag-success",
+            "Middel": "tag-warning",
+            "Hoog": "tag-warning",
+            "Kritiek": "tag-danger"
+          }
+        },
+        {
+          "key": "kostenRealisatie",
+          "label": "Kosten Realisatie",
+          "visible": true,
+          "type": "number",
+          "renderer": "budget"
+        },
+        {
+          "key": "startdatum",
+          "label": "Startdatum",
+          "visible": true,
+          "type": "date",
+          "renderer": "date"
+        },
+        {
+          "key": "regio",
+          "label": "Regio",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Centrum": "tag-info",
+            "Zuid": "tag-neutral",
+            "Kralingen-Crooswijk": "tag-neutral",
+            "Europoort": "tag-warning",
+            "Noord": "tag-neutral",
+            "Charlois": "tag-neutral",
+            "Feijenoord": "tag-neutral"
+          }
+        },
+        {
+          "key": "stakeholders",
+          "label": "Stakeholders",
+          "visible": true,
+          "type": "number",
+          "renderer": "number"
+        },
+        {
+          "key": "documentatie",
+          "label": "Documentatie",
+          "visible": true,
+          "type": "enum",
+          "renderer": "tag",
+          "tagColors": {
+            "Compleet": "tag-success",
+            "Incompleet": "tag-warning",
+            "Ontbreekt": "tag-danger"
+          }
+        },
+        {
+          "key": "laatsteUpdate",
+          "label": "Laatste Update",
+          "visible": false,
+          "type": "date",
+          "renderer": "date"
+        },
+        {
+          "key": "id",
+          "label": "ID",
+          "visible": false,
+          "type": "number",
+          "renderer": "number"
+        }
+      ],
+      "defaultRowCount": 4500,
+      "features": {
+        "search": true,
+        "filter": true,
+        "sort": true,
+        "group": true,
+        "condFormatting": true,
+        "freeze": true,
+        "multiSelect": true,
+        "contextMenu": true
+      },
+      "exports": {
+        "allow": ["csv", "json", "xlsx", "html", "markdown", "png"],
+        "defaultScope": "filtered",
+        "allowSelectionExport": true
+      },
+      "defaults": {
+        "rowHeight": "compact",
+        "visibleColumns": null,
+        "sort": { "key": "deadline", "dir": "asc" },
+        "grouping": []
+      },
+      "schemaContract": {
+        "primaryKey": "id",
+        "semanticFields": {
+          "primaryLabel": "projectnaam",
+          "secondaryLabel": "cluster",
+          "owner": "directeur",
+          "status": "status",
+          "priority": "prioriteit",
+          "progress": "voortgang",
+          "activeFlag": null,
+          "detailTitle": "projectnaam",
+          "searchTextFields": ["projectnaam", "directeur", "cluster", "regio"]
+        },
+        "condFormattingRules": [
+          { "field": "prioriteit", "op": "eq", "value": "Hoog", "cssClass": "cond-red" },
+          { "field": "risiconiveau", "op": "eq", "value": "Kritiek", "cssClass": "cond-red" },
+          { "field": "status", "op": "eq", "value": "On Hold", "cssClass": "cond-red" },
+          { "field": "status", "op": "eq", "value": "Voltooid", "cssClass": "cond-green" },
+          { "field": "status", "op": "eq", "value": "In Review", "cssClass": "cond-yellow" },
+          { "field": "voortgang", "op": "lt", "value": 25, "cssClass": "cond-yellow" }
+        ]
+      }
+    }
+  ],
+  "domain": {
+    "categoricalFields": [
+      "status", "prioriteit", "directeur", "cluster",
+      "fase", "risiconiveau", "regio", "documentatie"
+    ],
+    "averageFields": [
+      "voortgang", "budget", "kostenRealisatie", "stakeholders"
+    ],
+    "booleanFields": ["goedgekeurd"],
+    "ordinalOrders": {
+      "prioriteit":    ["Hoog", "Middel", "Laag"],
+      "risiconiveau":  ["Kritiek", "Hoog", "Middel", "Laag"],
+      "fase":          ["Initiatief", "Definitie", "Ontwerp", "Realisatie", "Afsluiting"],
+      "documentatie":  ["Compleet", "Incompleet", "Ontbreekt"],
+      "status":        ["Actief", "In Review", "Gepland", "On Hold", "Voltooid"]
+    },
+    "tagColors": {
+      "status": {
+        "Actief": "tag-success",
+        "In Review": "tag-info",
+        "Voltooid": "tag-purple",
+        "On Hold": "tag-warning",
+        "Gepland": "tag-info"
+      },
+      "prioriteit": {
+        "Hoog": "tag-danger",
+        "Middel": "tag-warning",
+        "Laag": "tag-success"
+      },
+      "risiconiveau": {
+        "Laag": "tag-success",
+        "Middel": "tag-warning",
+        "Hoog": "tag-warning",
+        "Kritiek": "tag-danger"
+      },
+      "fase": {
+        "Initiatief": "tag-info",
+        "Definitie": "tag-neutral",
+        "Ontwerp": "tag-warning",
+        "Realisatie": "tag-success",
+        "Afsluiting": "tag-purple"
+      },
+      "documentatie": {
+        "Compleet": "tag-success",
+        "Incompleet": "tag-warning",
+        "Ontbreekt": "tag-danger"
+      }
+    }
+  }
+}

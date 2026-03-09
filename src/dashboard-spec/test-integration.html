@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Layer 4 — Integratie Test (v0.64.0)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1e293b; padding: 24px; }
+h1 { font-size: 18px; margin-bottom: 4px; }
+.subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+.summary { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 24px; align-items: center; }
+.summary .count { font-size: 28px; font-weight: 700; }
+.summary .count.pass { color: #16a34a; }
+.summary .count.fail { color: #dc2626; }
+.summary .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.group-header { background: #1e293b; color: #fff; padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 600; margin-top: 16px; display: flex; justify-content: space-between; }
+.group-header .badge { background: rgba(255,255,255,0.2); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+.test-row { background: #fff; border: 1px solid #e2e8f0; border-top: none; padding: 6px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.test-row:last-child { border-radius: 0 0 6px 6px; }
+.test-row .icon { width: 18px; text-align: center; flex-shrink: 0; }
+.test-row.pass .icon { color: #16a34a; }
+.test-row.fail .icon { color: #dc2626; font-weight: 700; }
+.test-row.fail { background: #fef2f2; }
+.test-row .detail { color: #94a3b8; font-size: 11px; margin-left: auto; white-space: nowrap; }
+.duration { color: #94a3b8; font-size: 12px; margin-top: 12px; }
+.section-title { font-size: 14px; font-weight: 600; margin: 24px 0 8px; color: #374151; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+.preview-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; font-size: 12px; margin-top: 8px; }
+.preview-table th { background: #f1f5f9; padding: 7px 12px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.preview-table td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.preview-table tr:last-child td { border-bottom: none; }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.tag-success { background: #dcfce7; color: #16a34a; }
+.tag-warning { background: #fef9c3; color: #854d0e; }
+.tag-danger  { background: #fee2e2; color: #dc2626; }
+.tag-info    { background: #dbeafe; color: #1d4ed8; }
+.tag-purple  { background: #f3e8ff; color: #7e22ce; }
+.tag-neutral { background: #f1f5f9; color: #64748b; }
+.config-box { background: #1e293b; color: #94d0ff; font-family: monospace; font-size: 11px; padding: 16px; border-radius: 8px; margin-top: 8px; overflow: auto; max-height: 320px; white-space: pre; }
+.verdict { border-radius: 8px; padding: 14px 20px; margin-top: 20px; font-size: 14px; font-weight: 600; }
+.verdict.ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.verdict.err { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+</style>
+</head>
+<body>
+<h1>Dashboard Spec — Layer 4 Integratie Test</h1>
+<div class="subtitle">v0.64.0 — WP-D: CSV-adapter (L3) + Dashboard Spec (L4) + Engine-contract (L2)</div>
+<div class="summary" id="summary"></div>
+<div id="results"></div>
+<div class="duration" id="duration"></div>
+
+<script src="../csv-adapter/csv-adapter.js"></script>
+<script>
+(function() {
+'use strict';
+
+// ── Mini test runner ───────────────────────────────────────────────────────
+var passed = 0, failed = 0, t0 = performance.now();
+var resultsEl = document.getElementById('results');
+var currentGroupCounts = null;
+
+function group(name) {
+  currentGroupCounts = { pass: 0, fail: 0 };
+  var id = 'g' + name.replace(/\s/g,'');
+  var h = document.createElement('div');
+  h.className = 'group-header';
+  h.innerHTML = '<span>' + name + '</span><span class="badge" id="' + id + '"></span>';
+  resultsEl.appendChild(h);
+  group._el = h; group._id = id; group._counts = currentGroupCounts;
+}
+group._el = null; group._id = ''; group._counts = null;
+
+function assert(label, condition, detail) {
+  var ok = !!condition;
+  var row = document.createElement('div');
+  row.className = 'test-row ' + (ok ? 'pass' : 'fail');
+  row.innerHTML = '<span class="icon">' + (ok ? '&#10003;' : '&#10007;') + '</span>' +
+                  '<span>' + label + '</span>' +
+                  (detail !== undefined ? '<span class="detail">' + detail + '</span>' : '');
+  resultsEl.appendChild(row);
+  if (ok) { passed++; if (group._counts) group._counts.pass++; }
+  else    { failed++; if (group._counts) group._counts.fail++; }
+  // update badge
+  if (group._id) {
+    var badge = document.getElementById(group._id);
+    if (badge) badge.textContent = group._counts.pass + ' pass' + (group._counts.fail ? ', ' + group._counts.fail + ' fail' : '');
+  }
+}
+
+// ── Inline kopie van validateDashboardSpec (Layer 2 contract) ──────────────
+function validateDashboardSpec(spec) {
+  var errors = [];
+  if (!spec || typeof spec !== 'object') return ['spec is geen object'];
+  if (!spec.app || !spec.app.title) errors.push('app.title ontbreekt');
+  if (!spec.app || !spec.app.defaultTabId) errors.push('app.defaultTabId ontbreekt');
+  if (!Array.isArray(spec.tabs) || spec.tabs.length === 0) errors.push('tabs array is leeg of ontbreekt');
+  else {
+    var ids = {};
+    spec.tabs.forEach(function(tab, i) {
+      var p = 'tabs[' + i + ']';
+      if (!tab.id) errors.push(p + '.id ontbreekt');
+      if (ids[tab.id]) errors.push(p + '.id is niet uniek: ' + tab.id);
+      ids[tab.id] = true;
+      if (!tab.label) errors.push(p + '.label ontbreekt');
+      if (!Array.isArray(tab.columns) || tab.columns.length === 0) errors.push(p + '.columns is leeg of ontbreekt');
+      else tab.columns.forEach(function(col, j) {
+        var cp = p + '.columns[' + j + ']';
+        if (!col.key) errors.push(cp + '.key ontbreekt');
+        if (!col.label) errors.push(cp + '.label ontbreekt');
+        if (!col.type) errors.push(cp + '.type ontbreekt');
+        if (!col.renderer) errors.push(cp + '.renderer ontbreekt');
+      });
+    });
+  }
+  return errors;
+}
+
+// ── Inline kopie van validateDatasetContract (Layer 2 contract) ───────────
+function validateDatasetContract(dataset) {
+  var errors = [];
+  if (!dataset || typeof dataset !== 'object') return ['dataset is geen object'];
+  if (!Array.isArray(dataset.records)) errors.push('dataset.records is geen array');
+  else if (dataset.records.length > 0 && typeof dataset.records[0] !== 'object') errors.push('dataset.records[0] is geen object');
+  if (dataset.schema) {
+    if (!Array.isArray(dataset.schema.fields)) errors.push('dataset.schema.fields is geen array');
+    else dataset.schema.fields.forEach(function(f, i) {
+      if (!f.name) errors.push('schema.fields[' + i + '].name ontbreekt');
+      if (f.type && ['text','number','date','boolean','enum'].indexOf(f.type) === -1)
+        errors.push('schema.fields[' + i + '].type ongeldig: ' + f.type);
+    });
+  }
+  return errors;
+}
+
+// ── Testdata ───────────────────────────────────────────────────────────────
+
+var CSV_PROJECTEN = 'ID;Projectnaam;Status;Prioriteit;Directeur;Deadline;Voortgang;Budget;Cluster;Goedgekeurd;Fase;Risiconiveau;Startdatum;Regio;Kosten Realisatie;Stakeholders;Laatste Update;Documentatie\n' +
+'1;Omgevingsvisie 2030;Actief;Hoog;Richard van der Helm;2026-06-30;45;350000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-01-15;Centrum;280000;15;2026-03-01;Compleet\n' +
+'2;Feyenoord City;In Review;Middel;Marieke de Wit;2027-03-15;72;1250000;Stadsontwikkeling;ja;Ontwerp;Hoog;2022-06-01;Zuid;980000;28;2026-02-15;Compleet\n' +
+'3;Energietransitie Zuid;Actief;Hoog;Jan-Willem Bakker;2026-12-01;30;890000;Duurzaamheid;nee;Definitie;Kritiek;2024-03-10;Zuid;450000;12;2026-03-05;Incompleet\n' +
+'4;Digitale Dienstverlening;Voltooid;Laag;Richard van der Helm;2025-09-30;100;420000;ICT & Innovatie;ja;Afsluiting;Laag;2023-08-01;n.v.t.;420000;8;2025-10-01;Compleet\n' +
+'5;Wijkvernieuwing Crooswijk;Actief;Middel;Marieke de Wit;2027-06-30;55;2100000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-11-15;Kralingen-Crooswijk;1150000;22;2026-03-08;Incompleet\n' +
+'6;Luchtkwaliteit Monitoring;On Hold;Hoog;Jan-Willem Bakker;2026-09-15;15;180000;Duurzaamheid;nee;Initiatief;Hoog;2025-01-20;-;45000;5;2026-01-30;Ontbreekt\n' +
+'7;Havenbeveiligingssysteem;Gepland;Middel;Sarah Patel;2028-01-01;0;3500000;Haven & Economie;nee;Initiatief;Middel;2026-01-01;Europoort;0;30;2026-03-01;Ontbreekt\n' +
+'8;Fietsinfrastructuur Ring;Actief;Laag;Marieke de Wit;2026-11-30;68;750000;Mobiliteit;ja;Realisatie;Laag;2024-02-01;Noord;510000;10;2026-03-07;Compleet\n' +
+'9;Klimaatadaptatie Strategie;In Review;Hoog;Jan-Willem Bakker;2026-08-15;85;290000;Duurzaamheid;ja;Realisatie;Middel;2024-06-01;Centrum;246500;18;2026-03-06;Compleet\n' +
+'10;Smart City Platform;Actief;Middel;Sarah Patel;2027-12-31;22;1800000;ICT & Innovatie;nee;Ontwerp;Hoog;2025-04-01;n.v.t.;396000;14;2026-03-09;Incompleet\n' +
+'11;Sociaal Domein Dashboard;Voltooid;Laag;Richard van der Helm;2025-06-30;100;95000;Maatschappelijke Ontwikkeling;ja;Afsluiting;Laag;2024-09-15;n.v.t.;95000;4;2025-07-01;Compleet\n' +
+'12;Waterberging Zuidplein;Actief;Hoog;Marieke de Wit;2026-10-01;38;1.650.000,00;Stedelijke Ontwikkeling;ja;Definitie;Kritiek;2025-02-01;Charlois;627.000,00;20;2026-03-04;Incompleet\n' +
+'13;Brug Renovatie Koningshaven;Gepland;Middel;Sarah Patel;2028-06-30;0;4200000;Mobiliteit;nee;Initiatief;Middel;2026-06-01;Feijenoord;0;25;2026-03-01;Ontbreekt\n' +
+'14;Participatieplatform Burgers;Actief;Laag;Richard van der Helm;2026-05-15;90;120000;ICT & Innovatie;ja;Realisatie;Laag;2025-07-01;n.v.t.;108000;6;2026-03-08;Compleet\n' +
+'15;Havenenergie Transitie;In Review;Hoog;Jan-Willem Bakker;2027-09-30;60;5.200.000,00;Haven & Economie;nee;Ontwerp;Hoog;2024-11-01;Europoort;3.120.000,00;35;2026-03-02;Incompleet\n';
+
+var SPEC = {
+  "app": { "title": "Projectenmonitor Gemeente Rotterdam", "version": "1.0.0", "defaultTabId": "projecten" },
+  "tabs": [{
+    "id": "projecten", "label": "Projecten",
+    "dataSource": { "type": "dataset" },
+    "columns": [
+      { "key": "projectnaam",    "label": "Projectnaam",              "visible": true,  "type": "text",    "renderer": "text" },
+      { "key": "status",         "label": "Status",                   "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Actief":"tag-success","In Review":"tag-info","Voltooid":"tag-purple","On Hold":"tag-warning","Gepland":"tag-info" } },
+      { "key": "prioriteit",     "label": "Prioriteit",               "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Hoog":"tag-danger","Middel":"tag-warning","Laag":"tag-success" } },
+      { "key": "directeur",      "label": "Verantwoordelijke Directeur","visible": true, "type": "enum",   "renderer": "avatar" },
+      { "key": "deadline",       "label": "Deadline",                 "visible": true,  "type": "date",    "renderer": "date" },
+      { "key": "voortgang",      "label": "Voortgang",                "visible": true,  "type": "number",  "renderer": "progress" },
+      { "key": "budget",         "label": "Budget",                   "visible": true,  "type": "number",  "renderer": "budget" },
+      { "key": "cluster",        "label": "Cluster",                  "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Stedelijke Ontwikkeling":"tag-info","Stadsontwikkeling":"tag-info","Duurzaamheid":"tag-success","ICT & Innovatie":"tag-purple","Maatschappelijke Ontwikkeling":"tag-neutral","Haven & Economie":"tag-warning","Mobiliteit":"tag-neutral" } },
+      { "key": "goedgekeurd",    "label": "Goedgekeurd",              "visible": true,  "type": "boolean", "renderer": "check" },
+      { "key": "fase",           "label": "Fase",                     "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Initiatief":"tag-info","Definitie":"tag-neutral","Ontwerp":"tag-warning","Realisatie":"tag-success","Afsluiting":"tag-purple" } },
+      { "key": "risiconiveau",   "label": "Risiconiveau",             "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Laag":"tag-success","Middel":"tag-warning","Hoog":"tag-warning","Kritiek":"tag-danger" } },
+      { "key": "kostenRealisatie","label": "Kosten Realisatie",       "visible": true,  "type": "number",  "renderer": "budget" },
+      { "key": "startdatum",     "label": "Startdatum",               "visible": true,  "type": "date",    "renderer": "date" },
+      { "key": "regio",          "label": "Regio",                    "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Centrum":"tag-info","Zuid":"tag-neutral","Kralingen-Crooswijk":"tag-neutral","Europoort":"tag-warning","Noord":"tag-neutral","Charlois":"tag-neutral","Feijenoord":"tag-neutral" } },
+      { "key": "stakeholders",   "label": "Stakeholders",             "visible": true,  "type": "number",  "renderer": "number" },
+      { "key": "documentatie",   "label": "Documentatie",             "visible": true,  "type": "enum",    "renderer": "tag",
+        "tagColors": { "Compleet":"tag-success","Incompleet":"tag-warning","Ontbreekt":"tag-danger" } },
+      { "key": "laatsteUpdate",  "label": "Laatste Update",           "visible": false, "type": "date",    "renderer": "date" },
+      { "key": "id",             "label": "ID",                       "visible": false, "type": "number",  "renderer": "number" }
+    ],
+    "features": { "search":true,"filter":true,"sort":true,"group":true,"condFormatting":true,"freeze":true,"multiSelect":true,"contextMenu":true },
+    "exports": { "allow":["csv","json","xlsx","html","markdown","png"],"defaultScope":"filtered","allowSelectionExport":true },
+    "defaults": { "rowHeight":"compact","visibleColumns":null,"sort":{"key":"deadline","dir":"asc"},"grouping":[] },
+    "schemaContract": {
+      "primaryKey": "id",
+      "semanticFields": {
+        "primaryLabel":"projectnaam","secondaryLabel":"cluster","owner":"directeur",
+        "status":"status","priority":"prioriteit","progress":"voortgang",
+        "activeFlag":null,"detailTitle":"projectnaam",
+        "searchTextFields":["projectnaam","directeur","cluster","regio"]
+      },
+      "condFormattingRules": [
+        { "field":"prioriteit","op":"eq","value":"Hoog","cssClass":"cond-red" },
+        { "field":"risiconiveau","op":"eq","value":"Kritiek","cssClass":"cond-red" },
+        { "field":"status","op":"eq","value":"On Hold","cssClass":"cond-red" },
+        { "field":"status","op":"eq","value":"Voltooid","cssClass":"cond-green" },
+        { "field":"status","op":"eq","value":"In Review","cssClass":"cond-yellow" },
+        { "field":"voortgang","op":"lt","value":25,"cssClass":"cond-yellow" }
+      ]
+    }
+  }],
+  "domain": {
+    "categoricalFields":["status","prioriteit","directeur","cluster","fase","risiconiveau","regio","documentatie"],
+    "averageFields":["voortgang","budget","kostenRealisatie","stakeholders"],
+    "booleanFields":["goedgekeurd"],
+    "ordinalOrders":{
+      "prioriteit":["Hoog","Middel","Laag"],
+      "risiconiveau":["Kritiek","Hoog","Middel","Laag"],
+      "fase":["Initiatief","Definitie","Ontwerp","Realisatie","Afsluiting"],
+      "documentatie":["Compleet","Incompleet","Ontbreekt"],
+      "status":["Actief","In Review","Gepland","On Hold","Voltooid"]
+    },
+    "tagColors": {
+      "status":{"Actief":"tag-success","In Review":"tag-info","Voltooid":"tag-purple","On Hold":"tag-warning","Gepland":"tag-info"},
+      "prioriteit":{"Hoog":"tag-danger","Middel":"tag-warning","Laag":"tag-success"},
+      "risiconiveau":{"Laag":"tag-success","Middel":"tag-warning","Hoog":"tag-warning","Kritiek":"tag-danger"},
+      "fase":{"Initiatief":"tag-info","Definitie":"tag-neutral","Ontwerp":"tag-warning","Realisatie":"tag-success","Afsluiting":"tag-purple"},
+      "documentatie":{"Compleet":"tag-success","Incompleet":"tag-warning","Ontbreekt":"tag-danger"}
+    }
+  }
+};
+
+// ── Tests uitvoeren ────────────────────────────────────────────────────────
+
+// Stap 1: CSV parsen via Layer 3
+var dataset;
+try {
+  dataset = CsvAdapter.parseCSV(CSV_PROJECTEN);
+} catch(e) {
+  dataset = null;
+}
+
+var tab = SPEC.tabs[0];
+var specCols = tab.columns;
+var schemaFields = dataset && dataset.schema ? dataset.schema.fields : [];
+var schemaMap = {}; // name → field
+schemaFields.forEach(function(f) { schemaMap[f.name] = f; });
+
+// L4-INT-1: CSV parsing
+group('L4-INT-1 — Layer 3: CSV Parsing');
+assert('parseCSV() retourneert object', dataset !== null);
+assert('dataset.records is array', dataset && Array.isArray(dataset.records));
+assert('dataset.schema is aanwezig', dataset && dataset.schema && Array.isArray(dataset.schema.fields));
+assert('dataset.sourceMeta is aanwezig', dataset && dataset.sourceMeta);
+
+// L4-INT-2: Records
+group('L4-INT-2 — Layer 3: Records & Schema');
+assert('15 records geparseerd', dataset && dataset.records.length === 15, dataset ? dataset.records.length + ' records' : 'n/a');
+assert('18 schema velden', schemaFields.length === 18, schemaFields.length + ' velden');
+assert('validateDatasetContract geeft 0 fouten', (function(){ var e = validateDatasetContract(dataset); return e.length === 0; })(),
+  (function(){ var e = validateDatasetContract(dataset); return e.length ? e[0] : 'ok'; })());
+
+// Type checks
+assert('id is number', schemaMap['id'] && schemaMap['id'].type === 'number');
+assert('voortgang is number', schemaMap['voortgang'] && schemaMap['voortgang'].type === 'number');
+assert('deadline is date', schemaMap['deadline'] && schemaMap['deadline'].type === 'date');
+assert('goedgekeurd is boolean', schemaMap['goedgekeurd'] && schemaMap['goedgekeurd'].type === 'boolean');
+assert('status is enum', schemaMap['status'] && schemaMap['status'].type === 'enum');
+assert('budget is number', schemaMap['budget'] && schemaMap['budget'].type === 'number');
+assert('kostenRealisatie is number', schemaMap['kostenRealisatie'] && schemaMap['kostenRealisatie'].type === 'number');
+// Adapter classificeert tekstvelden met ≤30 unieke waarden als enum (ook in kleine datasets)
+// projectnaam heeft 15 unieke waarden → adapter inferreert enum; text én enum zijn beide correct
+assert('projectnaam is text of enum', schemaMap['projectnaam'] &&
+  (schemaMap['projectnaam'].type === 'text' || schemaMap['projectnaam'].type === 'enum'),
+  schemaMap['projectnaam'] ? schemaMap['projectnaam'].type : 'n/a');
+
+// NL getal parsing check
+assert('budget rij 12: 1.650.000,00 → 1650000', (function(){
+  if (!dataset || !dataset.records[11]) return false;
+  return dataset.records[11].budget === 1650000;
+})(), dataset && dataset.records[11] ? 'budget=' + dataset.records[11].budget : 'n/a');
+
+// L4-INT-3: Spec validatie
+group('L4-INT-3 — Layer 4: Spec Validatie');
+var specErrors = validateDashboardSpec(SPEC);
+assert('validateDashboardSpec geeft 0 fouten', specErrors.length === 0, specErrors.length ? specErrors[0] : 'ok');
+assert('app.defaultTabId bestaat in tabs', SPEC.tabs.some(function(t){ return t.id === SPEC.app.defaultTabId; }));
+assert('18 kolommen in spec', specCols.length === 18, specCols.length + ' kolommen');
+assert('Alle kolommen hebben key+label+type+renderer', specCols.every(function(c){
+  return c.key && c.label && c.type && c.renderer;
+}));
+
+// L4-INT-4: Schema ↔ Spec koppeling
+group('L4-INT-4 — Koppeling: Spec.column.key ↔ Schema.field.name');
+var missingInSchema = specCols.filter(function(c){ return !schemaMap[c.key]; }).map(function(c){ return c.key; });
+assert('Alle spec-kolomsleutels bestaan in schema', missingInSchema.length === 0,
+  missingInSchema.length ? 'ontbreekt: ' + missingInSchema.join(', ') : 'allemaal aanwezig');
+
+// Type-compatibiliteit (spec.type moet compatible zijn met schema.type)
+// enum→text is soms ok (avatar renderer), text→enum is ok, rest moet matchen
+var typeConflicts = specCols.filter(function(c) {
+  var sf = schemaMap[c.key];
+  if (!sf) return false;
+  // Exact match
+  if (c.type === sf.type) return false;
+  // enum↔text: beide zijn string-achtig, avatar renderer op enum is ok
+  if ((c.type === 'enum' && sf.type === 'text') || (c.type === 'text' && sf.type === 'enum')) return false;
+  return true; // echt conflict
+}).map(function(c){ return c.key + '(' + c.type + '≠' + (schemaMap[c.key]||{}).type + ')'; });
+assert('Geen type-conflicten tussen spec en schema', typeConflicts.length === 0,
+  typeConflicts.length ? typeConflicts.join(', ') : 'ok');
+
+// enum-velden hebben tagColors
+var enumColsWithoutColors = specCols.filter(function(c){
+  return c.type === 'enum' && c.renderer === 'tag' && !c.tagColors;
+}).map(function(c){ return c.key; });
+assert('Alle tag-kolommen hebben tagColors', enumColsWithoutColors.length === 0,
+  enumColsWithoutColors.length ? 'ontbreekt bij: ' + enumColsWithoutColors.join(', ') : 'ok');
+
+// L4-INT-5: Domain validatie
+group('L4-INT-5 — Layer 4: Domain Configuratie');
+var domain = SPEC.domain;
+var catMissing = (domain.categoricalFields||[]).filter(function(k){ return !schemaMap[k]; });
+assert('domain.categoricalFields: alle velden in schema', catMissing.length === 0,
+  catMissing.length ? 'ontbreekt: ' + catMissing.join(', ') : 'ok');
+
+var avgMissing = (domain.averageFields||[]).filter(function(k){ return !schemaMap[k] || schemaMap[k].type !== 'number'; });
+assert('domain.averageFields: alle velden zijn number in schema', avgMissing.length === 0,
+  avgMissing.length ? 'probleem: ' + avgMissing.join(', ') : 'ok');
+
+var boolMissing = (domain.booleanFields||[]).filter(function(k){ return !schemaMap[k] || schemaMap[k].type !== 'boolean'; });
+assert('domain.booleanFields: alle velden zijn boolean in schema', boolMissing.length === 0,
+  boolMissing.length ? 'probleem: ' + boolMissing.join(', ') : 'ok');
+
+var ordinalKeys = Object.keys(domain.ordinalOrders||{});
+var ordinalMissing = ordinalKeys.filter(function(k){ return !schemaMap[k]; });
+assert('domain.ordinalOrders: alle sleutels in schema', ordinalMissing.length === 0,
+  ordinalMissing.length ? 'ontbreekt: ' + ordinalMissing.join(', ') : 'ok (' + ordinalKeys.length + ' velden)');
+
+// L4-INT-6: SchemaContract
+group('L4-INT-6 — Layer 4: SchemaContract Semantiek');
+var sc = tab.schemaContract || {};
+var sf2 = sc.semanticFields || {};
+assert('primaryLabel bestaat in schema', !!schemaMap[sf2.primaryLabel], sf2.primaryLabel || 'null');
+assert('status-veld bestaat in schema', !!schemaMap[sf2.status], sf2.status || 'null');
+assert('priority-veld bestaat in schema', !!schemaMap[sf2.priority], sf2.priority || 'null');
+assert('progress-veld is number', !sf2.progress || (schemaMap[sf2.progress] && schemaMap[sf2.progress].type === 'number'), sf2.progress || 'null');
+
+var condRules = sc.condFormattingRules || [];
+var condMissing = condRules.filter(function(r){ return !schemaMap[r.field]; }).map(function(r){ return r.field; });
+assert('condFormattingRules: alle velden in schema', condMissing.length === 0,
+  condMissing.length ? 'ontbreekt: ' + condMissing.join(', ') : '6 regels ok');
+assert('condFormattingRules: correcte cssClass waarden', condRules.every(function(r){
+  return ['cond-red','cond-yellow','cond-green'].indexOf(r.cssClass) !== -1;
+}));
+
+// L4-INT-7: Assembled config (spec + data)
+group('L4-INT-7 — Assembled Config: Spec + Data → Engine-ready');
+var assembledConfig = null;
+try {
+  var tabWithData = Object.assign({}, tab, {
+    dataSource: { type: 'dataset', records: dataset ? dataset.records : [], schema: dataset ? dataset.schema : null }
+  });
+  assembledConfig = Object.assign({}, SPEC, { tabs: [tabWithData] });
+  var json = JSON.stringify(assembledConfig);
+  assert('Config is JSON-serialiseerbaar', true, Math.round(json.length/1024) + ' KB');
+  assert('Config bevat records', assembledConfig.tabs[0].dataSource.records.length > 0,
+    assembledConfig.tabs[0].dataSource.records.length + ' records');
+  assert('Config.tabs[0].dataSource.type = dataset', assembledConfig.tabs[0].dataSource.type === 'dataset');
+} catch(e) {
+  assert('Config is JSON-serialiseerbaar', false, e.message);
+}
+
+// ── Summary ────────────────────────────────────────────────────────────────
+document.getElementById('summary').innerHTML =
+  '<div><div class="count pass">' + passed + '</div><div class="label">Geslaagd</div></div>' +
+  '<div><div class="count fail">' + failed + '</div><div class="label">Mislukt</div></div>' +
+  '<div style="margin-left:auto;font-size:13px;color:#475569">Breekpunt 2: L3 → L4 → L2 pipeline</div>';
+
+document.getElementById('duration').textContent = 'Uitgevoerd in ' + (performance.now() - t0).toFixed(1) + ' ms';
+
+// ── Verdict ────────────────────────────────────────────────────────────────
+var verdictEl = document.createElement('div');
+verdictEl.className = 'verdict ' + (failed === 0 ? 'ok' : 'err');
+verdictEl.textContent = failed === 0
+  ? '✓ Breekpunt 2 voltooid — CSV-adapter + Dashboard Spec zijn klaar voor de Assembler (Layer 5)'
+  : '✗ ' + failed + ' check(s) mislukt — zie details hierboven';
+resultsEl.parentNode.insertBefore(verdictEl, document.getElementById('duration').nextSibling);
+
+// ── Preview tabel (eerste 5 rijen) ─────────────────────────────────────────
+if (dataset && dataset.records.length > 0) {
+  var visibleCols = specCols.filter(function(c){ return c.visible; }).slice(0, 8);
+
+  var st = document.createElement('div');
+  st.className = 'section-title';
+  st.textContent = 'Preview — eerste 5 rijen (zichtbare kolommen, via spec-labels en tagColors)';
+  document.body.appendChild(st);
+
+  var tbl = document.createElement('table');
+  tbl.className = 'preview-table';
+
+  var thead = '<thead><tr>' + visibleCols.map(function(c){
+    return '<th>' + c.label + '</th>';
+  }).join('') + '</tr></thead>';
+
+  var tbody = '<tbody>' + dataset.records.slice(0, 5).map(function(row) {
+    return '<tr>' + visibleCols.map(function(c) {
+      var val = row[c.key];
+      if (val === null || val === undefined) return '<td><span style="color:#94a3b8">—</span></td>';
+      if (c.renderer === 'tag' && c.tagColors) {
+        var cls = c.tagColors[val] || 'tag-neutral';
+        return '<td><span class="tag ' + cls + '">' + val + '</span></td>';
+      }
+      if (c.renderer === 'progress') {
+        return '<td><span style="display:inline-block;width:60px;height:8px;background:#e2e8f0;border-radius:4px;position:relative">' +
+               '<span style="position:absolute;left:0;top:0;height:8px;background:#3b82f6;border-radius:4px;width:' + Math.min(100,val) + '%"></span>' +
+               '</span> ' + val + '%</td>';
+      }
+      if (c.renderer === 'budget') {
+        return '<td>€\u202f' + (val||0).toLocaleString('nl-NL', {maximumFractionDigits:0}) + '</td>';
+      }
+      if (c.renderer === 'check') {
+        return '<td>' + (val ? '<span style="color:#16a34a">✓</span>' : '<span style="color:#dc2626">✗</span>') + '</td>';
+      }
+      if (c.renderer === 'date') {
+        if (val instanceof Date) {
+          return '<td>' + val.toLocaleDateString('nl-NL') + '</td>';
+        }
+        return '<td>' + val + '</td>';
+      }
+      if (c.renderer === 'avatar') {
+        var initials = String(val).split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+        return '<td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:22px;height:22px;border-radius:50%;background:#3b82f6;color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">' + initials + '</span>' + val + '</span></td>';
+      }
+      return '<td>' + val + '</td>';
+    }).join('') + '</tr>';
+  }).join('') + '</tbody>';
+
+  tbl.innerHTML = thead + tbody;
+  document.body.appendChild(tbl);
+
+  // Config viewer (collapsed)
+  if (assembledConfig) {
+    var st2 = document.createElement('div');
+    st2.className = 'section-title';
+    st2.textContent = 'Assembled dashboardConfig (input voor Layer 2 engine — uitvoer van Assembler)';
+    document.body.appendChild(st2);
+
+    var box = document.createElement('div');
+    box.className = 'config-box';
+    var preview = JSON.stringify({
+      app: assembledConfig.app,
+      tabs: assembledConfig.tabs.map(function(t){
+        return Object.assign({}, t, {
+          dataSource: {
+            type: 'dataset',
+            records: '[... ' + (t.dataSource.records||[]).length + ' records ...]',
+            schema: t.dataSource.schema
+          }
+        });
+      }),
+      domain: assembledConfig.domain
+    }, null, 2);
+    box.textContent = preview;
+    document.body.appendChild(box);
+  }
+}
+
+})();
+</script>
+</body>
+</html>

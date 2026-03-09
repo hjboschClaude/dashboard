@@ -68,7 +68,9 @@ dashboard-template-platform/
 ## Omgevingsbeperkingen
 
 - **Geen Python** beschikbaar op deze Windows-laptop — gebruik geen Python-scripts of pip-commando's
+- **Geen Node.js / npx** beschikbaar — gebruik geen npm, npx of Node-scripts
 - **Geen Chrome/browser-test** mogelijk vanuit CLI — visuele verificatie en testruns gebeuren door de gebruiker in de browser
+- **Geen preview_start** mogelijk — er is geen runtime om een dev-server te starten; sla verificatiestappen via preview-tools over
 
 ## Conventies
 

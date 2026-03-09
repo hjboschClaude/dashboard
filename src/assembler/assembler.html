@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════
+     ASSEMBLER — Layer 5 — CSV Dashboard Template Platform
+     Bundelt Layer 1+2+3+4 tot één single-file HTML-dashboard.
+
+     Gebruik:
+       1. Selecteer de engine:  dashboard.html  (Layer 2)
+       2. Selecteer de spec:    dashboard-spec.json  (Layer 4)
+       3. Selecteer de data:    *.csv  (Layer 3 input)
+       4. Klik "Assembleer Dashboard"
+       5. Download het geassembleerde dashboard
+
+     Vereisten:
+       - Geen server nodig — werkt op file:// in de browser
+       - dashboard.html moet de assembler-injectie ondersteunen (v0.65.0+)
+       - csv-adapter.js moet naast dit bestand staan (../csv-adapter/csv-adapter.js)
+     ═══════════════════════════════════════════════════════════════════ -->
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assembler — CSV Dashboard Platform</title>
+<script src="../csv-adapter/csv-adapter.js"></script>
+<style>
+:root {
+  --bg: #FFFFFF;
+  --surface: #F5F7F8;
+  --border: #CAD6DA;
+  --accent: #00811F;
+  --accent-dark: #006518;
+  --text: #1A2B35;
+  --text-muted: #5A7080;
+  --success: #00811F;
+  --warning: #E07B00;
+  --danger: #C0392B;
+  --radius: 6px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+}
+header {
+  background: var(--accent);
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+header h1 { font-size: 18px; font-weight: 600; }
+header .subtitle { font-size: 12px; opacity: 0.85; }
+.container { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+
+/* Pipeline diagram */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+}
+.pipeline-step {
+  text-align: center;
+  min-width: 90px;
+  padding: 8px 6px;
+}
+.pipeline-step .icon { font-size: 22px; margin-bottom: 4px; }
+.pipeline-step .label { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+.pipeline-step .layer { font-size: 10px; color: var(--accent); font-weight: 600; }
+.pipeline-arrow {
+  color: var(--border);
+  font-size: 18px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.pipeline-step.active .label { color: var(--text); font-weight: 600; }
+.pipeline-step.active .icon { filter: none; }
+
+/* Input cards */
+.input-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.input-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+.input-card.loaded { border-color: var(--success); }
+.input-card.error { border-color: var(--danger); }
+.input-card .step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.input-card.loaded .step-num { background: var(--success); border-color: var(--success); color: #fff; }
+.input-card.error .step-num { background: var(--danger); border-color: var(--danger); color: #fff; }
+.input-card .card-body { flex: 1; min-width: 0; }
+.input-card .card-label { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+.input-card .card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.input-card .card-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 16px;
+  word-break: break-all;
+}
+.input-card.loaded .card-status { color: var(--success); }
+.input-card.error .card-status { color: var(--danger); }
+.input-card input[type="file"] {
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 260px;
+}
+
+/* Button */
+.assemble-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 24px;
+}
+.assemble-btn:hover:not(:disabled) { background: var(--accent-dark); }
+.assemble-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Output */
+.output-card {
+  background: #fff;
+  border: 2px solid var(--success);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: none;
+}
+.output-card h2 { font-size: 15px; color: var(--success); margin-bottom: 12px; }
+.output-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.stat { text-align: center; }
+.stat .val { font-size: 22px; font-weight: 700; color: var(--text); }
+.stat .key { font-size: 11px; color: var(--text-muted); }
+.download-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+.download-btn:hover { background: var(--accent-dark); }
+.error-card {
+  background: #fff;
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: none;
+  color: var(--danger);
+  font-size: 13px;
+}
+.error-card pre { margin-top: 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+
+/* Log */
+.log {
+  margin-top: 20px;
+  background: #F5F7F8;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 11px;
+  font-family: 'Consolas', 'Menlo', monospace;
+  max-height: 180px;
+  overflow-y: auto;
+  color: var(--text-muted);
+  display: none;
+}
+.log .log-ok   { color: var(--success); }
+.log .log-warn { color: var(--warning); }
+.log .log-err  { color: var(--danger); }
+
+footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Assembler</h1>
+  <span class="subtitle">Layer 5 — CSV Dashboard Template Platform</span>
+</header>
+
+<div class="container">
+
+  <!-- Pipeline visualisatie -->
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="icon">📐</div>
+      <div class="layer">Layer 1</div>
+      <div class="label">UX Reference</div>
+    </div>
+    <div class="pipeline-arrow">+</div>
+    <div class="pipeline-step active">
+      <div class="icon">⚙️</div>
+      <div class="layer">Layer 2</div>
+      <div class="label">Engine<br>(dashboard.html)</div>
+    </div>
+    <div class="pipeline-arrow">+</div>
+    <div class="pipeline-step active">
+      <div class="icon">📊</div>
+      <div class="layer">Layer 3</div>
+      <div class="label">CSV Data<br>(*.csv)</div>
+    </div>
+    <div class="pipeline-arrow">+</div>
+    <div class="pipeline-step active">
+      <div class="icon">🗂️</div>
+      <div class="layer">Layer 4</div>
+      <div class="label">Spec<br>(spec.json)</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step active">
+      <div class="icon">📦</div>
+      <div class="layer">Layer 5</div>
+      <div class="label"><strong>dist/*.html</strong></div>
+    </div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="input-cards">
+
+    <div class="input-card" id="card-engine">
+      <div class="step-num">1</div>
+      <div class="card-body">
+        <div class="card-label">Engine — dashboard.html</div>
+        <div class="card-desc">Layer 2: de runtime met filter, sort, group, virtualisatie en export (v0.65.0+)</div>
+        <input type="file" id="engine-file" accept=".html">
+        <div class="card-status" id="engine-status">Nog niet geselecteerd</div>
+      </div>
+    </div>
+
+    <div class="input-card" id="card-spec">
+      <div class="step-num">2</div>
+      <div class="card-body">
+        <div class="card-label">Spec — dashboard-spec.json</div>
+        <div class="card-desc">Layer 4: AI-gegenereerde configuratie (kolommen, renderers, tagColors, condFormatting)</div>
+        <input type="file" id="spec-file" accept=".json">
+        <div class="card-status" id="spec-status">Nog niet geselecteerd</div>
+      </div>
+    </div>
+
+    <div class="input-card" id="card-csv">
+      <div class="step-num">3</div>
+      <div class="card-body">
+        <div class="card-label">Data — *.csv</div>
+        <div class="card-desc">Layer 3 input: CSV-bestand met de ruwe data (wordt geparseerd door csv-adapter)</div>
+        <input type="file" id="csv-file" accept=".csv">
+        <div class="card-status" id="csv-status">Nog niet geselecteerd</div>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="assemble-btn" id="assemble-btn" disabled>Assembleer Dashboard</button>
+
+  <!-- Output -->
+  <div class="output-card" id="output-card">
+    <h2>✓ Assemblage geslaagd</h2>
+    <div class="output-stats" id="output-stats"></div>
+    <a class="download-btn" id="download-link" href="#" download>Download dashboard</a>
+  </div>
+
+  <div class="error-card" id="error-card">
+    <strong>✗ Assemblage mislukt</strong>
+    <pre id="error-detail"></pre>
+  </div>
+
+  <div class="log" id="log"></div>
+
+</div>
+
+<footer>
+  CSV Dashboard Template Platform — Gemeente Rotterdam &nbsp;·&nbsp; Layer 5 Assembler
+</footer>
+
+<script>
+// ============================================================
+// ASSEMBLER LOGIC
+// ============================================================
+
+var _engineText = null;
+var _specObj    = null;
+var _csvText    = null;
+var _csvName    = '';
+
+// ── Hulpfuncties ─────────────────────────────────────────────
+
+function log(msg, type) {
+  var logEl = document.getElementById('log');
+  logEl.style.display = 'block';
+  var line = document.createElement('div');
+  line.className = type ? 'log-' + type : '';
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setCard(id, state, statusMsg) {
+  var card   = document.getElementById('card-' + id);
+  var status = document.getElementById(id + '-status');
+  card.className   = 'input-card' + (state ? ' ' + state : '');
+  status.textContent = statusMsg;
+}
+
+function checkReady() {
+  var ready = !!(_engineText && _specObj && _csvText);
+  document.getElementById('assemble-btn').disabled = !ready;
+  if (ready) log('Alle bestanden geladen — klik "Assembleer Dashboard".');
+}
+
+function readFile(input, cb) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload  = function(e) { cb(null, e.target.result, f.name); };
+  r.onerror = function()  { cb(new Error('Leesfout: ' + f.name)); };
+  r.readAsText(f, 'UTF-8');
+}
+
+// ── File input handlers ───────────────────────────────────────
+
+document.getElementById('engine-file').addEventListener('change', function() {
+  readFile(this, function(err, text, name) {
+    if (err) { setCard('engine', 'error', '✗ ' + err.message); return; }
+    // Controleer op injectie-ondersteuning
+    if (text.indexOf('dashboard-config') === -1) {
+      setCard('engine', 'error', '✗ ' + name + ' ondersteunt assembler-injectie niet (vereist v0.65.0+)');
+      log('Engine mist #dashboard-config check — update naar v0.65.0+', 'err');
+      return;
+    }
+    _engineText = text;
+    var sizeKB  = Math.round(text.length / 1024);
+    setCard('engine', 'loaded', '✓ ' + name + ' (' + sizeKB + ' KB)');
+    log('Engine geladen: ' + name + ' (' + sizeKB + ' KB)', 'ok');
+    checkReady();
+  });
+});
+
+document.getElementById('spec-file').addEventListener('change', function() {
+  readFile(this, function(err, text, name) {
+    if (err) { setCard('spec', 'error', '✗ ' + err.message); return; }
+    var obj;
+    try { obj = JSON.parse(text); }
+    catch(e) {
+      setCard('spec', 'error', '✗ Geen geldig JSON: ' + e.message);
+      log('Spec parse fout: ' + e.message, 'err');
+      return;
+    }
+    if (!obj.tabs || !Array.isArray(obj.tabs) || !obj.tabs[0]) {
+      setCard('spec', 'error', '✗ Spec mist tabs[]');
+      return;
+    }
+    _specObj = obj;
+    var info = obj.tabs.length + ' tab(s), ' + obj.tabs[0].columns.length + ' kolommen';
+    setCard('spec', 'loaded', '✓ ' + name + ' — ' + info);
+    log('Spec geladen: ' + name + ' — ' + info, 'ok');
+    checkReady();
+  });
+});
+
+document.getElementById('csv-file').addEventListener('change', function() {
+  readFile(this, function(err, text, name) {
+    if (err) { setCard('csv', 'error', '✗ ' + err.message); return; }
+    _csvText = text;
+    _csvName = name;
+    var rows = text.split('\n').length - 1;
+    setCard('csv', 'loaded', '✓ ' + name + ' (~' + rows + ' rijen)');
+    log('CSV geladen: ' + name + ' (~' + rows + ' rijen)', 'ok');
+    checkReady();
+  });
+});
+
+// ── Assemblage ────────────────────────────────────────────────
+
+document.getElementById('assemble-btn').addEventListener('click', function() {
+  document.getElementById('output-card').style.display = 'none';
+  document.getElementById('error-card').style.display  = 'none';
+  try {
+    assemble();
+  } catch(e) {
+    document.getElementById('error-card').style.display = '';
+    document.getElementById('error-detail').textContent = e.message + (e.stack ? '\n\n' + e.stack : '');
+    log('Assemblage mislukt: ' + e.message, 'err');
+    console.error('[Assembler]', e);
+  }
+});
+
+function assemble() {
+  log('── Start assemblage ──');
+
+  // Stap 1: CSV parsen via csv-adapter
+  log('Stap 1: CSV parsen...');
+  if (typeof CsvAdapter === 'undefined' || typeof CsvAdapter.parseCSV !== 'function') {
+    throw new Error('csv-adapter.js niet geladen. Controleer of ../csv-adapter/csv-adapter.js beschikbaar is.');
+  }
+  var dataset = CsvAdapter.parseCSV(_csvText);
+  if (!dataset || !dataset.records) {
+    throw new Error('CSV parsing mislukt — geen records teruggegeven.');
+  }
+  var warnings = (dataset.sourceMeta && dataset.sourceMeta.parseWarnings) || [];
+  log('  ✓ ' + dataset.records.length + ' records geparseerd, ' +
+      dataset.schema.fields.length + ' velden', 'ok');
+  if (warnings.length) {
+    warnings.forEach(function(w) { log('  ⚠ ' + w, 'warn'); });
+  }
+
+  // Stap 2: Spec klonen en records injecteren
+  log('Stap 2: Spec samenvoegen met data...');
+  var config = JSON.parse(JSON.stringify(_specObj));
+
+  var injectedTabs = 0;
+  config.tabs.forEach(function(tab, i) {
+    if (tab.dataSource && tab.dataSource.type === 'dataset') {
+      tab.dataSource.records = dataset.records;
+      if (dataset.schema) tab.dataSource.schema = dataset.schema;
+      injectedTabs++;
+      log('  ✓ Tab "' + tab.id + '": ' + dataset.records.length + ' records geïnjecteerd', 'ok');
+    } else {
+      log('  – Tab "' + (tab.id||i) + '" overgeslagen (type: ' +
+          (tab.dataSource && tab.dataSource.type || '?') + ')', 'warn');
+    }
+  });
+  if (injectedTabs === 0) {
+    throw new Error('Geen tabs met dataSource.type === "dataset" gevonden in spec. ' +
+                    'Controleer de spec JSON.');
+  }
+
+  // Stap 3: Config serialiseren
+  log('Stap 3: Config serialiseren...');
+  var configJson;
+  try { configJson = JSON.stringify(config, null, 2); }
+  catch(e) { throw new Error('Config serialisatie mislukt: ' + e.message); }
+  log('  ✓ Config: ~' + Math.round(configJson.length / 1024) + ' KB', 'ok');
+
+  // Stap 4: Injecteren in engine HTML
+  log('Stap 4: Injecteren in engine...');
+  var configElement =
+    '<script id="dashboard-config" type="application/json">\n' +
+    configJson + '\n' +
+    '</' + 'script>';
+
+  // Injecteer direct na <head> (voor alle andere scripts)
+  var assembled = _engineText.replace('<head>', '<head>\n' + configElement);
+  if (assembled === _engineText) {
+    // Fallback: voor </head>
+    assembled = _engineText.replace('</head>', configElement + '\n</head>');
+  }
+  if (assembled === _engineText) {
+    throw new Error('Kon injectiepunt niet vinden in engine HTML. ' +
+                    'Controleer of het bestand een geldige <head> tag heeft.');
+  }
+  log('  ✓ Config geïnjecteerd in <head>', 'ok');
+
+  // Stap 5: Bestandsnaam bepalen
+  var tabId    = config.tabs[0].id || 'dashboard';
+  var appTitle = (config.app && config.app.title) ? config.app.title : tabId;
+  var filename = tabId.toLowerCase().replace(/\s+/g, '-') + '-dashboard.html';
+  var sizeKB   = Math.round(assembled.length / 1024);
+
+  log('Stap 5: Download klaarmaken — ' + filename + ' (' + sizeKB + ' KB)', 'ok');
+
+  // Stap 6: Download aanbieden
+  var blob = new Blob([assembled], { type: 'text/html;charset=utf-8' });
+  var url  = URL.createObjectURL(blob);
+  var link = document.getElementById('download-link');
+  link.href     = url;
+  link.download = filename;
+  link.textContent = 'Download ' + filename + ' (' + sizeKB + ' KB)';
+
+  // Stap 7: Samenvatting tonen
+  var stats = [
+    { val: dataset.records.length, key: 'Records' },
+    { val: config.tabs[0].columns.length, key: 'Kolommen' },
+    { val: config.tabs.length, key: 'Tab(s)' },
+    { val: sizeKB + ' KB', key: 'Bestandsgrootte' }
+  ];
+  var statsHtml = stats.map(function(s) {
+    return '<div class="stat"><div class="val">' + s.val + '</div>' +
+           '<div class="key">' + s.key + '</div></div>';
+  }).join('');
+  document.getElementById('output-stats').innerHTML = statsHtml;
+  document.getElementById('output-card').style.display = '';
+
+  log('── Assemblage voltooid: ' + filename + ' ──', 'ok');
+
+  // Auto-download
+  link.click();
+}
+</script>
+</body>
+</html>
