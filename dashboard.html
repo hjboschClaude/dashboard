@@ -5181,7 +5181,7 @@ function runTests(){
   // Cat 5: Config structuur compleet (2)
   assert('B1: app.version is literal string', (function() {
     var json = JSON.stringify(dashboardConfig);
-    return json.indexOf('"version":"0.59.0"') !== -1;
+    return json.indexOf('"version":"0.60.0"') !== -1;
   })());
   assert('B1: geen functies in config', (function() {
     try {
