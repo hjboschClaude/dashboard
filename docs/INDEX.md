@@ -1,7 +1,7 @@
 # Index — Plannen, Sprint-IDs & Documenten
 
-Versie: 2.3
-Datum: 2026-03-08
+Versie: 2.4
+Datum: 2026-03-09
 
 ---
 
@@ -27,7 +27,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 |----------|-------|--------|
 | [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: 12 werkpakketten (WP1–WP12), herpositionering, structuur, PORT THIS/DEMO ONLY, token-alignment, pattern catalog, porting notes | ○ Open — P1 eerst |
 | [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
-| [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ○ Actief — Fase 2 afgerond (v0.57.0), Fase 3 volgt |
+| [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ✅ Fase 3 afgerond (v0.58.0) — Engine volledig generiek |
 | [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
 
 ---

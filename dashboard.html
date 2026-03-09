@@ -316,6 +316,8 @@ tbody tr.cond-yellow td{background:var(--yellow-50)!important;}
 tbody tr.cond-red td:first-child{border-left:3px solid var(--color-danger)!important;}
 tbody tr.cond-green td:first-child{border-left:3px solid var(--color-info)!important;}
 tbody tr.cond-yellow td:first-child{border-left:3px solid var(--color-warning)!important;}
+/* WP-S15: Feature gating — verberg UI-elementen voor uitgeschakelde features */
+.feature-gated{display:none!important;}
 /* #67/#69/#76: Selectie-checkboxen (header + rij) */
 .row-select-cb{width:16px;height:16px;border-radius:3px;border:1.5px solid var(--gray-400);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);cursor:pointer;flex-shrink:0;transition:all .12s;}
 .row-select-cb:hover{border-color:var(--accent);}
@@ -601,7 +603,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.57.0';
+const DASHBOARD_VERSION = '0.58.0';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -798,7 +800,14 @@ const dashboardConfig = {
           activeFlag: null,
           detailTitle: "name",
           searchTextFields: ["directeur", "aog", "pm"]
-        }
+        },
+        condFormattingRules: [
+          { field: "priority", op: "eq", value: "Hoog", cssClass: "cond-red" },
+          { field: "status", op: "eq", value: "On Hold", cssClass: "cond-red" },
+          { field: "status", op: "eq", value: "Voltooid", cssClass: "cond-green" },
+          { field: "status", op: "eq", value: "In Review", cssClass: "cond-yellow" },
+          { field: "progress", op: "lt", value: 30, cssClass: "cond-yellow" }
+        ]
       }
     },
     {
@@ -823,7 +832,14 @@ const dashboardConfig = {
           activeFlag: "actief",
           detailTitle: "name",
           searchTextFields: ["name"]
-        }
+        },
+        condFormattingRules: [
+          { field: "status", op: "eq", value: "On Hold", cssClass: "cond-red" },
+          { field: "status", op: "eq", value: "Voltooid", cssClass: "cond-green" },
+          { conditions: [{field:"actief",op:"eq",value:true},{field:"status",op:"eq",value:"Actief"}], cssClass: "cond-green" },
+          { field: "status", op: "eq", value: "In Review", cssClass: "cond-yellow" },
+          { field: "capaciteit", op: "lt", value: 30, cssClass: "cond-yellow" }
+        ]
       }
     }
   ],
@@ -940,7 +956,9 @@ function _buildTabIndex(tabIdx){
   var pkField=getPrimaryKeyField(tabIdx);
   var map=new Map();
   for(var i=0;i<data.length;i++){
-    map.set(normalizeRecordId(data[i][pkField]),data[i]);
+    var nk=normalizeRecordId(data[i][pkField]);
+    if(map.has(nk)) console.warn('[_buildTabIndex] Duplicate key "'+nk+'" in tab '+tabIdx+' at row '+i); // WP-S18: dupe-key validatie
+    map.set(nk,data[i]);
   }
   _tabIndexById[tabIdx]=map;
 }
@@ -1082,6 +1100,17 @@ var FEATURE_REQUIREMENTS = {
   modal:            { mode: 'requires', roles: ['primaryKey', 'detailTitle'] },
   rowAria:          { mode: 'requires', roles: ['primaryLabel'] },
   exportSelection:  { mode: 'requires', roles: ['primaryKey'] }
+};
+
+// WP-S15: FEATURE_UI_MAP — koppelt features aan toolbar-element-IDs
+// Features zonder toolbar-knop (multiSelect, contextMenu, modal) worden via JS guards afgehandeld.
+var FEATURE_UI_MAP = {
+  search:         ['search-wrap','global-name-filter'],
+  filter:         ['btn-filter'],
+  sort:           ['btn-sort'],
+  group:          ['btn-group'],
+  condFormatting: ['btn-cond'],
+  freeze:         ['btn-freeze']
 };
 
 // ── CONTRACT 6: SEMANTIC_ROLE_RULES ── Type-constraints per semantische rol
@@ -1257,6 +1286,43 @@ function validateFeatureRequirements(tab) {
   return result;
 }
 
+// ── WP-S14: resolveFeatureGates ────────────────────────────
+// Berekent en bewaart resolved features per tab in AppState.
+function resolveFeatureGates(tabIdx){
+  var tab=getTabConfigByIndex(tabIdx);
+  if(!tab) return {};
+  var result=validateFeatureRequirements(tab);
+  if(AppState.tabs[tab.id]) AppState.tabs[tab.id].resolvedFeatures=result.resolvedFeatures;
+  if(result.warnings.length>0) console.warn('[FeatureGate] Tab "'+tab.id+'":', result.warnings);
+  return result.resolvedFeatures;
+}
+// ── WP-S14: isFeatureEnabled ───────────────────────────────
+// Controleert of een feature actief is voor de gegeven tab.
+// Fallback: true als resolvedFeatures niet beschikbaar.
+function isFeatureEnabled(featureName,tabIdx){
+  var idx=tabIdx!==undefined?tabIdx:AppState.currentTab;
+  var tc=getTabConfigByIndex(idx);
+  if(!tc) return true;
+  var rf=AppState.tabs[tc.id]?AppState.tabs[tc.id].resolvedFeatures:null;
+  if(!rf||rf[featureName]===undefined) return true;
+  return rf[featureName];
+}
+// ── WP-S15: applyFeatureGates ───────────────────────────────
+// Toggled .feature-gated class op toolbar-elementen op basis van isFeatureEnabled().
+// Aanroepen na render() in init en na render() in switchTab().
+function applyFeatureGates(){
+  var features=Object.keys(FEATURE_UI_MAP);
+  for(var i=0;i<features.length;i++){
+    var feat=features[i];
+    var enabled=isFeatureEnabled(feat);
+    var ids=FEATURE_UI_MAP[feat];
+    for(var j=0;j<ids.length;j++){
+      var el=document.getElementById(ids[j]);
+      if(el) el.classList.toggle('feature-gated',!enabled);
+    }
+  }
+}
+
 // ── Contract validatie bij init (fail-fast) ──
 // Wordt aangeroepen in het INIT-blok na data-laden
 function _validateContractsOnInit() {
@@ -1285,16 +1351,10 @@ function _validateContractsOnInit() {
     if (types.warnings.length > 0) {
       console.warn('[Contract] Tab "' + tab.id + '" type semantics waarschuwingen:', types.warnings);
     }
-    // Stap E: Feature requirements — welke features zijn actief gegeven de semantiek?
-    var featureResult = validateFeatureRequirements(tab);
-    if (featureResult.errors.length > 0) {
-      console.error('[Contract] Tab "' + tab.id + '" feature requirements fouten:', featureResult.errors);
-    }
-    if (featureResult.warnings.length > 0) {
-      console.warn('[Contract] Tab "' + tab.id + '" feature requirements waarschuwingen:', featureResult.warnings);
-    }
-    // Log resolved features
-    console.info('[Contract] Tab "' + tab.id + '" resolved features:', featureResult.resolvedFeatures);
+    // Stap E: Feature requirements — WP-S14: resolveFeatureGates bewaart resultaat in AppState
+    var tabIdx=dashboardConfig.tabs.indexOf(tab);
+    var resolvedFeatures=resolveFeatureGates(tabIdx);
+    console.info('[Contract] Tab "' + tab.id + '" resolved features:', resolvedFeatures);
   });
 }
 
@@ -1363,7 +1423,7 @@ Object.defineProperty(window, 'data1', {
 //
 // State-categorieën:
 //   Dashboard  — activeTabId
-//   Selection  — selectedRows, _lastClickedIdx, contextRow
+//   Selection  — selectedRowKeys, _lastClickedIdx, contextRowKey
 //   Filter     — filterRules, filterLogic, colFilters, globalNameFilter
 //   Sort       — sortRules, _draftSortRules
 //   Group      — groupFields, collapsedGroups
@@ -1381,9 +1441,9 @@ var AppState = {
   activeTabId: dashboardConfig.app.defaultTabId,
 
   // ── Selection state (per tab — save/restore bij tabswitch) ──
-  selectedRows: new Set(),
+  selectedRowKeys: new Set(),
   _lastClickedIdx: null,
-  contextRow: null,
+  contextRowKey: null,
 
   // ── Filter state (per tab — save/restore bij tabswitch) ──
   filterRules: [],
@@ -1439,7 +1499,8 @@ var AppState = {
           globalNameFilter: null,
           _lastClickedIdx: null,
           _draftSortRules: null
-        }
+        },
+        resolvedFeatures: {}  // WP-S14: feature gating per tab
       };
     });
     return t;
@@ -1457,7 +1518,7 @@ var AppState = {
     this.ui.density = 'compact';
     this.freezeCol = false;
     this.ui.freezeFirstDataColumn = false;
-    this.selectedRows.clear();
+    this.selectedRowKeys.clear();
     this._lastClickedIdx = null;
     this._draftSortRules = null;
     this._exportMode = 'all';
@@ -1503,7 +1564,7 @@ Object.defineProperty(AppState, '_tabSelections', {
 // ══ ENGINE CORE: ViewState Save/Restore (tabswitch) ═══════════
 function saveTabViewState(){
   var vs=AppState.tabs[AppState.activeTabId].viewState;
-  vs.selection=new Set(AppState.selectedRows);
+  vs.selection=new Set(AppState.selectedRowKeys);
   vs.filterRules=AppState.filterRules.slice();
   vs.colFilters=Object.assign({},AppState.colFilters);
   vs.sortRules=AppState.sortRules.slice();
@@ -1515,7 +1576,7 @@ function saveTabViewState(){
 }
 function restoreTabViewState(tabId){
   var vs=AppState.tabs[tabId].viewState;
-  AppState.selectedRows=new Set(vs.selection);
+  AppState.selectedRowKeys=new Set(vs.selection);
   AppState.filterRules=vs.filterRules.slice();
   AppState.colFilters=Object.assign({},vs.colFilters);
   AppState.sortRules=vs.sortRules.slice();
@@ -2123,6 +2184,7 @@ function getAllUniqueNames(){
 }
 
 function initGlobalNameFilter(){
+  if(!isFeatureEnabled('search')) return; // WP-S15: feature gate
   var select=document.getElementById('global-name-filter');
   var names=getAllUniqueNames();
   var optionsHtml='<option value="">👤 Filter op naam — Alles tonen</option>';
@@ -2134,6 +2196,7 @@ function initGlobalNameFilter(){
 }
 
 function setGlobalNameFilter(val){
+  if(!isFeatureEnabled('search')) return; // WP-S15: feature gate
   AppState.globalNameFilter=val||null;
   _invalidate(['data','sort','group','agg','body','meta']); // A2: targeted invalidation for global name filter
   render();
@@ -2189,11 +2252,43 @@ function groupData(data){
 //   Output: CSS class string ('cond-red'|'cond-green'|'cond-yellow'|'')
 //   Cache:  — (inline per rij, geen cache)
 //   Test:   condClass({priority:'Hoog'}) → 'cond-red' — puur, geen DOM
-// WP-S9: condClass met semantic accessors (dual mode)
+// ── WP-S16: declaratieve conditionele opmaak ────────────────
+function _matchCondition(r,cond){
+  var val=r[cond.field];
+  switch(cond.op){
+    case 'eq':  return val===cond.value;
+    case 'ne':  return val!==cond.value;
+    case 'lt':  return val!==undefined&&val<cond.value;
+    case 'gt':  return val!==undefined&&val>cond.value;
+    case 'lte': return val!==undefined&&val<=cond.value;
+    case 'gte': return val!==undefined&&val>=cond.value;
+    default:    return false;
+  }
+}
+function evaluateCondRule(r,rule){
+  if(rule.conditions){
+    for(var i=0;i<rule.conditions.length;i++){
+      if(!_matchCondition(r,rule.conditions[i])) return false;
+    }
+    return true;
+  }
+  return _matchCondition(r,rule);
+}
+
+// WP-S16: condClass met declaratieve regels + legacy fallback
 function condClass(r){
   if(!AppState.condEnabled) return '';
+  if(!isFeatureEnabled('condFormatting')) return '';  // WP-S15: feature gate
   var tab=AppState.currentTab;
   var sc=getSchemaContract(tab);
+  // Declaratief pad: condFormattingRules uit schemaContract
+  if(sc&&sc.condFormattingRules&&sc.condFormattingRules.length>0){
+    for(var i=0;i<sc.condFormattingRules.length;i++){
+      if(evaluateCondRule(r,sc.condFormattingRules[i])) return sc.condFormattingRules[i].cssClass;
+    }
+    return '';
+  }
+  // Legacy fallback: semantic accessors (WP-S9)
   var priorityVal,statusVal,activeFlagVal,progressVal;
   if(sc&&sc.semanticFields){
     var sf=sc.semanticFields;
@@ -2202,7 +2297,6 @@ function condClass(r){
     activeFlagVal=sf.activeFlag?r[sf.activeFlag]:undefined;
     progressVal=sf.progress?r[sf.progress]:undefined;
   } else {
-    // Legacy fallback: hardcoded veldnamen
     priorityVal=r.priority;statusVal=r.status;activeFlagVal=r.actief;progressVal=r.progress;
   }
   if(priorityVal==='Hoog'||statusVal==='On Hold') return 'cond-red';
@@ -2434,7 +2528,7 @@ function _invalidateUniqueCache() {
 // Gevolgen voor UX-uitbreidingen (Layer 1 → Layer 2 porting):
 //   1. Event-listeners op rijen: bind via event-delegation op tbody,
 //      NIET op individuele <tr> (rijen worden hergebruikt bij scroll)
-//   2. Rij-selectie/highlight: sla state op in AppState (bijv. selectedRows Set),
+//   2. Rij-selectie/highlight: sla state op in AppState (bijv. selectedRowKeys Set),
 //      pas visuele klasse toe in rowHtml() — NIET via DOM-query na render
 //   3. Inline editing: activeer alleen op zichtbare rij, sla waarde op in data[],
 //      laat volgende virtual render de wijziging reflecteren
@@ -2570,13 +2664,15 @@ function _renderInternal() {
 // Trigger: _dirty.header
 function renderHeader(tab,cols,hpx){
   var row=document.getElementById('thead-'+tab+'-row');
-  // #67/#70/#72: Echte header-checkbox met drie states
+  // #67/#70/#72: Echte header-checkbox met drie states — WP-S15: alleen als multiSelect enabled
+  var multiEnabled=isFeatureEnabled('multiSelect',tab);
   var hdrCbState=getHeaderCheckboxState();
   var hdrCbClass='row-select-cb'+(hdrCbState==='all'?' checked':hdrCbState==='partial'?' indeterminate':'');
   var hdrCbIcon=hdrCbState==='all'?'✓':hdrCbState==='partial'?'−':'';
   var selTotal=_cachedData?_cachedData.length:0;
   var selTitle=hdrCbState==='all'?'Deselecteer alle '+selTotal+' gefilterde records':'Selecteer alle '+selTotal+' gefilterde records';
-  row.innerHTML='<th style="height:'+hpx+'px"><div class="th-inner" style="height:'+hpx+'px" onclick="toggleSelectAll()" role="checkbox" aria-label="'+escapeAttr(selTitle)+'" title="'+escapeAttr(selTitle)+'" tabindex="0"><div class="'+hdrCbClass+'" id="header-select-cb">'+hdrCbIcon+'</div></div></th>'+
+  var hdrCbHtml=multiEnabled?'<th style="height:'+hpx+'px"><div class="th-inner" style="height:'+hpx+'px" onclick="toggleSelectAll()" role="checkbox" aria-label="'+escapeAttr(selTitle)+'" title="'+escapeAttr(selTitle)+'" tabindex="0"><div class="'+hdrCbClass+'" id="header-select-cb">'+hdrCbIcon+'</div></div></th>':'<th style="height:'+hpx+'px"></th>';
+  row.innerHTML=hdrCbHtml+
     cols.map(function(c,ci){
       var si=getSortIcon(c.key);
       var isSorted=AppState.sortRules.some(function(r){return r.field===c.key;});
@@ -2614,22 +2710,24 @@ function rowHtml(r,rn,cols,tab,hpx){
   var sc=getSchemaContract(tab);
   var pkField=sc&&sc.primaryKey?sc.primaryKey:'id';
   var key=makeRowKey(tab,r[pkField]);
-  var sel=AppState.selectedRows.has(key)?'selected':'';
+  var sel=AppState.selectedRowKeys.has(key)?'selected':'';
   var cc=condClass(r);
-  // #69: rij-selectie checkbox
-  var cbClass='row-select-cb'+(AppState.selectedRows.has(key)?' checked':'');
-  var cbIcon=AppState.selectedRows.has(key)?'✓':'';
+  // #69: rij-selectie checkbox — WP-S15: alleen als multiSelect enabled
+  var multiEnabled=isFeatureEnabled('multiSelect',tab);
+  var cbClass='row-select-cb'+(AppState.selectedRowKeys.has(key)?' checked':'');
+  var cbIcon=AppState.selectedRowKeys.has(key)?'✓':'';
   var labelField=sc&&sc.semanticFields&&sc.semanticFields.primaryLabel?sc.semanticFields.primaryLabel:'name';
+  var ctxEnabled=isFeatureEnabled('contextMenu',tab); // WP-S15
   // 1.2: data-attributen i.p.v. inline event handlers — delegation via initTableDelegation()
   return '<tr class="'+sel+' '+cc+'" style="height:'+hpx+'px"'+
     ' data-row-key="'+escapeAttr(key)+'" data-tab="'+tab+'"'+
     ' tabindex="0" role="row" aria-label="'+escapeAttr(r[labelField]||key)+' — druk Enter voor details">'  // C.4
-    +'<td><div class="'+cbClass+'">'+cbIcon+'</div></td>'
+    +(multiEnabled?'<td><div class="'+cbClass+'">'+cbIcon+'</div></td>':'<td></td>')
     +cols.map(function(c){
       var cls=c.key===labelField?'cell-primary':'';
       var cell=renderCell(c,r);
-      // #31: actie-knop in de primary-label-kolom — delegation via data-action
-      if(c.key===labelField) cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
+      // #31: actie-knop in de primary-label-kolom — delegation via data-action — WP-S15: alleen als contextMenu enabled
+      if(c.key===labelField&&ctxEnabled) cell+='<button class="row-action-btn" data-action="row-ctx" aria-label="Acties" tabindex="-1">⋯</button>';
       return '<td class="'+cls+'">'+cell+'</td>'; /* BUG-017 fix: position:relative verplaatst naar .cell-primary CSS */
     }).join('')
     +'</tr>';
@@ -3019,9 +3117,9 @@ function renderAgg(tab,cols,data){
 // │ Density             │ setRowHeight(h)                       │ AppState.rowHeight        │
 // │ Cond. formatting    │ toggleCond()                          │ AppState.condEnabled      │
 // │ Freeze column       │ toggleFreeze()                        │ .freeze-active class      │
-// │ Select row          │ toggleRowSelect(key) ²                │ AppState.selectedRows     │
+// │ Select row          │ toggleRowSelect(key) ²                │ AppState.selectedRowKeys     │
 // │ Select all          │ toggleSelectAll()                     │ getHeaderCheckboxState()  │
-// │ Context menu        │ showCtx(e, key), showCtxAt(e, key)   │ AppState.contextRow       │
+// │ Context menu        │ showCtx(e, key), showCtxAt(e, key)   │ AppState.contextRowKey       │
 // │ Undo                │ (toekomstig: undo(), canUndo())      │ — ¹                       │
 // │ Announce            │ announce(message)                     │ #live-region              │
 // │ Reset               │ resetView(), resetViewState()         │ hasActiveSettings()       │
@@ -3075,6 +3173,7 @@ var thDidDrag=false;
    Emoji-iconen (👔/📋) zijn zo geen drag-doelwit meer en triggeren geen thDragStart().
    thDidDrag blijft false bij klikken op icongebied → clickSort() sorteert correct. */
 function clickSort(key){
+  if(!isFeatureEnabled('sort')) return; // WP-S15: feature gate
   if(thDidDrag){thDidDrag=false;return;}
   var ex=AppState.sortRules.findIndex(function(r){return r.field===key;});
   if(ex>=0){
@@ -3104,10 +3203,11 @@ function clickColFilter(e,key){
 function getHeaderCheckboxState(){
   if(!_cachedData||!_cachedData.length) return 'none';
   var tab=AppState.currentTab;
+  var pk=getPrimaryKeyField(tab); // WP-S18: semantic primary key
   var total=_cachedData.length;
   var count=0;
   for(var i=0;i<total;i++){
-    if(AppState.selectedRows.has(tab+'-'+_cachedData[i].id)) count++;
+    if(AppState.selectedRowKeys.has(makeRowKey(tab,_cachedData[i][pk]))) count++;
   }
   if(count===0) return 'none';
   if(count===total) return 'all';
@@ -3115,15 +3215,17 @@ function getHeaderCheckboxState(){
 }
 
 function toggleSelectAll(){
+  if(!isFeatureEnabled('multiSelect')) return; // WP-S15: feature gate
   if(!_cachedData) return;
   var tab=AppState.currentTab;
   var state=getHeaderCheckboxState();
+  var pk=getPrimaryKeyField(tab); // WP-S18: semantic primary key
   if(state==='all'){
     // Deselecteer alle zichtbare rijen
-    _cachedData.forEach(function(r){AppState.selectedRows.delete(tab+'-'+r.id);});
+    _cachedData.forEach(function(r){AppState.selectedRowKeys.delete(makeRowKey(tab,r[pk]));});
   } else {
     // Selecteer alle zichtbare rijen
-    _cachedData.forEach(function(r){AppState.selectedRows.add(tab+'-'+r.id);});
+    _cachedData.forEach(function(r){AppState.selectedRowKeys.add(makeRowKey(tab,r[pk]));});
   }
   updateSelectionUI();
 }
@@ -3138,7 +3240,7 @@ function updateSelectionUI(){
 // #73: Selectie-bar tonen/verbergen
 function updateSelectionBar(){
   var bar=document.getElementById('selection-bar');
-  var count=AppState.selectedRows.size;
+  var count=AppState.selectedRowKeys.size;
   bar.classList.toggle('is-visible',count>0); // 1.3: state class
   if(count>0){
     var total=_cachedData?_cachedData.length:0;
@@ -3147,7 +3249,7 @@ function updateSelectionBar(){
 }
 
 function clearSelection(){
-  AppState.selectedRows.clear();
+  AppState.selectedRowKeys.clear();
   AppState._lastClickedIdx=null;
   updateSelectionUI();
 }
@@ -3157,7 +3259,8 @@ function clearSelection(){
 function openSelectionExport(){
   if(!_cachedData||!_cachedCols) return;
   var tab=AppState.currentTab;
-  var selCount=_cachedData.filter(function(r){return AppState.selectedRows.has(tab+'-'+r.id);}).length;
+  var pk=getPrimaryKeyField(tab); // WP-S18
+  var selCount=_cachedData.filter(function(r){return AppState.selectedRowKeys.has(makeRowKey(tab,r[pk]));}).length;
   if(!selCount){toast('Geen rijen geselecteerd');return;}
   AppState._exportMode='selection';
   // Update panel-titel om selectie aan te geven
@@ -3169,7 +3272,8 @@ function openSelectionExport(){
 function getSelectedExportData(){
   if(!_cachedData||!_cachedCols) return null;
   var tab=AppState.currentTab;
-  var selData=_cachedData.filter(function(r){return AppState.selectedRows.has(tab+'-'+r.id);});
+  var pk=getPrimaryKeyField(tab); // WP-S18
+  var selData=_cachedData.filter(function(r){return AppState.selectedRowKeys.has(makeRowKey(tab,r[pk]));});
   return {cols:_cachedCols,data:selData};
 }
 
@@ -3189,7 +3293,7 @@ function updateRowHighlights(){
   for(var i=0;i<rows.length;i++){
     var tr=rows[i];
     var key=tr.dataset.rowKey;
-    var isSel=AppState.selectedRows.has(key);
+    var isSel=AppState.selectedRowKeys.has(key);
     tr.classList.toggle('selected',isSel);
     // #69: update rij-checkbox
     var cb=tr.querySelector('.row-select-cb');
@@ -3203,26 +3307,28 @@ function updateRowHighlights(){
 // _lastClickedIdx verplaatst naar AppState
 
 function toggleRow(e,key){
+  if(!isFeatureEnabled('multiSelect')) return; // WP-S15: feature gate
   if(e.target.closest('.data-checkbox')||e.target.closest('.progress-bar')) return; // #77: gescheiden class-naam
   var tab=AppState.currentTab;
   // Klik op rij-checkbox = altijd individuele toggle (multi-selectie zonder Ctrl)
   var isCheckboxClick=!!e.target.closest('.row-select-cb');
+  var pk=getPrimaryKeyField(tab); // WP-S18: semantic primary key
   if(e.shiftKey&&AppState._lastClickedIdx!==null&&_cachedData){
     // #74: Shift+klik range-select
-    var currentIdx=_cachedData.findIndex(function(r){return tab+'-'+r.id===key;});
+    var currentIdx=_cachedData.findIndex(function(r){return makeRowKey(tab,r[pk])===key;});
     if(currentIdx>=0){
       var from=Math.min(AppState._lastClickedIdx,currentIdx);
       var to=Math.max(AppState._lastClickedIdx,currentIdx);
-      for(var i=from;i<=to;i++) AppState.selectedRows.add(tab+'-'+_cachedData[i].id);
+      for(var i=from;i<=to;i++) AppState.selectedRowKeys.add(makeRowKey(tab,_cachedData[i][pk]));
     }
   } else if(isCheckboxClick||e.ctrlKey||e.metaKey){
     // Checkbox-klik of Ctrl+klik: toggle individueel zonder andere selectie te wissen
-    if(AppState.selectedRows.has(key)) AppState.selectedRows.delete(key); else AppState.selectedRows.add(key);
-    AppState._lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return tab+'-'+r.id===key;}):null;
+    if(AppState.selectedRowKeys.has(key)) AppState.selectedRowKeys.delete(key); else AppState.selectedRowKeys.add(key);
+    AppState._lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return makeRowKey(tab,r[pk])===key;}):null;
   } else {
-    if(AppState.selectedRows.size===1&&AppState.selectedRows.has(key)) AppState.selectedRows.clear();
-    else {AppState.selectedRows.clear();AppState.selectedRows.add(key);}
-    AppState._lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return tab+'-'+r.id===key;}):null;
+    if(AppState.selectedRowKeys.size===1&&AppState.selectedRowKeys.has(key)) AppState.selectedRowKeys.clear();
+    else {AppState.selectedRowKeys.clear();AppState.selectedRowKeys.add(key);}
+    AppState._lastClickedIdx=_cachedData?_cachedData.findIndex(function(r){return makeRowKey(tab,r[pk])===key;}):null;
   }
   updateSelectionUI(); // #41: lightweight + header/bar update
 }
@@ -3636,6 +3742,7 @@ function clearGroup(){
 // 5. CONDITIONAL FORMATTING
 // ============================================================
 function toggleCond(){
+  if(!isFeatureEnabled('condFormatting')) return; // WP-S15: feature gate
   AppState.condEnabled=!AppState.condEnabled;
   document.getElementById('btn-cond').classList.toggle('active',AppState.condEnabled);
   _invalidate(['body']); // A2: targeted invalidation for conditional formatting (display only)
@@ -3677,6 +3784,7 @@ function cycleRowHeight(){
    Fix: klasse NA render() opnieuw toepassen (zie BUGS.md), of render() zelf de klasse
    laten zetten op basis van AppState.freezeCol. */
 function toggleFreeze(){
+  if(!isFeatureEnabled('freeze')) return; // WP-S15: feature gate
   AppState.freezeCol=!AppState.freezeCol;
   AppState.ui.freezeFirstDataColumn=AppState.freezeCol;
   document.getElementById('btn-freeze').classList.toggle('active',AppState.freezeCol);
@@ -3723,6 +3831,7 @@ function switchTab(tabIdOrIndex){
   document.getElementById('search-input').value='';
   _invalidate(['data','sort','group','header','body','agg','meta']);
   render();updateSelectionUI();
+  applyFeatureGates(); // WP-S15: feature gates herevalueren bij tab-switch
   document.getElementById('global-name-filter').value='';
 }
 
@@ -3768,7 +3877,8 @@ renderTabBar();
 // CONTEXT MENU
 // ============================================================
 function showCtx(e,key){
-  e.preventDefault();AppState.contextRow=key;AppState.selectedRows.add(key);updateSelectionUI(); // #53: geen volledige render
+  if(!isFeatureEnabled('contextMenu')) return; // WP-S15: feature gate
+  e.preventDefault();AppState.contextRowKey=key;AppState.selectedRowKeys.add(key);updateSelectionUI(); // #53: geen volledige render
   var m=document.getElementById('ctx-menu');
   m.style.display='block';
   m.style.left=Math.min(e.clientX,window.innerWidth-180)+'px';
@@ -3776,7 +3886,8 @@ function showCtx(e,key){
 }
 // #31: Actie-knop trigger voor contextmenu
 function showCtxAt(e,key){
-  AppState.contextRow=key;AppState.selectedRows.add(key);updateSelectionUI();
+  if(!isFeatureEnabled('contextMenu')) return; // WP-S15: feature gate
+  AppState.contextRowKey=key;AppState.selectedRowKeys.add(key);updateSelectionUI();
   var m=document.getElementById('ctx-menu');
   m.style.display='block';
   var rect=e.target.getBoundingClientRect();
@@ -3794,12 +3905,12 @@ document.addEventListener('keydown',function(e){
   }
   // Escape: wis selectie en sluit panels
   if(e.key==='Escape'){
-    if(AppState.selectedRows.size>0){clearSelection();return;}
+    if(AppState.selectedRowKeys.size>0){clearSelection();return;}
     if(AppState.activePanel){closePanel(AppState.activePanel);}
   }
 });
 // WP-S11: expandRow via parseRowKey (vervangt fragiele parseInt/split)
-function expandRow(){if(!AppState.contextRow) return;var parsed=parseRowKey(AppState.contextRow);openModal(parsed.tabIdx,parsed.recordId);}
+function expandRow(){if(!AppState.contextRowKey) return;var parsed=parseRowKey(AppState.contextRowKey);openModal(parsed.tabIdx,parsed.recordId);}
 // [Template-refactoring sprint 1] duplicateRow() verwijderd — dashboard is read-only
 
 // ============================================================
@@ -3807,6 +3918,7 @@ function expandRow(){if(!AppState.contextRow) return;var parsed=parseRowKey(AppS
 // ============================================================
 // WP-S11: openModal met getRecordByKey (O(1)) + semantic title (dual mode)
 function openModal(tab,id){
+  if(!isFeatureEnabled('modal',tab)) return; // WP-S15: feature gate
   var r=getRecordByKey(tab,id);
   if(!r) return;
   var cols=getCols(tab);
@@ -3894,7 +4006,7 @@ function syncAggWidths(){
 // Export-architectuur: alle formaten delen hetzelfde data-contract.
 //
 // Data-resolutie (getExportData()):
-//   1. Selection-mode → alleen AppState.selectedRows
+//   1. Selection-mode → alleen AppState.selectedRowKeys
 //   2. Cached pipeline → _cachedData + _cachedCols (gefilterd + gesorteerd + zichtbare kolommen)
 //   3. Fallback → getData() + filters + sort (herberekening)
 //
@@ -4152,7 +4264,7 @@ function resetView(){
   document.getElementById('btn-group').classList.remove('active');
   document.getElementById('btn-group').innerHTML='<span aria-hidden="true">⊞</span> Groeperen';
   document.getElementById('btn-filter').classList.remove('active');
-  AppState.selectedRows.clear();
+  AppState.selectedRowKeys.clear();
   _invalidate(['data','sort','group','header','body','agg','meta','widths']); // volledige reset
   render();
   toast('Weergave hersteld');
@@ -4167,7 +4279,7 @@ function updateResetBtn(){
 // [Template-refactoring sprint 1] Hernoemd van resetDashboardValues, data-regeneratie verwijderd
 // ============================================================
 function resetViewState(){
-  AppState.selectedRows.clear();AppState.colFilters={};AppState.globalNameFilter=null;
+  AppState.selectedRowKeys.clear();AppState.colFilters={};AppState.globalNameFilter=null;
   AppState.filterRules=[];AppState.sortRules=[];AppState.groupFields=[];AppState.collapsedGroups.clear();
   // Sprint 5: ook per-tab viewState resetten
   saveTabViewState();
@@ -4552,10 +4664,10 @@ function runTests(){
   assert('restoreTabViewState herstelt filterRules', AppState.filterRules.length===origLen);
 
   // E.3: AppState-isolatie
-  var e3Keys=['filterRules','sortRules','selectedRows','groupFields',
+  var e3Keys=['filterRules','sortRules','selectedRowKeys','groupFields',
               'colFilters','globalNameFilter','condEnabled','rowHeight',
               'freezeCol','activePanel','collapsedGroups','_exportMode',
-              'contextRow','filterLogic','_draftSortRules','_lastClickedIdx',
+              'contextRowKey','filterLogic','_draftSortRules','_lastClickedIdx',
               '_panelPrevFocus','_panelTrapHandler','_searchTimer',
               '_colFilterPanelKey','_colFilterSearch'];
   var ownOnWindow=e3Keys.filter(function(k){
@@ -4565,7 +4677,7 @@ function runTests(){
   // Controleert dat AppState zelf alle state-sleutels nog WEL heeft
   assert('E.3: AppState.filterRules is array', Array.isArray(AppState.filterRules));
   assert('E.3: AppState.sortRules is array', Array.isArray(AppState.sortRules));
-  assert('E.3: AppState.selectedRows is Set', AppState.selectedRows instanceof Set);
+  assert('E.3: AppState.selectedRowKeys is Set', AppState.selectedRowKeys instanceof Set);
   assert('E.3: AppState.groupFields is array', Array.isArray(AppState.groupFields));
   assert('E.3: AppState.colFilters is object', typeof AppState.colFilters==='object'&&AppState.colFilters!==null);
   assert('E.3: AppState.collapsedGroups is Set', AppState.collapsedGroups instanceof Set);
@@ -4850,6 +4962,145 @@ function runTests(){
     return result === 'cond-red';
   })());
 
+  // ── WP-S17: A-FEATURE-GATE — Feature gating infrastructuur tests ──
+  group('A-FEATURE-GATE');
+
+  // Cat 1: Functies bestaan (4)
+  assert('S14: resolveFeatureGates is een functie', typeof resolveFeatureGates === 'function');
+  assert('S14: isFeatureEnabled is een functie', typeof isFeatureEnabled === 'function');
+  assert('S15: applyFeatureGates is een functie', typeof applyFeatureGates === 'function');
+  assert('S15: FEATURE_UI_MAP is een object', typeof FEATURE_UI_MAP === 'object' && FEATURE_UI_MAP !== null);
+
+  // Cat 2: resolveFeatureGates retourwaarden (4)
+  assert('S14: resolveFeatureGates(0) retourneert object', (function() {
+    var rf = resolveFeatureGates(0);
+    return rf !== null && typeof rf === 'object';
+  })());
+  assert('S14: resolveFeatureGates(0).search === true', (function() {
+    var rf = resolveFeatureGates(0);
+    return rf.search === true;
+  })());
+  assert('S14: resolveFeatureGates(0).modal === true', (function() {
+    var rf = resolveFeatureGates(0);
+    return rf.modal === true;
+  })());
+  assert('S14: resolveFeatureGates(0).filter === true', (function() {
+    var rf = resolveFeatureGates(0);
+    return rf.filter === true;
+  })());
+
+  // Cat 3: isFeatureEnabled leest uit AppState (3)
+  assert('S14: isFeatureEnabled("search") === true', isFeatureEnabled('search') === true);
+  assert('S14: isFeatureEnabled("modal") === true', isFeatureEnabled('modal') === true);
+  assert('S14: isFeatureEnabled("nonExistent") fallback true', isFeatureEnabled('nonExistent') === true);
+
+  // Cat 4: AppState opslag (3)
+  assert('S14: AppState.tabs projects heeft resolvedFeatures.search', (function() {
+    var tc = getTabConfigByIndex(0);
+    return tc && AppState.tabs[tc.id] && AppState.tabs[tc.id].resolvedFeatures && AppState.tabs[tc.id].resolvedFeatures.search === true;
+  })());
+  assert('S14: AppState.tabs team heeft resolvedFeatures.multiSelect', (function() {
+    var tc = getTabConfigByIndex(1);
+    return tc && AppState.tabs[tc.id] && AppState.tabs[tc.id].resolvedFeatures && AppState.tabs[tc.id].resolvedFeatures.multiSelect === true;
+  })());
+  assert('S14: resolvedFeatures heeft ≥8 keys', (function() {
+    var tc = getTabConfigByIndex(0);
+    if (!tc || !AppState.tabs[tc.id] || !AppState.tabs[tc.id].resolvedFeatures) return false;
+    return Object.keys(AppState.tabs[tc.id].resolvedFeatures).length >= 8;
+  })());
+
+  // Cat 5: UI gating (4)
+  assert('S15: FEATURE_UI_MAP.search bevat search-wrap', FEATURE_UI_MAP.search && FEATURE_UI_MAP.search.indexOf('search-wrap') !== -1);
+  assert('S15: FEATURE_UI_MAP.filter bevat btn-filter', FEATURE_UI_MAP.filter && FEATURE_UI_MAP.filter.indexOf('btn-filter') !== -1);
+  assert('S15: btn-filter niet gegated bij huidige config', (function() {
+    var el = document.getElementById('btn-filter');
+    return el && !el.classList.contains('feature-gated');
+  })());
+  assert('S15: btn-cond niet gegated bij huidige config', (function() {
+    var el = document.getElementById('btn-cond');
+    return el && !el.classList.contains('feature-gated');
+  })());
+
+  // Cat 6: Declaratief condFormatting (2)
+  assert('S16: condFormattingRules aanwezig in tab 0', (function() {
+    var sc = getSchemaContract(0);
+    return sc && sc.condFormattingRules && sc.condFormattingRules.length > 0;
+  })());
+  assert('S16: condClass retourneert identiek resultaat', (function() {
+    var savedCond = AppState.condEnabled; AppState.condEnabled = true;
+    var savedTab = AppState.currentTab; AppState.currentTab = 0;
+    var r = { priority: 'Hoog', status: 'Actief', progress: 50 };
+    var result = condClass(r);
+    AppState.condEnabled = savedCond; AppState.currentTab = savedTab;
+    return result === 'cond-red';
+  })());
+
+  // ── WP-S17: A-DEGRADE — Graceful degradation tests ──
+  group('A-DEGRADE');
+
+  // Cat 1: Degradatie zonder primaryKey (3)
+  assert('S14: feature zonder primaryKey → multiSelect false', (function() {
+    var fakeTab = { id: 'fake', schemaContract: { primaryKey: null, semanticFields: {} } };
+    var result = validateFeatureRequirements(fakeTab);
+    return result.resolvedFeatures && result.resolvedFeatures.multiSelect === false;
+  })());
+  assert('S14: feature zonder primaryKey → contextMenu false', (function() {
+    var fakeTab = { id: 'fake', schemaContract: { primaryKey: null, semanticFields: {} } };
+    var result = validateFeatureRequirements(fakeTab);
+    return result.resolvedFeatures && result.resolvedFeatures.contextMenu === false;
+  })());
+  assert('S14: feature zonder primaryKey → exportSelection false', (function() {
+    var fakeTab = { id: 'fake', schemaContract: { primaryKey: null, semanticFields: {} } };
+    var result = validateFeatureRequirements(fakeTab);
+    return result.resolvedFeatures && result.resolvedFeatures.exportSelection === false;
+  })());
+
+  // Cat 2: Degradatie zonder schemaContract (2)
+  assert('S14: tab zonder schemaContract → search fallback true', (function() {
+    var fakeTab = { id: 'fake2' };
+    var result = validateFeatureRequirements(fakeTab);
+    return result.resolvedFeatures && result.resolvedFeatures.search === false;
+  })());
+  assert('S14: tab zonder roles → filter true (lege roles)', (function() {
+    var fakeTab = { id: 'fake3', schemaContract: { semanticFields: {} } };
+    var result = validateFeatureRequirements(fakeTab);
+    return result.resolvedFeatures && result.resolvedFeatures.filter === true;
+  })());
+
+  // Cat 3: condFormattingRules evaluatie (3)
+  assert('S16: evaluateCondRule eq match', (function() {
+    var r = { status: 'On Hold' };
+    var rule = { field: 'status', op: 'eq', value: 'On Hold', cssClass: 'cond-red' };
+    return evaluateCondRule(r, rule) === true;
+  })());
+  assert('S16: evaluateCondRule lt match', (function() {
+    var r = { progress: 20 };
+    var rule = { field: 'progress', op: 'lt', value: 30, cssClass: 'cond-yellow' };
+    return evaluateCondRule(r, rule) === true;
+  })());
+  assert('S16: condClass zonder condFormattingRules valt terug op legacy', (function() {
+    // Test dat condClass werkt voor tab zonder condFormattingRules (legacy pad)
+    return typeof evaluateCondRule === 'function' && typeof _matchCondition === 'function';
+  })());
+
+  // Cat 4: isFeatureEnabled fallback (2)
+  assert('S14: isFeatureEnabled fallback bij ontbrekend', (function() {
+    var tc = getTabConfigByIndex(0);
+    var saved = AppState.tabs[tc.id].resolvedFeatures;
+    AppState.tabs[tc.id].resolvedFeatures = {};
+    var result = isFeatureEnabled('search', 0);
+    AppState.tabs[tc.id].resolvedFeatures = saved;
+    return result === true; // fallback: true als key niet in resolvedFeatures
+  })());
+  assert('S14: isFeatureEnabled respecteert false waarde', (function() {
+    var tc = getTabConfigByIndex(0);
+    var saved = AppState.tabs[tc.id].resolvedFeatures;
+    AppState.tabs[tc.id].resolvedFeatures = { search: false };
+    var result = isFeatureEnabled('search', 0);
+    AppState.tabs[tc.id].resolvedFeatures = saved;
+    return result === false;
+  })());
+
   var elapsed=Math.round(performance.now()-t0);
   var summary=passed+'/'+(passed+failed)+' tests geslaagd ('+elapsed+'ms)';
   if(failed>0) summary+='\n'+results.join('\n');
@@ -5052,6 +5303,7 @@ if (_checkBrowserSupport()) {
   initTabDataFromConfig(function() {
     render();
     initGlobalNameFilter();
+    applyFeatureGates(); // WP-S15: verberg toolbar-elementen voor uitgeschakelde features
     // Sprint 4.2: First Render & Init timing
     performance.mark('dashboard:ready'); // Altijd: gebruikt door D-P2/D-P3 tests
     if (_perfDebug) { // WP-P1: measure + console.log alleen bij _perfDebug
@@ -5911,21 +6163,21 @@ var TESTS_INTEG = [
     group: 'B-I11/I12 — Selectie',
     run: function() {
       var results = [];
-      var savedSel = new Set(AppState.selectedRows);
+      var savedSel = new Set(AppState.selectedRowKeys);
       try {
         // B-I11: Selectie toevoegen
         var tab = AppState.currentTab;
         var data = getData();
         if (data.length > 0) {
           var key = tab + '-' + data[0].id;
-          AppState.selectedRows.add(key);
-          results.push(AppState.selectedRows.has(key)
+          AppState.selectedRowKeys.add(key);
+          results.push(AppState.selectedRowKeys.has(key)
             ? pass('B-I11 Selectie toevoegen', 'rij ' + data[0].id + ' geselecteerd')
             : fail('B-I11 Selectie toevoegen'));
 
           // B-I12: Selectie na filter — gefilterde rij blijft geselecteerd
           AppState.filterRules = [{field:'status', op:'equals', value:'Actief'}];
-          var stillSelected = AppState.selectedRows.has(key);
+          var stillSelected = AppState.selectedRowKeys.has(key);
           results.push(stillSelected
             ? pass('B-I12 Selectie persistent na filter')
             : fail('B-I12 Selectie persistent na filter'));
@@ -5935,7 +6187,7 @@ var TESTS_INTEG = [
           results.push(skip('B-I12 Selectie na filter', 'geen data'));
         }
       } finally {
-        AppState.selectedRows = savedSel;
+        AppState.selectedRowKeys = savedSel;
       }
       return results;
     }

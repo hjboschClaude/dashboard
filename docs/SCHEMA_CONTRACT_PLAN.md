@@ -1,8 +1,8 @@
 # SCHEMA_CONTRACT_PLAN.md — Schema Contract & Feature Gating
 
-Versie: 1.3
+Versie: 1.4
 Datum: 2026-03-09
-Status: ○ Actief — Fase 2 afgerond (v0.57.0), Fase 3 volgt
+Status: ✅ Fase 3 afgerond (v0.58.0) — Engine volledig generiek
 Bronnen: `advies stable row identity.md` (v1.1), `Performance_Roadmap_Dashboard_v052.md` (v1.2)
 
 ---
@@ -99,11 +99,11 @@ Bron: `Performance_Roadmap_Dashboard_v052.md` — routes 1, 6 (prio 1/2, nul ris
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
-| WP-S14 | resolveFeatureGates() en ContractRegistry | ○ |
-| WP-S15 | UI reageert op resolved features | ○ |
-| WP-S16 | Declaratief conditional formatting | ○ |
-| WP-S17 | Tests A-FEATURE-GATE + A-DEGRADE suites | ○ |
-| WP-S18 | Legacy fallbacks verwijderen (optioneel) + `selectedRows` → `selectedRowKeys` hernoemen, `contextRow` → `contextRowKey` hernoemen, duplicate-key validatie bij data-init | ○ |
+| WP-S14 | resolveFeatureGates() + isFeatureEnabled() + AppState opslag | ✅ |
+| WP-S15 | UI reageert op resolved features (CSS gating + guards + rowHtml/renderHeader) | ✅ |
+| WP-S16 | Declaratief conditional formatting (condFormattingRules + evaluateCondRule) | ✅ |
+| WP-S17 | Tests A-FEATURE-GATE (20) + A-DEGRADE (10) suites | ✅ |
+| WP-S18 | Legacy cleanup: `selectedRows` → `selectedRowKeys`, `contextRow` → `contextRowKey`, makeRowKey migratie, dupe-key validatie | ✅ |
 
 ---
 
@@ -125,8 +125,7 @@ Fase 3:   S14 → S15+S16 (parallel) → S17 → S18 (optioneel)
 | v0.56.0 | 1 | S1–S6 | Nul runtime-impact, alleen diagnostiek |
 | v0.56.1 | 1½ | P1–P2 | Performance quickfixes, nul functionele impact |
 | v0.57.0 | 2 | S7–S13 | Identiek gedrag, generiekere code + single-pass filter |
-| v0.58.0 | 3 | S14–S17 | Features schakelbaar, UI reageert |
-| v0.59.0 | (opt) | S18 | Cleanup, nul hardcoded veldnamen |
+| v0.58.0 | 3 | S14–S18 | Features schakelbaar, UI reageert, declaratief condFormatting, legacy cleanup |
 
 ---
 

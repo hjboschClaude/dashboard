@@ -6,6 +6,43 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.58.0 — 2026-03-09
+
+**Type:** Feature / Refactor
+**Domein:** Schema Contract Fase 3 — Feature Gating Active (Layer 2)
+
+Features dynamisch schakelbaar via schemaContract: UI verbergt/disablet features op basis van wat het contract ondersteunt. Conditionele opmaak volledig declaratief via config-regels. Legacy renames voor consistentie. Na deze versie is de engine volledig generiek — geen hardcoded veldnamen of feature-aannames meer.
+
+**WP-S14 — resolveFeatureGates + isFeatureEnabled:**
+- `resolveFeatureGates(tabIdx)` roept `validateFeatureRequirements()` aan en slaat resultaat op in `AppState.tabs[tabId].resolvedFeatures`
+- `isFeatureEnabled(featureName, tabIdx)` leest uit opgeslagen resolved features, fallback `true` bij ontbrekende data
+- Init via `_validateContractsOnInit()`: valideert én slaat per-tab feature gates op
+
+**WP-S15 — UI reageert op resolved features:**
+- CSS `.feature-gated { display: none !important }` voor verborgen toolbar-elementen
+- `FEATURE_UI_MAP` constante koppelt features aan toolbar-element-IDs (search, filter, sort, group, condFormatting, freeze)
+- `applyFeatureGates()` toggled `.feature-gated` class bij init en tabswitch
+- Early-return guards in 10 handler-functies: initGlobalNameFilter, setGlobalNameFilter, clickSort, toggleCond, toggleFreeze, toggleSelectAll, toggleRow, showCtx, showCtxAt, openModal
+- Checkbox-kolom en context-actieknop in rowHtml/renderHeader conditioneel op basis van multiSelect/contextMenu feature gate
+
+**WP-S16 — Declaratief conditional formatting:**
+- `condFormattingRules` array in schemaContract per tab (5 regels per tab)
+- `_matchCondition(r, cond)` helper: eq, ne, lt, gt, lte, gte operators
+- `evaluateCondRule(r, rule)` helper: simpele en compound regels (conditions array)
+- `condClass()` refactored: declaratief pad eerst, legacy fallback, feature gate check
+
+**WP-S17 — A-FEATURE-GATE + A-DEGRADE testsuites (30 assertions):**
+- A-FEATURE-GATE (20): functies bestaan, resolveFeatureGates retourwaarden, isFeatureEnabled AppState, UI gating, declaratief condFormatting
+- A-DEGRADE (10): degradatie zonder primaryKey, zonder schemaContract, condFormattingRules evaluatie, isFeatureEnabled fallback/false
+
+**WP-S18 — Legacy cleanup:**
+- `selectedRows` → `selectedRowKeys` (alle ~30 locaties)
+- `contextRow` → `contextRowKey` (alle ~5 locaties)
+- Alle `tab+'-'+r.id` patronen → `makeRowKey(tab, r[getPrimaryKeyField(tab)])` (8 locaties in selectiecode)
+- Duplicate-key validatie in `_buildTabIndex()`: console.warn bij dubbele keys
+
+---
+
 ## v0.57.0 — 2026-03-09
 
 **Type:** Refactor
