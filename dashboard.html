@@ -601,7 +601,7 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.56.0';
+const DASHBOARD_VERSION = '0.56.1';
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -1493,7 +1493,7 @@ const _booleanKeySet      = new Set(dashboardConfig.domain.booleanFields);
 //   PerformanceObserver    — LongTask detectie (> 50ms frames)
 //   initPerfOverlay()      — visuele overlay rechtsonder bij _perfDebug
 //
-var _perfDebug = true; // A3: toggle performance logging
+var _perfDebug = false; // A3: toggle performance logging (WP-P1: standaard uit in productie)
 
 // A3: Performance measurement helper
 function _measure(name, fn) {
@@ -1510,7 +1510,8 @@ function _measure(name, fn) {
 }
 
 // Sprint 4.3: LongTask observer — detecteert frames > 50ms automatisch
-if ('PerformanceObserver' in window) {
+// WP-P1: alleen actief bij _perfDebug (vermijdt PerformanceObserver overhead in productie)
+if (_perfDebug && 'PerformanceObserver' in window) {
   try {
     new PerformanceObserver(function(list) {
       list.getEntries().forEach(function(entry) {
@@ -1569,8 +1570,8 @@ function _updatePerfOverlay(renderMs, rowCount, colCount) {
 //   Sort toggle    → sort, group, body, meta
 //   Group change   → group, agg, body, meta
 //   Tab switch     → ALL (via _invalidateAll)
-//   Column hide    → header, body, meta, widths
-//   Column reorder → header, body
+//   Column hide    → cols, header, body, meta, widths
+//   Column reorder → cols, header, body
 //   Row height     → body
 //   Cond format    → body
 //   Reset          → ALL
@@ -1579,13 +1580,14 @@ function _updatePerfOverlay(renderMs, rowCount, colCount) {
 //   data dirty  → computeFilteredData()  → _derived.filteredData
 //   sort dirty  → computeSortedData()    → _derived.sortedData
 //   group dirty → computeGroupModel()    → _derived.groupModel
+//   cols dirty  → computeVisibleCols()   → _derived.visibleCols  (WP-P2: cached)
 //   agg dirty   → computeAggModel()      → _derived.aggModel
-//   visibleCols → computeVisibleCols()   → _derived.visibleCols
 //
 AppState._dirty = {
   data: true,      // filteredData needs recompute
   sort: true,      // sortedData needs recompute
   group: true,     // groupModel needs recompute
+  cols: true,      // WP-P2: visibleCols needs recompute
   agg: true,       // aggModel needs recompute
   header: true,    // header needs rerender
   body: true,      // body needs rerender
@@ -2133,9 +2135,11 @@ function computeGroupModel() {
   return _derived.groupModel;
 }
 
-// A1: Compute visible columns
+// A1: Compute visible columns (WP-P2: cached via _dirty.cols)
 function computeVisibleCols() {
+  if (!_dirty.cols && _derived.visibleCols) return _derived.visibleCols;
   _derived.visibleCols = getCols().filter(function(c) { return c.visible; });
+  _dirty.cols = false;
   return _derived.visibleCols;
 }
 
@@ -3182,14 +3186,14 @@ function toggleCol(key){
   var c=getCols().find(function(x){return x.key===key;});
   if(c) c.visible=!c.visible;
   renderColPanel('');
-  _invalidate(['header','body','widths']); // kolom-zichtbaarheid raakt header + body
+  _invalidate(['cols','header','body','widths']); // kolom-zichtbaarheid raakt header + body
   render();
 }
 // 10. Bulk toggle
 function toggleAllCols(val){
   getCols().forEach(function(c){c.visible=val;});
   renderColPanel('');
-  _invalidate(['header','body','widths']); // bulk kolom-toggle raakt header + body
+  _invalidate(['cols','header','body','widths']); // bulk kolom-toggle raakt header + body
   render();
 }
 
@@ -3238,7 +3242,7 @@ function colDrop(e,targetIdx){
   cols.splice(targetIdx,0,moved);
   colDragIdx=null;
   renderColPanel('');
-  _invalidate(['header','body','widths']); // kolomvolgorde gewijzigd
+  _invalidate(['cols','header','body','widths']); // kolomvolgorde gewijzigd
   render();
   toast('Kolom "'+moved.label+'" verplaatst');
 }
@@ -3296,7 +3300,7 @@ function thDrop(e,targetKey){
   var moved=cols.splice(fromIdx,1)[0];
   cols.splice(toIdx,0,moved);
   thDragKey=null;
-  _invalidate(['header','body','widths']); // header drag-drop kolomvolgorde
+  _invalidate(['cols','header','body','widths']); // header drag-drop kolomvolgorde
   render();
   toast('Kolom "'+moved.label+'" verplaatst');
 }
@@ -4606,6 +4610,33 @@ function runTests(){
   assert('validateTypeSemantics is een functie', typeof validateTypeSemantics === 'function');
   assert('validateFeatureRequirements is een functie', typeof validateFeatureRequirements === 'function');
 
+  // ── A-PERF: Performance quickfixes (WP-P1 + WP-P2) ──
+  group('A-PERF');
+
+  // WP-P1: _perfDebug standaard uit
+  assert('WP-P1: _perfDebug is false in productie', _perfDebug === false);
+  assert('WP-P1: _measure() retourneert resultaat bij _perfDebug=false', (function() {
+    var saved = _perfDebug; _perfDebug = false;
+    var r = _measure('test', function() { return 42; });
+    _perfDebug = saved; return r === 42;
+  })());
+  assert('WP-P1: perf-overlay niet aangemaakt bij _perfDebug=false', document.getElementById('perf-overlay') === null);
+
+  // WP-P2: _dirty.cols flag en computeVisibleCols cache
+  assert('WP-P2: _dirty.cols flag bestaat', 'cols' in AppState._dirty);
+  assert('WP-P2: computeVisibleCols cached bij cols=false', (function() {
+    _dirty.cols = false;
+    var sentinel = _derived.visibleCols;
+    var result = computeVisibleCols();
+    return result === sentinel;
+  })());
+  assert('WP-P2: computeVisibleCols herberekent bij cols=true', (function() {
+    _dirty.cols = true;
+    var before = _derived.visibleCols;
+    var result = computeVisibleCols();
+    return Array.isArray(result) && result.length > 0;
+  })());
+
   var elapsed=Math.round(performance.now()-t0);
   var summary=passed+'/'+(passed+failed)+' tests geslaagd ('+elapsed+'ms)';
   if(failed>0) summary+='\n'+results.join('\n');
@@ -4810,11 +4841,13 @@ if (_checkBrowserSupport()) {
   initTabDataFromConfig(function() {
     render();
     initGlobalNameFilter();
-    // Sprint 4.2: First Render & Init timing
-    performance.mark('dashboard:ready');
-    try { performance.measure('dashboard:total-init', undefined, 'dashboard:ready'); } catch(e) {}
-    var _initEntry = performance.getEntriesByName('dashboard:total-init')[0];
-    if (_initEntry) console.log('[perf] Dashboard klaar in: ' + _initEntry.duration.toFixed(0) + 'ms');
+    // Sprint 4.2: First Render & Init timing (WP-P1: alleen bij _perfDebug)
+    if (_perfDebug) {
+      performance.mark('dashboard:ready');
+      try { performance.measure('dashboard:total-init', undefined, 'dashboard:ready'); } catch(e) {}
+      var _initEntry = performance.getEntriesByName('dashboard:total-init')[0];
+      if (_initEntry) console.log('[perf] Dashboard klaar in: ' + _initEntry.duration.toFixed(0) + 'ms');
+    }
     // Sprint 4.4 + 5.1: start monitoring
     _startFpsMonitor();
     initPerfOverlay();

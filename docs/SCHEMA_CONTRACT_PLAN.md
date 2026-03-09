@@ -2,7 +2,7 @@
 
 Versie: 1.2
 Datum: 2026-03-08
-Status: ○ Actief — Fase 1 afgerond (v0.56.0), Fase 1½ volgt
+Status: ○ Actief — Fase 1½ afgerond (v0.56.1), Fase 2 volgt
 Bronnen: `advies stable row identity.md` (v1.1), `Performance_Roadmap_Dashboard_v052.md` (v1.2)
 
 ---
@@ -80,8 +80,8 @@ Bron: `Performance_Roadmap_Dashboard_v052.md` — routes 1, 6 (prio 1/2, nul ris
 
 | WP | Beschrijving | Status |
 |----|-------------|--------|
-| WP-P1 | `_perfDebug` guard: `performance.mark/measure` + `console.log` alleen als `_perfDebug=true`; standaard uit in productie (Route 1) | ○ |
-| WP-P2 | `computeVisibleCols()` cachen: dirty flag `_dirty.cols`, alleen herberekenen bij kolom-toggle/reorder (Route 6) | ○ |
+| WP-P1 | `_perfDebug` guard: `performance.mark/measure` + `console.log` alleen als `_perfDebug=true`; standaard uit in productie (Route 1) | ✅ |
+| WP-P2 | `computeVisibleCols()` cachen: dirty flag `_dirty.cols`, alleen herberekenen bij kolom-toggle/reorder (Route 6) | ✅ |
 
 ### Fase 2 — Semantic accessors + dual mode (v0.57.0)
 

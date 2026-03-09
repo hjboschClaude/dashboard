@@ -117,7 +117,7 @@ Eén commit per versienummer.
 6. Commit: `<type>(v<versie>): <samenvatting>`
 7. Optioneel: toets tegen `docs/TOETSINGSKADER.md` bij sprint-afronding
 
-## Architectuur — huidige implementatie (v0.56.0)
+## Architectuur — huidige implementatie (v0.56.1)
 
 De huidige `dashboard.html` bevat de engine-laag en UX-laag nog in één bestand:
 

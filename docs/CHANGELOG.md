@@ -6,6 +6,29 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.56.1 — 2026-03-09
+
+**Type:** Performance
+**Domein:** Engine instrumentatie & derived-state cache (Layer 2)
+
+Twee performance quickfixes uit de Performance Roadmap: instrumentatie-overhead verwijderd in productiemodus en onnodige herberekening van zichtbare kolommen geëlimineerd.
+
+**WP-P1 — _perfDebug guard (Route 1):**
+- `_perfDebug` standaard op `false` gezet (was `true`)
+- LongTask PerformanceObserver gewrapped in `_perfDebug` guard — geen observer-overhead in productie
+- Init-timing (`dashboard:ready` mark/measure) gewrapped in `_perfDebug` guard
+- `_measure()`, `_startFpsMonitor()`, `initPerfOverlay()` waren al guarded — ongewijzigd
+- Geschatte winst: 5–15% op alle kritische paden (render, filter, sort, scroll, init)
+
+**WP-P2 — computeVisibleCols() cache (Route 6):**
+- Nieuw dirty flag `_dirty.cols` toegevoegd aan AppState._dirty
+- `computeVisibleCols()` retourneert cached `_derived.visibleCols` als `_dirty.cols === false`
+- `_dirty.cols` wordt gezet bij: toggleCol, toggleAllCols, colDrop, thDrop, resetView
+- Voorkomt onnodige `getCols().filter()` bij elke render-cyclus als kolommen niet wijzigen
+- Geschatte winst: 2–5% structureel per render-cyclus
+
+---
+
 ## v0.56.0 — 2026-03-08
 
 **Type:** Architectuur
