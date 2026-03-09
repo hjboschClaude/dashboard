@@ -6,6 +6,42 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.61.0 — 2026-03-09
+
+**Type:** Refactor / Engine Generiek
+**Domein:** Iconen verwijderd — engine emoji-vrij
+
+Alle decoratieve iconen (emoji) verwijderd uit config en engine-code. Kolom- en tab-`icon:` properties verwijderd, engine-rendering van `c.icon`/`tab.icon` verwijderd, UI-chrome emoji vervangen door tekst-labels.
+
+**WP-I1 — Config icon properties verwijderd:**
+- `icon:` property verwijderd uit alle 50 kolom-definities en 2 tab-headers
+- Config bevat nu alleen functionele properties (key, label, renderer, type, etc.)
+
+**WP-I2 — Engine icon-rendering verwijderd:**
+- `c.icon` rendering verwijderd uit `buildHeaders()`, `renderColPanel()`, `showModalDetail()`
+- `tab.icon` rendering verwijderd uit `updateTabBadges()`, `renderTabBar()`
+
+**WP-I3 — CSS opgeruimd:**
+- `.col-type-icon` class en BUG-016 comment verwijderd
+- `.export-icon` vervangen door `.export-format`
+
+**WP-I4 — UI-chrome emoji vervangen:**
+- Toolbar: 🔄/⬇/👤/🔍 vervangen door tekst-labels
+- Export-panel: 📄/📊/🖼/📝/🌐 vervangen door format-codes (CSV, XLSX, etc.)
+- Empty-state: 📭 vervangen door em dash
+
+**WP-I5 — Validators bijgewerkt:**
+- `icon` verwijderd uit verplichte tab-velden (tabReqFields)
+
+**WP-I6 — Tests:**
+- 1 test aangepast (icon === undefined i.p.v. icon === '📋')
+- 5 nieuwe A-ICON tests (geen icon in cols, geen icon in tabs, geen col-type-icon DOM, geen export-icon DOM, export-format aanwezig)
+- Test data source `icon:'T'` verwijderd
+
+**Resultaat:** 0 emoji in config, 0 `c.icon`/`tab.icon` in engine, 0 decoratieve emoji in UI-chrome. Functionele symbolen (✓ ↑↓ ▼ ⠿ ✕) behouden.
+
+---
+
 ## v0.60.0 — 2026-03-09
 
 **Type:** Refactor / Engine Generiek

@@ -171,7 +171,6 @@ th:hover .col-filter-btn{opacity:.5;}
 th .col-filter-btn:hover{opacity:1;background:var(--gray-200);color:var(--accent);}
 th .col-filter-btn.col-filter-active{opacity:1;color:var(--accent);}
 th .col-filter-btn:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:1px;border-radius:2px;} /* C.1: toetsenbord-focus indicator */
-.col-type-icon{font-size:12px;opacity:.6;pointer-events:none;user-select:none;} /* BUG-016 fix: emoji-iconen zijn geen drag-doelwit meer, voorkomt thDidDrag=true bij klik op icon */
 th:first-child{min-width:44px;width:44px;}
 th:first-child .th-inner{min-width:44px;justify-content:center;cursor:pointer;} /* #71: cursor:pointer */
 thead tr th:first-child{position:sticky;left:0;z-index:12;background:var(--header-bg);}
@@ -275,7 +274,7 @@ td.cell-primary{font-family:system-ui,-apple-system,sans-serif;font-weight:500;f
 .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0;}
 .export-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--gray-200);cursor:pointer;transition:all .2s;} /* #66: 12px sym, #58: 8px radius, D.5: gap 6→8 */
 .export-item:hover{border-color:var(--accent);background:var(--green-50);}
-.export-icon{font-size:20px;} /* D.5: 22→20px */
+.export-format{font-size:13px;font-weight:600;color:var(--text-dim);letter-spacing:.5px;}
 .export-label{font-size:12px;font-weight:500;color:var(--text-dim);}
 .export-desc{font-size:12px;color:var(--text-muted);text-align:center;}
 .export-item:hover .export-label{color:var(--green-800);}
@@ -402,17 +401,16 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
   <!-- #55: tabs verplaatst naar topbar -->
   <div class="topbar-tabs" role="tablist" id="tab-bar"></div>
   <div class="topbar-right">
-    <button class="btn btn-system" onclick="resetViewState()"><span aria-hidden="true">🔄</span><span class="sr-only">Reset weergave</span> Reset weergave</button>
-    <button class="btn btn-export" onclick="AppState._exportMode='all';togglePanel('export')"><span aria-hidden="true">⬇</span><span class="sr-only">Exporteren</span> Exporteren</button>
+    <button class="btn btn-system" onclick="resetViewState()"><span class="sr-only">Reset weergave</span>Reset weergave</button>
+    <button class="btn btn-export" onclick="AppState._exportMode='all';togglePanel('export')"><span class="sr-only">Exporteren</span>Exporteren</button>
   </div>
 </div>
 
 <div class="toolbar">
   <select id="global-name-filter" onchange="setGlobalNameFilter(this.value)" class="toolbar-select">
-    <option value="">👤 Filter op naam</option>
+    <option value="">Filter op naam</option>
   </select>
   <div class="search-wrap" id="search-wrap">
-    <span>🔍</span>
     <input type="text" placeholder="Zoeken in alle velden..." id="search-input" oninput="onSearchInput()">
     <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
   </div>
@@ -543,20 +541,20 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 <!-- EXPORT PANEL -->
 <div class="panel-overlay" id="overlay-export" onclick="closePanel('export')"></div>
 <div class="panel" id="panel-export" style="max-width:340px">
-  <div class="panel-header"><div class="panel-title">⬇ Exporteren</div><div class="panel-close" onclick="closePanel('export')">✕</div></div>
+  <div class="panel-header"><div class="panel-title">Exporteren</div><div class="panel-close" onclick="closePanel('export')">✕</div></div>
   <div class="panel-body">
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Exporteert huidige weergave incl. actieve filters en zichtbare kolommen.</div> <!-- D.5: margin 10→8 -->
     <!-- #37: Primaire exports eerst, visueel prominent -->
     <div class="export-grid" style="grid-template-columns:1fr 1fr;">
-      <button class="export-item" type="button" onclick="exportCSV()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-icon">📄</div><div class="export-label" style="color:var(--green-800)">CSV</div><div class="export-desc">Kommagescheiden</div></button>
-      <button class="export-item" type="button" onclick="exportXLSX()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-icon">📊</div><div class="export-label" style="color:var(--green-800)">Excel (.xlsx)</div><div class="export-desc">Microsoft Excel</div></button>
+      <button class="export-item" type="button" onclick="exportCSV()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-format">CSV</div><div class="export-label" style="color:var(--green-800)">CSV</div><div class="export-desc">Kommagescheiden</div></button>
+      <button class="export-item" type="button" onclick="exportXLSX()" style="border-color:var(--accent);background:var(--green-50)"><div class="export-format">XLSX</div><div class="export-label" style="color:var(--green-800)">Excel (.xlsx)</div><div class="export-desc">Microsoft Excel</div></button>
     </div>
     <div style="font-size:11px;color:var(--text-muted);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Overige formaten</div>
     <div class="export-grid">
-      <button class="export-item" type="button" onclick="exportJSON()"><div class="export-icon">{ }</div><div class="export-label">JSON</div><div class="export-desc">Gestructureerde data</div></button>
-      <button class="export-item" type="button" onclick="exportPNG()"><div class="export-icon">🖼</div><div class="export-label">PNG</div><div class="export-desc">Visuele screenshot</div></button>
-      <button class="export-item" type="button" onclick="exportMarkdown()"><div class="export-icon">📝</div><div class="export-label">Markdown</div><div class="export-desc">Tabel in .md</div></button>
-      <button class="export-item" type="button" onclick="exportHTML()"><div class="export-icon">🌐</div><div class="export-label">HTML</div><div class="export-desc">Statische webpagina</div></button>
+      <button class="export-item" type="button" onclick="exportJSON()"><div class="export-format">JSON</div><div class="export-label">JSON</div><div class="export-desc">Gestructureerde data</div></button>
+      <button class="export-item" type="button" onclick="exportPNG()"><div class="export-format">PNG</div><div class="export-label">PNG</div><div class="export-desc">Visuele screenshot</div></button>
+      <button class="export-item" type="button" onclick="exportMarkdown()"><div class="export-format">MD</div><div class="export-label">Markdown</div><div class="export-desc">Tabel in .md</div></button>
+      <button class="export-item" type="button" onclick="exportHTML()"><div class="export-format">HTML</div><div class="export-label">HTML</div><div class="export-desc">Statische webpagina</div></button>
     </div>
   </div>
 </div>
@@ -716,41 +714,40 @@ var _tabIndexById={};  // WP-S11: O(1) record lookup per tab
 const dashboardConfig = {
   app: {
     title: "Dashboard Gemeente Rotterdam",
-    version: '0.60.0',
+    version: '0.61.0',
     defaultTabId: "projects"
   },
   tabs: [
     {
       id: "projects",
       label: "Projecten",
-      icon: "📋",
       dataSource: { type: "embedded" },
       columns: [
-        {key:'name',label:'Projectnaam',icon:'Aa',visible:true, renderer:'text',type:'text'},
-        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral'}},
-        {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'tag',type:'enum',tagColors:{Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'}},
-        {key:'directeur',label:'Verantwoordelijke Directeur',icon:'👔',visible:true, renderer:'avatar',type:'text'},
-        {key:'aog',label:'Ambtelijk Opdrachtgever',icon:'📋',visible:true, renderer:'avatar',type:'text'},
-        {key:'pm',label:'Projectmanager',icon:'👤',visible:true, renderer:'avatar',type:'text'},
-        {key:'deadline',label:'Deadline',icon:'📅',visible:true, renderer:'date',type:'date'},
-        {key:'progress',label:'Voortgang',icon:'▦',visible:true, renderer:'progress',type:'number'},
-        {key:'budget',label:'Budget',icon:'€',visible:true, renderer:'budget',type:'number'},
-        {key:'cluster',label:'Cluster',icon:'🏷',visible:true, renderer:'tag',type:'enum'},
-        {key:'approved',label:'Goedgekeurd',icon:'✓',visible:true, renderer:'check',type:'boolean'},
-        {key:'note',label:'Notitie',icon:'📝',visible:true, renderer:'note',type:'text'},
-        {key:'fase',label:'Fase',icon:'📊',visible:true, renderer:'tag',type:'enum',tagColors:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'}},
-        {key:'risico',label:'Risiconiveau',icon:'⚠',visible:true, renderer:'tag',type:'enum',tagColors:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'}},
-        {key:'startDatum',label:'Startdatum',icon:'📅',visible:true, renderer:'date',type:'date'},
-        {key:'regio',label:'Regio',icon:'🗺',visible:true, renderer:'tag',type:'enum'},
-        {key:'type',label:'Projecttype',icon:'🏗',visible:true, renderer:'tag',type:'enum'},
-        {key:'fte',label:'FTE',icon:'👥',visible:true, renderer:'number',type:'number'},
-        {key:'kostenRealisatie',label:'Kosten Realisatie',icon:'💰',visible:true, renderer:'budget',type:'number'},
-        {key:'oplevering',label:'Oplevering',icon:'🎯',visible:true, renderer:'date',type:'date'},
-        {key:'stakeholders',label:'Stakeholders',icon:'🤝',visible:true, renderer:'number',type:'number'},
-        {key:'laatsteUpdate',label:'Laatste Update',icon:'🔄',visible:true, renderer:'date',type:'date'},
-        {key:'documentatie',label:'Documentatie',icon:'📁',visible:true, renderer:'tag',type:'enum',tagColors:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'}},
-        {key:'programma',label:'Programmalijn',icon:'📐',visible:true, renderer:'tag',type:'enum'},
-        {key:'milieu',label:'Milieu-impact',icon:'🌿',visible:true, renderer:'tag',type:'enum',tagColors:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'}}
+        {key:'name',label:'Projectnaam',visible:true, renderer:'text',type:'text'},
+        {key:'status',label:'Status',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success','In Review':'tag-info',Voltooid:'tag-purple','On Hold':'tag-warning',Gepland:'tag-neutral'}},
+        {key:'priority',label:'Prioriteit',visible:true, renderer:'tag',type:'enum',tagColors:{Hoog:'tag-danger',Middel:'tag-warning',Laag:'tag-success'}},
+        {key:'directeur',label:'Verantwoordelijke Directeur',visible:true, renderer:'avatar',type:'text'},
+        {key:'aog',label:'Ambtelijk Opdrachtgever',visible:true, renderer:'avatar',type:'text'},
+        {key:'pm',label:'Projectmanager',visible:true, renderer:'avatar',type:'text'},
+        {key:'deadline',label:'Deadline',visible:true, renderer:'date',type:'date'},
+        {key:'progress',label:'Voortgang',visible:true, renderer:'progress',type:'number'},
+        {key:'budget',label:'Budget',visible:true, renderer:'budget',type:'number'},
+        {key:'cluster',label:'Cluster',visible:true, renderer:'tag',type:'enum'},
+        {key:'approved',label:'Goedgekeurd',visible:true, renderer:'check',type:'boolean'},
+        {key:'note',label:'Notitie',visible:true, renderer:'note',type:'text'},
+        {key:'fase',label:'Fase',visible:true, renderer:'tag',type:'enum',tagColors:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'}},
+        {key:'risico',label:'Risiconiveau',visible:true, renderer:'tag',type:'enum',tagColors:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'}},
+        {key:'startDatum',label:'Startdatum',visible:true, renderer:'date',type:'date'},
+        {key:'regio',label:'Regio',visible:true, renderer:'tag',type:'enum'},
+        {key:'type',label:'Projecttype',visible:true, renderer:'tag',type:'enum'},
+        {key:'fte',label:'FTE',visible:true, renderer:'number',type:'number'},
+        {key:'kostenRealisatie',label:'Kosten Realisatie',visible:true, renderer:'budget',type:'number'},
+        {key:'oplevering',label:'Oplevering',visible:true, renderer:'date',type:'date'},
+        {key:'stakeholders',label:'Stakeholders',visible:true, renderer:'number',type:'number'},
+        {key:'laatsteUpdate',label:'Laatste Update',visible:true, renderer:'date',type:'date'},
+        {key:'documentatie',label:'Documentatie',visible:true, renderer:'tag',type:'enum',tagColors:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'}},
+        {key:'programma',label:'Programmalijn',visible:true, renderer:'tag',type:'enum'},
+        {key:'milieu',label:'Milieu-impact',visible:true, renderer:'tag',type:'enum',tagColors:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'}}
       ],
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
@@ -781,34 +778,33 @@ const dashboardConfig = {
     {
       id: "team",
       label: "Teamleden",
-      icon: "👥",
       dataSource: { type: "embedded" },
       columns: [
-        {key:'name',label:'Naam',icon:'Aa',visible:true, renderer:'avatar',type:'text'},
-        {key:'functie',label:'Functie',icon:'💼',visible:true, renderer:'text',type:'text'},
-        {key:'afdeling',label:'Afdeling',icon:'🏢',visible:true, renderer:'tag',type:'enum'},
-        {key:'email',label:'Email',icon:'📧',visible:true, renderer:'email',type:'text'},
-        {key:'inDienst',label:'In Dienst',icon:'📅',visible:true, renderer:'date',type:'date'},
-        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'}},
-        {key:'beoordeling',label:'Beoordeling',icon:'⭐',visible:true, renderer:'star',type:'number'},
-        {key:'locatie',label:'Locatie',icon:'🗺',visible:true, renderer:'text',type:'text'},
-        {key:'capaciteit',label:'Capaciteit',icon:'▦',visible:true, renderer:'progress',type:'number'},
-        {key:'actief',label:'Actief',icon:'✓',visible:true, renderer:'check',type:'boolean'},
-        {key:'telefoon',label:'Telefoon',icon:'📞',visible:true, renderer:'mono',type:'text'},
-        {key:'contract',label:'Contract',icon:'📄',visible:true, renderer:'tag',type:'enum',tagColors:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'}},
-        {key:'uren',label:'Uren/week',icon:'⏱',visible:true, renderer:'number',type:'number',suffix:'u'},
-        {key:'team',label:'Team',icon:'👥',visible:true, renderer:'tag',type:'enum'},
-        {key:'leidinggevende',label:'Leidinggevende',icon:'👔',visible:true, renderer:'avatar',type:'text'},
-        {key:'opleiding',label:'Opleiding',icon:'🎓',visible:true, renderer:'tag',type:'enum',tagColors:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}},
-        {key:'startProject',label:'Start Project',icon:'📅',visible:true, renderer:'date',type:'date'},
-        {key:'projecten',label:'Projecten',icon:'📊',visible:true, renderer:'number',type:'number'},
-        {key:'salSchaal',label:'Salarisschaal',icon:'💶',visible:true, renderer:'text',type:'text'},
-        {key:'skills',label:'Skills',icon:'🛠',visible:true, renderer:'tag',type:'enum'},
-        {key:'beschikbaarheid',label:'Beschikbaarheid',icon:'▦',visible:true, renderer:'progress',type:'number'},
-        {key:'reisafstand',label:'Reisafstand (km)',icon:'🚗',visible:true, renderer:'mono',type:'number',suffix:' km'},
-        {key:'kantoorDagen',label:'Kantoordagen',icon:'🏢',visible:true, renderer:'number',type:'number',suffix:'d'},
-        {key:'certificeringen',label:'Certificeringen',icon:'🏅',visible:true, renderer:'number',type:'number'},
-        {key:'laatsteGesprek',label:'Laatste Gesprek',icon:'💬',visible:true, renderer:'date',type:'date'}
+        {key:'name',label:'Naam',visible:true, renderer:'avatar',type:'text'},
+        {key:'functie',label:'Functie',visible:true, renderer:'text',type:'text'},
+        {key:'afdeling',label:'Afdeling',visible:true, renderer:'tag',type:'enum'},
+        {key:'email',label:'Email',visible:true, renderer:'email',type:'text'},
+        {key:'inDienst',label:'In Dienst',visible:true, renderer:'date',type:'date'},
+        {key:'status',label:'Status',visible:true, renderer:'tag',type:'enum',tagColors:{Actief:'tag-success',Verlof:'tag-warning',Deeltijd:'tag-info',Detachering:'tag-purple'}},
+        {key:'beoordeling',label:'Beoordeling',visible:true, renderer:'star',type:'number'},
+        {key:'locatie',label:'Locatie',visible:true, renderer:'text',type:'text'},
+        {key:'capaciteit',label:'Capaciteit',visible:true, renderer:'progress',type:'number'},
+        {key:'actief',label:'Actief',visible:true, renderer:'check',type:'boolean'},
+        {key:'telefoon',label:'Telefoon',visible:true, renderer:'mono',type:'text'},
+        {key:'contract',label:'Contract',visible:true, renderer:'tag',type:'enum',tagColors:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'}},
+        {key:'uren',label:'Uren/week',visible:true, renderer:'number',type:'number',suffix:'u'},
+        {key:'team',label:'Team',visible:true, renderer:'tag',type:'enum'},
+        {key:'leidinggevende',label:'Leidinggevende',visible:true, renderer:'avatar',type:'text'},
+        {key:'opleiding',label:'Opleiding',visible:true, renderer:'tag',type:'enum',tagColors:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}},
+        {key:'startProject',label:'Start Project',visible:true, renderer:'date',type:'date'},
+        {key:'projecten',label:'Projecten',visible:true, renderer:'number',type:'number'},
+        {key:'salSchaal',label:'Salarisschaal',visible:true, renderer:'text',type:'text'},
+        {key:'skills',label:'Skills',visible:true, renderer:'tag',type:'enum'},
+        {key:'beschikbaarheid',label:'Beschikbaarheid',visible:true, renderer:'progress',type:'number'},
+        {key:'reisafstand',label:'Reisafstand (km)',visible:true, renderer:'mono',type:'number',suffix:' km'},
+        {key:'kantoorDagen',label:'Kantoordagen',visible:true, renderer:'number',type:'number',suffix:'d'},
+        {key:'certificeringen',label:'Certificeringen',visible:true, renderer:'number',type:'number'},
+        {key:'laatsteGesprek',label:'Laatste Gesprek',visible:true, renderer:'date',type:'date'}
       ],
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
@@ -2677,7 +2673,7 @@ function renderHeader(tab,cols,hpx){
         ' ondragend="thDragEnd(event)"'+
         ' onclick="clickSort(\''+safeKey+'\')" role="columnheader" aria-sort="'+(isSorted?(AppState.sortRules.find(function(r){return r.field===c.key;}).dir==='asc'?'ascending':'descending'):'none')+'" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickSort(\''+safeKey+'\');}">'+
         '<div class="th-inner" style="height:'+hpx+'px;min-width:'+(c._width?c._width:(c.renderer==='note'||c.renderer==='email'?180:120))+'px;position:relative;">'+
-        '<span class="col-type-icon">'+escapeHtml(c.icon)+'</span>'+escapeHtml(c.label)+
+        escapeHtml(c.label)+
         '<span class="col-filter-btn'+(hasColFilter?' col-filter-active':'')+'"'+
         ' onclick="clickColFilter(event,\''+safeKey+'\')"'+
         ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickColFilter(event,\''+safeKey+'\');}"'+
@@ -2789,7 +2785,7 @@ function renderVirtualBody(){
     // #17: Lege staat
     var hasFilters=document.getElementById('search-input').value||AppState.filterRules.length||Object.keys(AppState.colFilters).length||AppState.globalNameFilter;
     tbody.innerHTML='<tr><td colspan="'+cols.length+1+'" style="border:none;padding:0"><div class="empty-state">'+
-      '<div class="empty-state-icon">📭</div>'+
+      '<div class="empty-state-icon">—</div>'+
       '<div class="empty-state-text">'+(hasFilters?'Geen resultaten gevonden voor de actieve filters.':'Geen records beschikbaar.')+'</div>'+
       (hasFilters?'<button class="empty-state-btn" onclick="resetView()">Filters wissen</button>':'')+
       '</div></td></tr>';
@@ -3158,9 +3154,6 @@ function renderAgg(tab,cols,data){
 function _toggleSortDir(dir){ return dir==='asc'?'desc':'asc'; }
 
 var thDidDrag=false;
-/* BUG-016 opgelost: .col-type-icon heeft nu pointer-events:none;user-select:none
-   Emoji-iconen (👔/📋) zijn zo geen drag-doelwit meer en triggeren geen thDragStart().
-   thDidDrag blijft false bij klikken op icongebied → clickSort() sorteert correct. */
 function clickSort(key){
   if(!isFeatureEnabled('sort')) return; // WP-S15: feature gate
   if(thDidDrag){thDidDrag=false;return;}
@@ -3410,7 +3403,7 @@ function renderColPanel(search){
         ' ondragend="colDragEnd(event)">'+
         '<div class="col-drag" title="Sleep om te verplaatsen">⠿</div>'+
         '<button class="col-toggle '+(c.visible?'on':'')+'" type="button" onclick="toggleCol(\''+escapeAttr(c.key)+'\')" role="switch" aria-checked="'+(c.visible?'true':'false')+'" aria-label="'+escapeAttr(c.label)+' tonen"></button>'+ /* #40: semantisch */
-        '<div class="col-name">'+escapeHtml(c.icon)+' '+escapeHtml(c.label)+'</div></div>';
+        '<div class="col-name">'+escapeHtml(c.label)+'</div></div>';
     }).join('');
 }
 function toggleCol(key){
@@ -3576,7 +3569,7 @@ function clearAllFilters(){AppState.filterRules=[];_invalidate(['data','sort','g
 // DOM-ownership:
 //   updateFilterBadge()       → btn-filter innerHTML + .active class
 //   updateActiveFiltersBar()  → af-chips innerHTML + active-filters-bar .is-visible
-//   updateTabBadges()         → tab-{n} innerHTML (icon + label + count)
+//   updateTabBadges()         → tab-{n} innerHTML (label + count)
 //   updateResetBtn()          → btn-reset display (show/hide)
 // Trigger: _dirty.meta (vanuit _renderInternal)
 // Niet-destructief: deze functies lezen AppState en schrijven naar UI-chrome,
@@ -3830,8 +3823,7 @@ function updateTabBadges(activeTab,count){
   if(!tabEl) return;
   var tabCfg=getTabConfigByIndex(activeTab);
   var label=tabCfg?tabCfg.label:'';
-  var icon=tabCfg?tabCfg.icon:'';
-  tabEl.innerHTML='<span>'+escapeHtml(icon)+'</span> '+escapeHtml(label)+' <span style="font-size:11px;color:var(--text-muted);font-weight:400">('+escapeHtml(count)+')</span>';
+  tabEl.innerHTML=escapeHtml(label)+' <span style="font-size:11px;color:var(--text-muted);font-weight:400">('+escapeHtml(count)+')</span>';
 }
 
 // ══ RENDER: Tab Bar ════════════════════════════════════════════
@@ -3850,7 +3842,7 @@ function renderTabBar(){
       +' data-action="switch-tab" data-tab-index="'+idx+'"'
       +' id="tab-'+idx+'" role="tab"'
       +' aria-selected="'+(active?'true':'false')+'">'
-      +'<span aria-hidden="true">'+escapeHtml(tab.icon)+'</span> '+escapeHtml(tab.label)
+      +escapeHtml(tab.label)
       +'</button>';
   }).join('');
 }
@@ -3917,7 +3909,7 @@ function openModal(tab,id){
   document.getElementById('modal-body').innerHTML=cols.map(function(c){
     var v=r[c.key];
     var disp=v===true?'✓ Ja':v===false?'✗ Nee':(v===undefined||v===null?'—':escapeHtml(String(v)));
-    return '<div class="modal-field"><div class="modal-label">'+escapeHtml(c.icon)+' '+escapeHtml(c.label)+'</div><div class="modal-value">'+disp+'</div></div>';
+    return '<div class="modal-field"><div class="modal-label">'+escapeHtml(c.label)+'</div><div class="modal-value">'+disp+'</div></div>';
   }).join('');
   document.getElementById('modal-overlay').classList.add('is-open'); // 1.3: state class
 }
@@ -4553,7 +4545,7 @@ function runTests(){
   assert('getTabLabel("team") geeft Teamleden', getTabLabel('team')==='Teamleden');
   assert('getTabConfig("projects") heeft kolommen', getTabConfig('projects').columns.length>0);
   assert('getTabIndex("team")===1', getTabIndex('team')===1);
-  assert('getTabConfigByIndex(0).icon is 📋', getTabConfigByIndex(0).icon==='📋');
+  assert('getTabConfigByIndex(0) heeft geen icon property', getTabConfigByIndex(0).icon===undefined);
   assert('renderTabBar bestaat', typeof window.renderTabBar==='function');
 
   // tabs abstraheren (template-refactoring sprint 3)
@@ -4650,6 +4642,23 @@ function runTests(){
   AppState.condEnabled=origCond;
   // D6: toggleCond toast is generiek (geen domein-specifieke termen)
   assert('condClass defensive: retourneert string', typeof condResult==='string');
+
+  // ── A-ICON: iconen verwijderd uit engine ──
+  group('A-ICON');
+  // I1: geen icon property meer in kolom-config
+  var allColsNoIcon=cols0.concat(cols1).every(function(c){return c.icon===undefined;});
+  assert('geen enkele kolom heeft icon property', allColsNoIcon);
+  // I1: geen icon property meer in tab-config
+  var allTabsNoIcon=dashboardConfig.tabs.every(function(t){return t.icon===undefined;});
+  assert('geen enkele tab heeft icon property', allTabsNoIcon);
+  // I2: geen col-type-icon spans in headers
+  var colTypeIcons=document.querySelectorAll('.col-type-icon');
+  assert('geen col-type-icon spans in DOM', colTypeIcons.length===0);
+  // I4: geen export-icon divs (vervangen door export-format)
+  var exportIcons=document.querySelectorAll('.export-icon');
+  assert('geen export-icon divs in DOM', exportIcons.length===0);
+  var exportFormats=document.querySelectorAll('.export-format');
+  assert('export-format labels aanwezig', exportFormats.length>=4);
 
   // ── A-VIEW: viewState + E.3 isolatie ──
   group('A-VIEW');
@@ -4759,11 +4768,11 @@ function runTests(){
   // ── A-U6/U7/U8: Config contracten ──
   group('A-CONFIG-CTR');
   // A-U6: elke tab heeft verplichte velden
-  var tabReqFields=['id','label','icon','columns','features'];
+  var tabReqFields=['id','label','columns','features'];
   var allTabsValid=dashboardConfig.tabs.every(function(tab){
     return tabReqFields.every(function(f){return tab[f]!==undefined&&tab[f]!==null;});
   });
-  assert('A-U6: alle tabs hebben verplichte velden (id,label,icon,columns,features)', allTabsValid);
+  assert('A-U6: alle tabs hebben verplichte velden (id,label,columns,features)', allTabsValid);
   // A-U7: tab-ids zijn uniek
   var tabIds=dashboardConfig.tabs.map(function(t){return t.id;});
   var uniqueTabIds=tabIds.filter(function(id,i){return tabIds.indexOf(id)===i;});
@@ -5158,7 +5167,7 @@ function runTests(){
     var origTabData = _tabData.slice();
     var origTabCols = _tabCols.slice();
     var fakeTab = {
-      id:'_test_ds', label:'Test', icon:'T',
+      id:'_test_ds', label:'Test',
       dataSource: { type:'dataset', records: testRecords },
       columns: [{key:'name',label:'Naam',type:'text',renderer:'text'}],
       features:{}, exports:{allow:[]}, defaults:{},
@@ -5181,7 +5190,7 @@ function runTests(){
   // Cat 5: Config structuur compleet (2)
   assert('B1: app.version is literal string', (function() {
     var json = JSON.stringify(dashboardConfig);
-    return json.indexOf('"version":"0.60.0"') !== -1;
+    return json.indexOf('"version":"0.61.0"') !== -1;
   })());
   assert('B1: geen functies in config', (function() {
     try {
