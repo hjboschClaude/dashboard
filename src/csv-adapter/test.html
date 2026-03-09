@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>CSV Adapter — Layer 3 Tests (v0.62.0)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1e293b; padding: 24px; }
+h1 { font-size: 18px; margin-bottom: 4px; }
+.subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+.summary { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 24px; align-items: center; }
+.summary .count { font-size: 28px; font-weight: 700; }
+.summary .count.pass { color: #16a34a; }
+.summary .count.fail { color: #dc2626; }
+.summary .count.warn { color: #d97706; }
+.summary .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.group-header { background: #1e293b; color: #fff; padding: 8px 14px; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 600; margin-top: 16px; display: flex; justify-content: space-between; }
+.group-header .badge { background: rgba(255,255,255,0.2); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+.test-row { background: #fff; border: 1px solid #e2e8f0; border-top: none; padding: 6px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.test-row:last-child { border-radius: 0 0 6px 6px; }
+.test-row .icon { width: 18px; text-align: center; flex-shrink: 0; }
+.test-row.pass .icon { color: #16a34a; }
+.test-row.fail .icon { color: #dc2626; font-weight: 700; }
+.test-row.fail { background: #fef2f2; }
+.test-row .detail { color: #94a3b8; font-size: 11px; margin-left: auto; white-space: nowrap; }
+.duration { color: #94a3b8; font-size: 12px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<h1>CSV Adapter — Layer 3 Tests</h1>
+<div class="subtitle">v0.62.0 — Standalone test harness (geen engine-afhankelijkheid)</div>
+<div class="summary" id="summary"></div>
+<div id="results"></div>
+<div class="duration" id="duration"></div>
+
+<script src="csv-adapter.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ── Mini test runner ───────────────────────────────────
+  var passed = 0, failed = 0, currentGroup = '', groupCounts = {};
+  var resultsEl = document.getElementById('results');
+  var groupEl = null;
+  var t0 = performance.now();
+
+  function group(name) {
+    currentGroup = name;
+    groupCounts[name] = { pass: 0, fail: 0 };
+    var h = document.createElement('div');
+    h.className = 'group-header';
+    h.innerHTML = '<span>' + name + '</span><span class="badge" id="badge-' + name + '"></span>';
+    resultsEl.appendChild(h);
+    groupEl = h;
+  }
+
+  function assert(label, condition, detail) {
+    var row = document.createElement('div');
+    var ok = !!condition;
+    row.className = 'test-row ' + (ok ? 'pass' : 'fail');
+    row.innerHTML = '<span class="icon">' + (ok ? '&#10003;' : '&#10007;') + '</span>' +
+                    '<span>' + label + '</span>' +
+                    (detail ? '<span class="detail">' + detail + '</span>' : '');
+    resultsEl.appendChild(row);
+    if (ok) { passed++; groupCounts[currentGroup].pass++; }
+    else    { failed++; groupCounts[currentGroup].fail++; }
+  }
+
+  function eq(a, b) {
+    if (a === b) return true;
+    if (a === null || b === null) return false;
+    if (typeof a === 'object' && typeof b === 'object') return JSON.stringify(a) === JSON.stringify(b);
+    return false;
+  }
+
+  function near(a, b, eps) { return Math.abs(a - b) < (eps || 0.001); }
+
+  // ── Test CSV data (inline) ─────────────────────────────
+
+  var CSV_MINIMAL = 'naam,leeftijd,actief\nAlice,30,ja\nBob,25,nee\nCharlie,35,ja\n';
+
+  var CSV_SEMICOLON = 'ID;Naam;Status\n1;Emma;Actief\n2;Daan;Verlof\n3;Sophie;Actief\n';
+
+  var CSV_TAB = 'ID\tNaam\tStatus\n1\tEmma\tActief\n2\tDaan\tVerlof\n';
+
+  var CSV_QUOTED = 'Naam;Bedrag;Notitie\n"Gewone rij";1000;"Normaal"\n"Rij met;puntkomma";2000;"Bevat;scheidingsteken"\n';
+
+  var CSV_EMBEDDED_NL = 'Naam;Notitie\n"Rij met\nnewline";"Tekst over\ntwee regels"\n"Normaal";"Ok"\n';
+
+  var CSV_ESCAPED_QUOTES = 'Naam;Notitie\n"Rij met ""quotes""";""Dubbel""\n"Normaal";"Ok"\n';
+
+  var CSV_CRLF = 'Naam;Leeftijd\r\nAlice;30\r\nBob;25\r\n';
+
+  var CSV_TRAILING = 'Naam;Leeftijd\nAlice;30\nBob;25\n\n\n';
+
+  var CSV_HEADER_ONLY = 'Naam;Leeftijd;Status\n';
+
+  var CSV_EMPTY = '';
+
+  var CSV_NL_NUMBERS = 'ID;Bedrag;Percentage\n1;1.234,56;85\n2;999,99;90\n3;2500;100\n4;350.000;75\n5;1.650.000,00;60\n';
+
+  var CSV_DATES = 'ID;DatumISO;DatumNL\n1;2026-03-09;09-03-2026\n2;2025-12-31;31-12-2025\n3;2024-06-15;15/06/2024\n';
+
+  var CSV_BOOLEANS = 'ID;ActiefJN;ActiefTF\n1;ja;true\n2;nee;false\n3;ja;true\n';
+
+  var CSV_ENUM = 'ID;Status;Prioriteit\n1;Actief;Hoog\n2;Verlof;Middel\n3;Actief;Laag\n4;Actief;Hoog\n5;Deeltijd;Middel\n';
+
+  var CSV_THRESHOLD = (function() {
+    // 10 rijen: 8 numbers + 2 text = 80% (onder drempel)
+    var lines = ['ID;Waarde'];
+    for (var i = 1; i <= 8; i++) lines.push(i + ';' + (i * 100));
+    lines.push('9;niet-een-getal');
+    lines.push('10;ook-geen-getal');
+    return lines.join('\n') + '\n';
+  })();
+
+  var CSV_THRESHOLD_ABOVE = (function() {
+    // 10 rijen: 10 numbers + 1 text = ~91% (boven drempel)
+    var lines = ['ID;Waarde'];
+    for (var i = 1; i <= 10; i++) lines.push(i + ';' + (i * 100));
+    lines.push('11;tekstwaarde');
+    return lines.join('\n') + '\n';
+  })();
+
+  var CSV_NULLS = 'ID;Waarde\n1;\n2;NULL\n3;N/A\n4;n.v.t.\n5;-\n6;#N/A\n7;echte waarde\n';
+
+  var CSV_TYPEHINTS = 'ID;Code;Bedrag\n1;ABC;100\n2;DEF;200\n3;GHI;300\n';
+
+  // Teamleden CSV (semi-colon, NL format)
+  var CSV_TEAMLEDEN = 'ID;Naam;Functie;Afdeling;Email;In Dienst;Status;Beoordeling;Locatie;Capaciteit;Actief;Telefoon;Contract;Uren/week;Team;Opleiding\n' +
+    '1;Emma de Vries;Projectmanager;Stedelijke Ontwikkeling;emma.de.vries@rotterdam.nl;2018-03-15;Actief;4;Rotterdam Centrum;85;ja;06-12345678;Vast;40;Stadsprojecten;WO\n' +
+    '2;Daan Bakker;Data Analist;ICT & Innovatie;daan.bakker@rotterdam.nl;2020-09-01;Actief;5;Rotterdam Centrum;90;ja;06-23456789;Vast;40;Digitaal;HBO\n' +
+    '3;Sophie van Dijk;Communicatieadviseur;Maatschappelijke Ontwikkeling;sophie.van.dijk@rotterdam.nl;2019-06-10;Verlof;3;Rotterdam Noord;0;nee;06-34567890;Vast;32;Communicatie;WO\n' +
+    '4;Lucas Jansen;Beleidsmedewerker;Duurzaamheid;lucas.jansen@rotterdam.nl;2021-01-20;Actief;4;Rotterdam Zuid;75;ja;06-45678901;Tijdelijk;36;Duurzaam;WO\n' +
+    '5;Fleur Hendriks;UX Designer;ICT & Innovatie;fleur.hendriks@rotterdam.nl;2022-04-01;Actief;5;Rotterdam Centrum;95;ja;06-56789012;Vast;40;Digitaal;HBO\n' +
+    '6;Bram de Groot;Financieel Adviseur;Haven & Economie;bram.de.groot@rotterdam.nl;2017-11-15;Deeltijd;3;Europoort;60;ja;06-67890123;Vast;24;Financien;WO\n' +
+    '7;Lotte Smit;Projectcoordinator;Mobiliteit;lotte.smit@rotterdam.nl;2023-02-01;Actief;4;Rotterdam Centrum;80;ja;06-78901234;Inhuur;40;Stadsprojecten;HBO\n' +
+    '8;Sem van den Berg;Juridisch Adviseur;Maatschappelijke Ontwikkeling;sem.van.den.berg@rotterdam.nl;2016-08-20;Actief;4;Rotterdam Noord;70;ja;06-89012345;Vast;36;Juridisch;WO\n' +
+    '9;Julia Visser;Programmamanager;Stedelijke Ontwikkeling;julia.visser@rotterdam.nl;2015-05-01;Actief;5;Rotterdam Centrum;85;ja;06-90123456;Vast;40;Stadsprojecten;WO\n' +
+    '10;Thijs Mulder;DevOps Engineer;ICT & Innovatie;thijs.mulder@rotterdam.nl;2021-10-15;Detachering;4;Rotterdam Zuid;100;ja;06-01234567;Detachering;40;Digitaal;MBO\n';
+
+  // Projecten CSV (semi-colon, NL format, mixed number styles)
+  var CSV_PROJECTEN = 'ID;Projectnaam;Status;Prioriteit;Directeur;Deadline;Voortgang;Budget;Cluster;Goedgekeurd;Fase;Risiconiveau;Startdatum;Regio;Kosten Realisatie;Stakeholders;Laatste Update;Documentatie\n' +
+    '1;Omgevingsvisie 2030;Actief;Hoog;Richard van der Helm;2026-06-30;45;350000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-01-15;Centrum;280000;15;2026-03-01;Compleet\n' +
+    '2;Feyenoord City;In Review;Middel;Marieke de Wit;2027-03-15;72;1250000;Stadsontwikkeling;ja;Ontwerp;Hoog;2022-06-01;Zuid;980000;28;2026-02-15;Compleet\n' +
+    '3;Energietransitie Zuid;Actief;Hoog;Jan-Willem Bakker;2026-12-01;30;890000;Duurzaamheid;nee;Definitie;Kritiek;2024-03-10;Zuid;450000;12;2026-03-05;Incompleet\n' +
+    '4;Digitale Dienstverlening;Voltooid;Laag;Richard van der Helm;2025-09-30;100;420000;ICT & Innovatie;ja;Afsluiting;Laag;2023-08-01;n.v.t.;420000;8;2025-10-01;Compleet\n' +
+    '5;Wijkvernieuwing Crooswijk;Actief;Middel;Marieke de Wit;2027-06-30;55;2100000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-11-15;Kralingen-Crooswijk;1150000;22;2026-03-08;Incompleet\n' +
+    '6;Luchtkwaliteit Monitoring;On Hold;Hoog;Jan-Willem Bakker;2026-09-15;15;180000;Duurzaamheid;nee;Initiatief;Hoog;2025-01-20;-;45000;5;2026-01-30;Ontbreekt\n' +
+    '7;Havenbeveiligingssysteem;Gepland;Middel;Sarah Patel;2028-01-01;0;3500000;Haven & Economie;nee;Initiatief;Middel;2026-01-01;Europoort;0;30;2026-03-01;Ontbreekt\n' +
+    '8;Fietsinfrastructuur Ring;Actief;Laag;Marieke de Wit;2026-11-30;68;750000;Mobiliteit;ja;Realisatie;Laag;2024-02-01;Noord;510000;10;2026-03-07;Compleet\n' +
+    '9;Klimaatadaptatie Strategie;In Review;Hoog;Jan-Willem Bakker;2026-08-15;85;290000;Duurzaamheid;ja;Realisatie;Middel;2024-06-01;Centrum;246500;18;2026-03-06;Compleet\n' +
+    '10;Smart City Platform;Actief;Middel;Sarah Patel;2027-12-31;22;1800000;ICT & Innovatie;nee;Ontwerp;Hoog;2025-04-01;n.v.t.;396000;14;2026-03-09;Incompleet\n' +
+    '11;Sociaal Domein Dashboard;Voltooid;Laag;Richard van der Helm;2025-06-30;100;95000;Maatschappelijke Ontwikkeling;ja;Afsluiting;Laag;2024-09-15;n.v.t.;95000;4;2025-07-01;Compleet\n' +
+    '12;Waterberging Zuidplein;Actief;Hoog;Marieke de Wit;2026-10-01;38;1.650.000,00;Stedelijke Ontwikkeling;ja;Definitie;Kritiek;2025-02-01;Charlois;627.000,00;20;2026-03-04;Incompleet\n' +
+    '13;Brug Renovatie Koningshaven;Gepland;Middel;Sarah Patel;2028-06-30;0;4200000;Mobiliteit;nee;Initiatief;Middel;2026-06-01;Feijenoord;0;25;2026-03-01;Ontbreekt\n' +
+    '14;Participatieplatform Burgers;Actief;Laag;Richard van der Helm;2026-05-15;90;120000;ICT & Innovatie;ja;Realisatie;Laag;2025-07-01;n.v.t.;108000;6;2026-03-08;Compleet\n' +
+    '15;Havenenergie Transitie;In Review;Hoog;Jan-Willem Bakker;2027-09-30;60;5.200.000,00;Haven & Economie;nee;Ontwerp;Hoog;2024-11-01;Europoort;3.120.000,00;35;2026-03-02;Incompleet\n';
+
+  // Edge cases CSV (met BOM prefix)
+  var CSV_EDGE = '\uFEFF"Naam kolom";Bedrag;Datum;Actief;Status;"Notitie met; puntkomma"\n' +
+    '"Gewone rij";1.234,56;2026-03-09;ja;Actief;Alles normaal\n' +
+    '"Rij met ""quotes""";2500;09-03-2026;nee;Voltooid;"Bevat ""dubbele"" quotes"\n' +
+    '"";NULL;N/A;n.v.t.;-;#N/A\n' +
+    '"Lege waarden";;;;;;\n' +
+    '"Rij met\nnewline";999,99;2025-12-31;true;In Review;Meerregelig veld\n' +
+    '"Laatste rij";0;2020-01-01;false;On Hold;Normaal\n';
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-PARSE (~15 tests) ────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-PARSE');
+
+  // Delimiter detectie
+  assert('detectDelimiter: herkent puntkomma', CsvAdapter.detectDelimiter(CSV_SEMICOLON) === ';');
+  assert('detectDelimiter: herkent komma', CsvAdapter.detectDelimiter(CSV_MINIMAL) === ',');
+  assert('detectDelimiter: herkent tab', CsvAdapter.detectDelimiter(CSV_TAB) === '\t');
+  assert('detectDelimiter: lege input → puntkomma default', CsvAdapter.detectDelimiter('') === ';');
+
+  // BOM
+  var bomText = '\uFEFFHello';
+  assert('removeBOM: verwijdert BOM karakter', CsvAdapter.removeBOM(bomText) === 'Hello');
+  assert('removeBOM: geen BOM → passthrough', CsvAdapter.removeBOM('Hello') === 'Hello');
+  assert('removeBOM: null → lege string', CsvAdapter.removeBOM(null) === '');
+  assert('removeBOM: leeg → lege string', CsvAdapter.removeBOM('') === '');
+
+  // Tokenize basis
+  var grid1 = CsvAdapter.tokenizeCSV('A;B;C\n1;2;3\n', ';');
+  assert('tokenizeCSV: basis semicolon parsing', grid1.length === 2 && grid1[0][0] === 'A' && grid1[1][2] === '3');
+
+  // Quoted fields
+  var gridQ = CsvAdapter.tokenizeCSV(CSV_QUOTED, ';');
+  assert('tokenizeCSV: quoted velden correct geparst', gridQ[1][0] === 'Gewone rij' && gridQ[2][0] === 'Rij met;puntkomma');
+
+  // Embedded delimiter in quotes
+  assert('tokenizeCSV: embedded delimiter in quotes bewaard', gridQ[2][2] === 'Bevat;scheidingsteken');
+
+  // Embedded newline in quotes
+  var gridNL = CsvAdapter.tokenizeCSV(CSV_EMBEDDED_NL, ';');
+  assert('tokenizeCSV: embedded newline in quotes', gridNL[1][0] === 'Rij met\nnewline', 'val="' + gridNL[1][0] + '"');
+
+  // Escaped quotes
+  var gridEsc = CsvAdapter.tokenizeCSV(CSV_ESCAPED_QUOTES, ';');
+  assert('tokenizeCSV: escaped quotes (dubbele "")', gridEsc[1][0] === 'Rij met "quotes"', 'val="' + gridEsc[1][0] + '"');
+
+  // CRLF
+  var gridCR = CsvAdapter.tokenizeCSV(CSV_CRLF, ';');
+  assert('tokenizeCSV: CRLF line endings correct', gridCR.length === 3 && gridCR[2][0] === 'Bob');
+
+  // Trailing empty rows stripped
+  var gridTrail = CsvAdapter.tokenizeCSV(CSV_TRAILING, ';');
+  assert('tokenizeCSV: trailing lege rijen gestript', gridTrail.length === 3, 'rijen=' + gridTrail.length);
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-HEADER (~10 tests) ───────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-HEADER');
+
+  assert('toCamelCase: spaties → "kostenRealisatie"',
+    CsvAdapter.toCamelCase('Kosten Realisatie') === 'kostenRealisatie');
+  assert('toCamelCase: underscores → "inDienst"',
+    CsvAdapter.toCamelCase('in_dienst') === 'inDienst');
+  assert('toCamelCase: hyphens → "projectType"',
+    CsvAdapter.toCamelCase('project-type') === 'projectType');
+  assert('toCamelCase: ALL CAPS → "projectType"',
+    CsvAdapter.toCamelCase('PROJECT TYPE') === 'projectType');
+  assert('toCamelCase: enkel woord → "naam"',
+    CsvAdapter.toCamelCase('naam') === 'naam');
+  assert('toCamelCase: leeg → ""',
+    CsvAdapter.toCamelCase('') === '');
+  assert('toCamelCase: slash-scheiding → "urenWeek"',
+    CsvAdapter.toCamelCase('Uren/week') === 'urenWeek');
+  assert('toCamelCase: & scheiding → "ictInnovatie"',
+    CsvAdapter.toCamelCase('ICT & Innovatie') === 'ictInnovatie');
+
+  // normalizeHeaders
+  var headers1 = CsvAdapter.normalizeHeaders(['Naam', 'Leeftijd', 'Status']);
+  assert('normalizeHeaders: basis conversie',
+    eq(headers1, ['naam', 'leeftijd', 'status']));
+
+  var headersDup = CsvAdapter.normalizeHeaders(['Status', 'Naam', 'Status']);
+  assert('normalizeHeaders: duplicaat → suffix',
+    headersDup[0] === 'status' && headersDup[2] === 'status2',
+    'result=[' + headersDup.join(',') + ']');
+
+  var headersEmpty = CsvAdapter.normalizeHeaders(['', 'Naam', '']);
+  assert('normalizeHeaders: lege header → column1/column3',
+    headersEmpty[0] === 'column1' && headersEmpty[2] === 'column3',
+    'result=[' + headersEmpty.join(',') + ']');
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-TYPE (~12 tests) ─────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-TYPE');
+
+  // Boolean ja/nee
+  var typeBool = CsvAdapter.inferColumnTypes(
+    [['ja'], ['nee'], ['ja']], ['actief'], {}
+  );
+  assert('inferColumnTypes: herkent boolean (ja/nee)',
+    typeBool[0].inferredType === 'boolean');
+
+  // Boolean true/false
+  var typeBoolTF = CsvAdapter.inferColumnTypes(
+    [['true'], ['false'], ['true']], ['active'], {}
+  );
+  assert('inferColumnTypes: herkent boolean (true/false)',
+    typeBoolTF[0].inferredType === 'boolean');
+
+  // Number integers
+  var typeNum = CsvAdapter.inferColumnTypes(
+    [['100'], ['200'], ['300'], ['400']], ['bedrag'], {}
+  );
+  assert('inferColumnTypes: herkent number (integers)',
+    typeNum[0].inferredType === 'number');
+
+  // Number NL format
+  var typeNLNum = CsvAdapter.inferColumnTypes(
+    [['1.234,56'], ['999,99'], ['2500'], ['350.000']], ['bedrag'], {}
+  );
+  assert('inferColumnTypes: herkent number (NL decimalen)',
+    typeNLNum[0].inferredType === 'number');
+
+  // Date ISO
+  var typeDate = CsvAdapter.inferColumnTypes(
+    [['2026-03-09'], ['2025-12-31'], ['2024-06-15']], ['datum'], {}
+  );
+  assert('inferColumnTypes: herkent date (ISO)',
+    typeDate[0].inferredType === 'date');
+
+  // Date NL
+  var typeDateNL = CsvAdapter.inferColumnTypes(
+    [['09-03-2026'], ['31-12-2025'], ['15-06-2024']], ['datum'], {}
+  );
+  assert('inferColumnTypes: herkent date (NL dd-mm-yyyy)',
+    typeDateNL[0].inferredType === 'date');
+
+  // Enum (weinig unieke waarden)
+  var typeEnum = CsvAdapter.inferColumnTypes(
+    [['Actief'], ['Verlof'], ['Actief'], ['Deeltijd'], ['Actief']], ['status'], {}
+  );
+  assert('inferColumnTypes: herkent enum (weinig unieke waarden)',
+    typeEnum[0].inferredType === 'enum');
+  assert('inferColumnTypes: enum bevat enumValues',
+    typeEnum[0].enumValues && typeEnum[0].enumValues.length === 3,
+    'vals=' + (typeEnum[0].enumValues || []).join(','));
+
+  // Text fallback (>30 unieke waarden)
+  var manyRows = [];
+  for (var i = 0; i < 35; i++) manyRows.push(['waarde_' + i]);
+  var typeText = CsvAdapter.inferColumnTypes(manyRows, ['beschrijving'], {});
+  assert('inferColumnTypes: text fallback bij >30 unieke waarden',
+    typeText[0].inferredType === 'text');
+
+  // Drempel 80% (onder 90%) → text
+  var threshResult = CsvAdapter.parseCSV(CSV_THRESHOLD);
+  var waardeField = threshResult.schema.fields.filter(function(f) { return f.name === 'waarde'; })[0];
+  assert('inferColumnTypes: 80% numbers → enum/text (onder drempel)',
+    waardeField && waardeField.type !== 'number',
+    'type=' + (waardeField ? waardeField.type : '?'));
+
+  // Drempel 91% → number
+  var threshAbove = CsvAdapter.parseCSV(CSV_THRESHOLD_ABOVE);
+  var waardeAbove = threshAbove.schema.fields.filter(function(f) { return f.name === 'waarde'; })[0];
+  assert('inferColumnTypes: 91% numbers → number (boven drempel)',
+    waardeAbove && waardeAbove.type === 'number',
+    'type=' + (waardeAbove ? waardeAbove.type : '?'));
+
+  // typeHints override
+  var typeHinted = CsvAdapter.inferColumnTypes(
+    [['100'], ['200'], ['300']], ['code'], { typeHints: { code: 'text' } }
+  );
+  assert('inferColumnTypes: typeHints override → text i.p.v. number',
+    typeHinted[0].inferredType === 'text');
+
+  // All null → text
+  var typeAllNull = CsvAdapter.inferColumnTypes(
+    [[''], ['NULL'], ['N/A']], ['leeg'], {}
+  );
+  assert('inferColumnTypes: alle null → text',
+    typeAllNull[0].inferredType === 'text' && typeAllNull[0].nullable === true);
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-CONVERT (~15 tests) ─────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-CONVERT');
+
+  // isNullValue
+  assert('isNullValue: lege string → true', CsvAdapter.isNullValue('') === true);
+  assert('isNullValue: "NULL" → true', CsvAdapter.isNullValue('NULL') === true);
+  assert('isNullValue: "N/A" → true', CsvAdapter.isNullValue('N/A') === true);
+  assert('isNullValue: "n.v.t." → true', CsvAdapter.isNullValue('n.v.t.') === true);
+  assert('isNullValue: "-" → true', CsvAdapter.isNullValue('-') === true);
+  assert('isNullValue: "#N/A" → true', CsvAdapter.isNullValue('#N/A') === true);
+  assert('isNullValue: "tekst" → false', CsvAdapter.isNullValue('tekst') === false);
+  assert('isNullValue: null → true', CsvAdapter.isNullValue(null) === true);
+
+  // parseNLNumber
+  assert('parseNLNumber: "1.234,56" → 1234.56',
+    near(CsvAdapter.parseNLNumber('1.234,56'), 1234.56));
+  assert('parseNLNumber: "999,99" → 999.99',
+    near(CsvAdapter.parseNLNumber('999,99'), 999.99));
+  assert('parseNLNumber: "2500" → 2500',
+    CsvAdapter.parseNLNumber('2500') === 2500);
+  assert('parseNLNumber: "1.650.000,00" → 1650000',
+    near(CsvAdapter.parseNLNumber('1.650.000,00'), 1650000));
+  assert('parseNLNumber: "0" → 0',
+    CsvAdapter.parseNLNumber('0') === 0);
+
+  // parseDate
+  assert('parseDate: ISO "2026-03-09" → "2026-03-09"',
+    CsvAdapter.parseDate('2026-03-09') === '2026-03-09');
+  assert('parseDate: NL "09-03-2026" → "2026-03-09"',
+    CsvAdapter.parseDate('09-03-2026') === '2026-03-09');
+  assert('parseDate: NL slash "15/06/2024" → "2024-06-15"',
+    CsvAdapter.parseDate('15/06/2024') === '2024-06-15');
+  assert('parseDate: leeg → null',
+    CsvAdapter.parseDate('') === null);
+
+  // parseBoolean
+  assert('parseBoolean: "ja" → true', CsvAdapter.parseBoolean('ja') === true);
+  assert('parseBoolean: "nee" → false', CsvAdapter.parseBoolean('nee') === false);
+  assert('parseBoolean: "true" → true', CsvAdapter.parseBoolean('true') === true);
+  assert('parseBoolean: "false" → false', CsvAdapter.parseBoolean('false') === false);
+  assert('parseBoolean: "onbekend" → null', CsvAdapter.parseBoolean('onbekend') === null);
+
+  // convertValue: failed number
+  var cvFail = CsvAdapter.convertValue('geen-getal', 'number', 'nl');
+  assert('convertValue: fout getal → null + warning',
+    cvFail.value === null && cvFail.warning !== null);
+
+  // convertValue: failed date
+  var cvDateFail = CsvAdapter.convertValue('geendatum', 'date', 'nl');
+  assert('convertValue: foute datum → null + warning',
+    cvDateFail.value === null && cvDateFail.warning !== null);
+
+  // convertValue: null passthrough
+  var cvNull = CsvAdapter.convertValue('', 'number', 'nl');
+  assert('convertValue: lege string → null (geen warning)',
+    cvNull.value === null && cvNull.warning === null);
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-SCHEMA (~5 tests) ────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-SCHEMA');
+
+  var schemaInput = [
+    { name: 'id', inferredType: 'number', nullable: false },
+    { name: 'naam', inferredType: 'text', nullable: false },
+    { name: 'status', inferredType: 'enum', nullable: true, enumValues: ['Actief', 'Verlof'] },
+    { name: 'actief', inferredType: 'boolean', nullable: false }
+  ];
+  var schema1 = CsvAdapter.buildSchema(schemaInput);
+
+  assert('buildSchema: field count matcht input',
+    schema1.fields.length === 4);
+  assert('buildSchema: types correct overgenomen',
+    schema1.fields[0].type === 'number' && schema1.fields[2].type === 'enum');
+  assert('buildSchema: enumValues alleen bij enum',
+    schema1.fields[2].enumValues && schema1.fields[2].enumValues.length === 2 &&
+    !schema1.fields[0].enumValues);
+  assert('buildSchema: nullable correct',
+    schema1.fields[0].nullable === false && schema1.fields[2].nullable === true);
+
+  // validateOutput
+  var validDs = {
+    records: [{ id: 1, naam: 'A' }, { id: 2, naam: 'B' }],
+    schema: { fields: [{ name: 'id', type: 'number', nullable: false }, { name: 'naam', type: 'text', nullable: false }] },
+    sourceMeta: {}
+  };
+  var valWarns = CsvAdapter.validateOutput(validDs);
+  assert('validateOutput: geldig dataset → geen warnings', valWarns.length === 0);
+
+  var badDs = { records: [], schema: { fields: [] }, sourceMeta: {} };
+  var badWarns = CsvAdapter.validateOutput(badDs);
+  assert('validateOutput: lege records → warning', badWarns.length > 0 && badWarns[0].indexOf('geen records') > -1);
+
+
+  // ═══════════════════════════════════════════════════════════
+  // ── SUITE L3-E2E (~8 tests) ──────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+
+  group('L3-E2E');
+
+  // minimal.csv
+  var resMin = CsvAdapter.parseCSV(CSV_MINIMAL, { filename: 'minimal.csv' });
+  assert('E2E minimal: 3 records', resMin.records.length === 3, 'count=' + resMin.records.length);
+  assert('E2E minimal: schema heeft 3 velden', resMin.schema.fields.length === 3);
+  assert('E2E minimal: leeftijd is number',
+    resMin.schema.fields.filter(function(f) { return f.name === 'leeftijd'; })[0].type === 'number');
+  assert('E2E minimal: actief is boolean',
+    resMin.schema.fields.filter(function(f) { return f.name === 'actief'; })[0].type === 'boolean');
+  assert('E2E minimal: sourceMeta.rowCount = 3',
+    resMin.sourceMeta.rowCount === 3);
+  assert('E2E minimal: sourceMeta.filename bewaard',
+    resMin.sourceMeta.filename === 'minimal.csv');
+
+  // teamleden.csv
+  var resTeam = CsvAdapter.parseCSV(CSV_TEAMLEDEN, { filename: 'teamleden.csv' });
+  assert('E2E teamleden: 10 records', resTeam.records.length === 10);
+  assert('E2E teamleden: 16 schema velden', resTeam.schema.fields.length === 16);
+
+  // Check specifieke types
+  var teamIdField = resTeam.schema.fields.filter(function(f) { return f.name === 'id'; })[0];
+  assert('E2E teamleden: id is number', teamIdField && teamIdField.type === 'number');
+
+  var teamDateField = resTeam.schema.fields.filter(function(f) { return f.name === 'inDienst'; })[0];
+  assert('E2E teamleden: inDienst is date', teamDateField && teamDateField.type === 'date');
+
+  var teamBoolField = resTeam.schema.fields.filter(function(f) { return f.name === 'actief'; })[0];
+  assert('E2E teamleden: actief is boolean', teamBoolField && teamBoolField.type === 'boolean');
+
+  var teamStatusField = resTeam.schema.fields.filter(function(f) { return f.name === 'status'; })[0];
+  assert('E2E teamleden: status is enum', teamStatusField && teamStatusField.type === 'enum');
+
+  // Waarde-check
+  assert('E2E teamleden: Emma is eerste record',
+    resTeam.records[0].naam === 'Emma de Vries');
+  assert('E2E teamleden: beoordeling geconverteerd naar number',
+    resTeam.records[0].beoordeling === 4);
+  assert('E2E teamleden: inDienst geconverteerd naar ISO date',
+    resTeam.records[0].inDienst === '2018-03-15');
+  assert('E2E teamleden: actief geconverteerd naar boolean',
+    resTeam.records[0].actief === true && resTeam.records[2].actief === false);
+
+  // projecten.csv
+  var resProj = CsvAdapter.parseCSV(CSV_PROJECTEN, { filename: 'projecten.csv' });
+  assert('E2E projecten: 15 records', resProj.records.length === 15);
+  assert('E2E projecten: 18 schema velden', resProj.schema.fields.length === 18);
+
+  // NL nummer met punten en komma's
+  assert('E2E projecten: NL getal 1.650.000,00 correct',
+    resProj.records[11].budget === 1650000,
+    'val=' + resProj.records[11].budget);
+  assert('E2E projecten: NL getal 5.200.000,00 correct',
+    resProj.records[14].budget === 5200000,
+    'val=' + resProj.records[14].budget);
+  assert('E2E projecten: deadline is date',
+    resProj.schema.fields.filter(function(f) { return f.name === 'deadline'; })[0].type === 'date');
+  assert('E2E projecten: goedgekeurd is boolean',
+    resProj.schema.fields.filter(function(f) { return f.name === 'goedgekeurd'; })[0].type === 'boolean');
+
+  // edge-cases.csv (met BOM)
+  var resEdge = CsvAdapter.parseCSV(CSV_EDGE, { filename: 'edge-cases.csv' });
+  assert('E2E edge-cases: BOM verwijderd, header correct',
+    resEdge.schema.fields[0].name === 'naamKolom',
+    'name=' + resEdge.schema.fields[0].name);
+  assert('E2E edge-cases: 6 records (incl newline-rij)',
+    resEdge.records.length === 6,
+    'count=' + resEdge.records.length);
+  assert('E2E edge-cases: escaped quotes correct',
+    resEdge.records[1].naamKolom === 'Rij met "quotes"',
+    'val="' + resEdge.records[1].naamKolom + '"');
+  assert('E2E edge-cases: null-rij waarden zijn null',
+    resEdge.records[2].bedrag === null && resEdge.records[2].datum === null);
+  assert('E2E edge-cases: embedded newline bewaard',
+    resEdge.records[4].naamKolom === 'Rij met\nnewline',
+    'val="' + resEdge.records[4].naamKolom + '"');
+
+  // Lege CSV
+  var resEmpty = CsvAdapter.parseCSV(CSV_EMPTY);
+  assert('E2E lege CSV: records leeg', resEmpty.records.length === 0);
+  assert('E2E lege CSV: warning aanwezig',
+    resEmpty.sourceMeta.parseWarnings.length > 0);
+
+  // Header-only CSV
+  var resHdrOnly = CsvAdapter.parseCSV(CSV_HEADER_ONLY);
+  assert('E2E header-only CSV: records leeg', resHdrOnly.records.length === 0);
+  assert('E2E header-only CSV: schema velden bewaard', resHdrOnly.schema.fields.length === 3);
+
+  // Output structuur
+  assert('E2E output: heeft records array', Array.isArray(resMin.records));
+  assert('E2E output: heeft schema.fields', Array.isArray(resMin.schema.fields));
+  assert('E2E output: heeft sourceMeta.parseWarnings', Array.isArray(resMin.sourceMeta.parseWarnings));
+  assert('E2E output: heeft sourceMeta.delimiter', typeof resMin.sourceMeta.delimiter === 'string');
+
+  // Versie check
+  assert('CsvAdapter.version === "0.62.0"', CsvAdapter.version === '0.62.0');
+
+
+  // ── Samenvatting ─────────────────────────────────────────
+  var t1 = performance.now();
+  var total = passed + failed;
+
+  // Update group badges
+  Object.keys(groupCounts).forEach(function(name) {
+    var badge = document.getElementById('badge-' + name);
+    if (badge) {
+      var g = groupCounts[name];
+      badge.textContent = g.pass + '/' + (g.pass + g.fail);
+      if (g.fail > 0) badge.style.background = 'rgba(220,38,38,0.4)';
+    }
+  });
+
+  document.getElementById('summary').innerHTML =
+    '<div><div class="count pass">' + passed + '</div><div class="label">Passed</div></div>' +
+    '<div><div class="count fail">' + failed + '</div><div class="label">Failed</div></div>' +
+    '<div><div class="count">' + total + '</div><div class="label">Total</div></div>' +
+    '<div style="margin-left:auto;font-size:13px;color:#64748b">' +
+    Object.keys(groupCounts).map(function(n) {
+      var g = groupCounts[n];
+      var color = g.fail > 0 ? '#dc2626' : '#16a34a';
+      return '<span style="color:' + color + '">' + n + ' ' + g.pass + '/' + (g.pass + g.fail) + '</span>';
+    }).join(' &middot; ') +
+    '</div>';
+
+  document.getElementById('duration').textContent = 'Uitgevoerd in ' + (t1 - t0).toFixed(1) + 'ms — ' + new Date().toISOString().slice(0, 19).replace('T', ' ');
+  document.title = (failed === 0 ? 'PASS' : 'FAIL') + ' (' + passed + '/' + total + ') — CSV Adapter Tests';
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+ID;Naam;Functie;Afdeling;Email;In Dienst;Status;Beoordeling;Locatie;Capaciteit;Actief;Telefoon;Contract;Uren/week;Team;Opleiding
+1;Emma de Vries;Projectmanager;Stedelijke Ontwikkeling;emma.de.vries@rotterdam.nl;2018-03-15;Actief;4;Rotterdam Centrum;85;ja;06-12345678;Vast;40;Stadsprojecten;WO
+2;Daan Bakker;Data Analist;ICT & Innovatie;daan.bakker@rotterdam.nl;2020-09-01;Actief;5;Rotterdam Centrum;90;ja;06-23456789;Vast;40;Digitaal;HBO
+3;Sophie van Dijk;Communicatieadviseur;Maatschappelijke Ontwikkeling;sophie.van.dijk@rotterdam.nl;2019-06-10;Verlof;3;Rotterdam Noord;0;nee;06-34567890;Vast;32;Communicatie;WO
+4;Lucas Jansen;Beleidsmedewerker;Duurzaamheid;lucas.jansen@rotterdam.nl;2021-01-20;Actief;4;Rotterdam Zuid;75;ja;06-45678901;Tijdelijk;36;Duurzaam;WO
+5;Fleur Hendriks;UX Designer;ICT & Innovatie;fleur.hendriks@rotterdam.nl;2022-04-01;Actief;5;Rotterdam Centrum;95;ja;06-56789012;Vast;40;Digitaal;HBO
+6;Bram de Groot;Financieel Adviseur;Haven & Economie;bram.de.groot@rotterdam.nl;2017-11-15;Deeltijd;3;Europoort;60;ja;06-67890123;Vast;24;Financien;WO
+7;Lotte Smit;Projectcoordinator;Mobiliteit;lotte.smit@rotterdam.nl;2023-02-01;Actief;4;Rotterdam Centrum;80;ja;06-78901234;Inhuur;40;Stadsprojecten;HBO
+8;Sem van den Berg;Juridisch Adviseur;Maatschappelijke Ontwikkeling;sem.van.den.berg@rotterdam.nl;2016-08-20;Actief;4;Rotterdam Noord;70;ja;06-89012345;Vast;36;Juridisch;WO
+9;Julia Visser;Programmamanager;Stedelijke Ontwikkeling;julia.visser@rotterdam.nl;2015-05-01;Actief;5;Rotterdam Centrum;85;ja;06-90123456;Vast;40;Stadsprojecten;WO
+10;Thijs Mulder;DevOps Engineer;ICT & Innovatie;thijs.mulder@rotterdam.nl;2021-10-15;Detachering;4;Rotterdam Zuid;100;ja;06-01234567;Detachering;40;Digitaal;MBO

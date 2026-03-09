@@ -1,0 +1,16 @@
+ID;Projectnaam;Status;Prioriteit;Directeur;Deadline;Voortgang;Budget;Cluster;Goedgekeurd;Fase;Risiconiveau;Startdatum;Regio;Kosten Realisatie;Stakeholders;Laatste Update;Documentatie
+1;Omgevingsvisie 2030;Actief;Hoog;Richard van der Helm;2026-06-30;45;350000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-01-15;Centrum;280000;15;2026-03-01;Compleet
+2;Feyenoord City;In Review;Middel;Marieke de Wit;2027-03-15;72;1250000;Stadsontwikkeling;ja;Ontwerp;Hoog;2022-06-01;Zuid;980000;28;2026-02-15;Compleet
+3;Energietransitie Zuid;Actief;Hoog;Jan-Willem Bakker;2026-12-01;30;890000;Duurzaamheid;nee;Definitie;Kritiek;2024-03-10;Zuid;450000;12;2026-03-05;Incompleet
+4;Digitale Dienstverlening;Voltooid;Laag;Richard van der Helm;2025-09-30;100;420000;ICT & Innovatie;ja;Afsluiting;Laag;2023-08-01;n.v.t.;420000;8;2025-10-01;Compleet
+5;Wijkvernieuwing Crooswijk;Actief;Middel;Marieke de Wit;2027-06-30;55;2100000;Stedelijke Ontwikkeling;ja;Realisatie;Middel;2023-11-15;Kralingen-Crooswijk;1150000;22;2026-03-08;Incompleet
+6;Luchtkwaliteit Monitoring;On Hold;Hoog;Jan-Willem Bakker;2026-09-15;15;180000;Duurzaamheid;nee;Initiatief;Hoog;2025-01-20;-;45000;5;2026-01-30;Ontbreekt
+7;Havenbeveiligingssysteem;Gepland;Middel;Sarah Patel;2028-01-01;0;3500000;Haven & Economie;nee;Initiatief;Middel;2026-01-01;Europoort;0;30;2026-03-01;Ontbreekt
+8;Fietsinfrastructuur Ring;Actief;Laag;Marieke de Wit;2026-11-30;68;750000;Mobiliteit;ja;Realisatie;Laag;2024-02-01;Noord;510000;10;2026-03-07;Compleet
+9;Klimaatadaptatie Strategie;In Review;Hoog;Jan-Willem Bakker;2026-08-15;85;290000;Duurzaamheid;ja;Realisatie;Middel;2024-06-01;Centrum;246500;18;2026-03-06;Compleet
+10;Smart City Platform;Actief;Middel;Sarah Patel;2027-12-31;22;1800000;ICT & Innovatie;nee;Ontwerp;Hoog;2025-04-01;n.v.t.;396000;14;2026-03-09;Incompleet
+11;Sociaal Domein Dashboard;Voltooid;Laag;Richard van der Helm;2025-06-30;100;95000;Maatschappelijke Ontwikkeling;ja;Afsluiting;Laag;2024-09-15;n.v.t.;95000;4;2025-07-01;Compleet
+12;Waterberging Zuidplein;Actief;Hoog;Marieke de Wit;2026-10-01;38;1.650.000,00;Stedelijke Ontwikkeling;ja;Definitie;Kritiek;2025-02-01;Charlois;627.000,00;20;2026-03-04;Incompleet
+13;Brug Renovatie Koningshaven;Gepland;Middel;Sarah Patel;2028-06-30;0;4200000;Mobiliteit;nee;Initiatief;Middel;2026-06-01;Feijenoord;0;25;2026-03-01;Ontbreekt
+14;Participatieplatform Burgers;Actief;Laag;Richard van der Helm;2026-05-15;90;120000;ICT & Innovatie;ja;Realisatie;Laag;2025-07-01;n.v.t.;108000;6;2026-03-08;Compleet
+15;Havenenergie Transitie;In Review;Hoog;Jan-Willem Bakker;2027-09-30;60;5.200.000,00;Haven & Economie;nee;Ontwerp;Hoog;2024-11-01;Europoort;3.120.000,00;35;2026-03-02;Incompleet

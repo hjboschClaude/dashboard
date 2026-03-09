@@ -714,7 +714,7 @@ var _tabIndexById={};  // WP-S11: O(1) record lookup per tab
 const dashboardConfig = {
   app: {
     title: "Dashboard Gemeente Rotterdam",
-    version: '0.61.0',
+    version: '0.62.0',
     defaultTabId: "projects"
   },
   tabs: [
@@ -5190,7 +5190,7 @@ function runTests(){
   // Cat 5: Config structuur compleet (2)
   assert('B1: app.version is literal string', (function() {
     var json = JSON.stringify(dashboardConfig);
-    return json.indexOf('"version":"0.61.0"') !== -1;
+    return json.indexOf('"version":"0.62.0"') !== -1;
   })());
   assert('B1: geen functies in config', (function() {
     try {

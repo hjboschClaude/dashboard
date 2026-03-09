@@ -27,6 +27,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 |----------|-------|--------|
 | [LAYER1_PLAN.md](LAYER1_PLAN.md) | UX Reference Layer: Fase 1 (WP1–WP12) + Fase 2 Refresh (WP-R1–R6), tokens, 24 patronen, CSS-stubs, porting map | ✅ Fase 1 (v0.55.0) + Fase 2 (v1.5) afgerond |
 | [LAYER2_PLAN.md](LAYER2_PLAN.md) | Dashboard Engine Layer: 13 werkpakketten (WP-A t/m WP-M), 4 fasen (2a–2d), config extraheerbaar, contracts, derive, render, UX hooks | ○ Open — Fase 2a eerst |
+| [LAYER3_VISIE.md](LAYER3_VISIE.md) | Layer 3 visie: CSV Adapter positie, pipeline, inter-layer relaties, bouwstrategie | ✅ Visie + implementatie (v0.62.0) |
 | [SCHEMA_CONTRACT_PLAN.md](SCHEMA_CONTRACT_PLAN.md) | Schema Contract & Feature Gating: 20 werkpakketten (WP-P1–P2, WP-S1–S18), 4 fasen, perf quickfixes + semantisch generieke engine | ✅ Fase 3 afgerond (v0.58.0) — Engine volledig generiek |
 | [TESTREGISTER.md](TESTREGISTER.md) | Automatische testarchitectuur: 4 suites, 27 performance-metrics, 271 checks | ✅ Fase 1–5 afgerond (v0.42.0), taak 5.6 doorlopend |
 
@@ -49,7 +50,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | [TOETSINGSKADER.md](TOETSINGSKADER.md) | 64 bevindingen over 11 dimensies + beoordelingskader 10 domeinen | Per sprint herscoren |
 | [TESTPLAN.md](TESTPLAN.md) | Testplan design-wijzigingen (DevTools-based) | Bij testwijziging |
 | [BUGS.md](BUGS.md) | Bug tracker (BUG-016+) | Bij nieuwe bug of fix |
-| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.56.0) | Elke versie |
+| [CHANGELOG.md](CHANGELOG.md) | Chronologisch logboek alle versies (v0.9.0–v0.62.0) | Elke versie |
 | [WERKWIJZE_VERSIEBEHEER.md](WERKWIJZE_VERSIEBEHEER.md) | Proces: versienummering, changelog, commits, toetsing | Bij proceswijziging |
 | [VOORSTEL_UX_KOLOMMEN.md](VOORSTEL_UX_KOLOMMEN.md) | Kolom drag-drop UX voorstel: visuele feedback combinatie | Referentie |
 
@@ -72,6 +73,7 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 | **L2-WP-A–M** | LAYER2_PLAN.md | Engine: positionering, config, contracts, core, derive, virtualisatie, render, hooks, export, a11y, tests, assembler | ○ Open |
 | **WP-P1–P2** | SCHEMA_CONTRACT_PLAN.md | Performance quickfixes: _perfDebug guard, computeVisibleCols() cache | ✅ v0.56.1 |
 | **WP-S1–S18** | SCHEMA_CONTRACT_PLAN.md | Schema contracts, semantic accessors, feature gating, declaratief condFormatting | ✅ Fase 3 afgerond (v0.58.0) |
+| **WP-L3-A–E** | LAYER3_VISIE.md | CSV Adapter: skeleton, parsing, types, schema, docs | ✅ v0.62.0 |
 
 ---
 

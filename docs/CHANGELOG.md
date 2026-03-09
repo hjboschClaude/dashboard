@@ -6,6 +6,43 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.62.0 — 2026-03-09
+
+**Type:** Feature / Layer 3
+**Domein:** CSV Adapter — CSV → datasetContract transformatie
+
+Eerste module in de doelmappenstructuur (`src/csv-adapter/`). Transformeert ruwe CSV-tekst naar een gevalideerd datasetContract dat de Layer 2 engine direct kan consumeren. Build-time tool, geen engine-afhankelijkheid.
+
+**Nieuwe bestanden:**
+- `src/csv-adapter/csv-adapter.js` — Hoofdmodule: 6-staps pipeline, IIFE + module.exports
+- `src/csv-adapter/test.html` — Standalone browser test harness (~65 tests, 6 suites)
+- `src/csv-adapter/testdata/projecten.csv` — 15 rijen, 18 kolommen, NL locale
+- `src/csv-adapter/testdata/teamleden.csv` — 10 rijen, 16 kolommen, NL locale
+- `src/csv-adapter/testdata/edge-cases.csv` — BOM, quotes, embedded newlines, null-patronen
+- `src/csv-adapter/testdata/minimal.csv` — 3 rijen, 3 kolommen, snelle sanity check
+
+**Pipeline (6 stappen):**
+1. **Parsing** — BOM verwijdering, delimiter auto-detectie (`;` `,` `\t`), RFC 4180 tokenizer
+2. **Header normalisatie** — camelCase conversie, deduplicatie, lege-header fallback
+3. **Type inferentie** — boolean → number → date → enum → text, 90% drempel, typeHints
+4. **Waarde-conversie** — NL-getallen (`1.234,56` → `1234.56`), ISO-datums, booleans (ja/nee)
+5. **Schema generatie** — `{ fields: [{ name, type, nullable, enumValues? }] }`
+6. **Validatie** — keys-consistentie, schema-match, warnings
+
+**Null-normalisatie:** `""`, `"NULL"`, `"N/A"`, `"n.v.t."`, `"-"`, `"#N/A"` → `null`
+
+**Test suites (6):**
+- L3-PARSE (~15): delimiter, BOM, tokenizer, CRLF, trailing
+- L3-HEADER (~11): camelCase, duplicaten, lege headers
+- L3-TYPE (~14): boolean, number, date, enum, text, drempel, typeHints
+- L3-CONVERT (~28): isNullValue, parseNLNumber, parseDate, parseBoolean, convertValue
+- L3-SCHEMA (~6): buildSchema, validateOutput
+- L3-E2E (~30+): volledige pipeline op alle 4 test-CSVs, lege/header-only CSV, structuur
+
+**Publieke API:** `CsvAdapter.parseCSV(csvText, options?) → { records, schema, sourceMeta }`
+
+---
+
 ## v0.61.0 — 2026-03-09
 
 **Type:** Refactor / Engine Generiek

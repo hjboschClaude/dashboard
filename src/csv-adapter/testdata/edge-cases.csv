@@ -1,0 +1,8 @@
+﻿"Naam kolom";Bedrag;Datum;Actief;Status;"Notitie met; puntkomma"
+"Gewone rij";1.234,56;2026-03-09;ja;Actief;Alles normaal
+"Rij met ""quotes""";2500;09-03-2026;nee;Voltooid;"Bevat ""dubbele"" quotes"
+"";NULL;N/A;n.v.t.;-;#N/A
+"Lege waarden";;;;;;
+"Rij met
+newline";999,99;2025-12-31;true;In Review;Meerregelig veld
+"Laatste rij";0;2020-01-01;false;On Hold;Normaal
