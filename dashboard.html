@@ -4841,9 +4841,9 @@ if (_checkBrowserSupport()) {
   initTabDataFromConfig(function() {
     render();
     initGlobalNameFilter();
-    // Sprint 4.2: First Render & Init timing (WP-P1: alleen bij _perfDebug)
-    if (_perfDebug) {
-      performance.mark('dashboard:ready');
+    // Sprint 4.2: First Render & Init timing
+    performance.mark('dashboard:ready'); // Altijd: gebruikt door D-P2/D-P3 tests
+    if (_perfDebug) { // WP-P1: measure + console.log alleen bij _perfDebug
       try { performance.measure('dashboard:total-init', undefined, 'dashboard:ready'); } catch(e) {}
       var _initEntry = performance.getEntriesByName('dashboard:total-init')[0];
       if (_initEntry) console.log('[perf] Dashboard klaar in: ' + _initEntry.duration.toFixed(0) + 'ms');
