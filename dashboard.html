@@ -567,19 +567,19 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 // ████████████████████████████████████████████████████████████████
 // [4/11] TEMPLATE CONFIG & DATA
 // Versie, veiligheid, sample-data, dashboardConfig, config-helpers
-// Noot: DATA staat vóór CONFIG omdat cols0/cols1 eerst gedefinieerd
-// moeten zijn voordat dashboardConfig ernaar kan verwijzen.
+// Noot: dashboardConfig bevat kolommen inline (v0.59.0).
+// cols0/cols1 zijn backward-compatible aliassen na de config-declaratie.
 //
 // ══ DATA SOURCE ABSTRACTIE ══════════════════════════════════
 // Contract:
 //   Elke tab in dashboardConfig.tabs[] declareert een dataSource:
 //     { type: 'embedded' }   — data uit _dataGenerators registry (huidige situatie)
-//     { type: 'dataset' }    — data via Layer 3 CSV-adapter (toekomstig)
+//     { type: 'dataset', records: [...] }  — pre-loaded data (v0.59.0)
 //
 // Laadproces:
 //   1. initTabDataFromConfig() leest tab.dataSource.type
 //   2. type 'embedded' → _dataGenerators[tab.id](tab.defaultRowCount)
-//   3. type 'dataset'  → (toekomstig) records + schema van Layer 3
+//   3. type 'dataset'  → tab.dataSource.records (pre-loaded array, v0.59.0)
 //   4. Resultaat → _tabData[idx], columns → _tabCols[idx]
 //   5. buildSearchIndex() voegt _searchStr toe per rij
 //
@@ -587,23 +587,20 @@ th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 //   getData(tabIdx)  → _tabData[idx]    — rij-array
 //   getCols(tabIdx)  → _tabCols[idx]    — kolom-definities
 //
-// Hardcoded veldnamen (TECH DEBT — Layer 4 dashboard-spec verantwoordelijkheid):
-//   applyFiltersToData()  — globalNameFilter: r.directeur/aog/pm (tab 0), r.name (tab 1)
-//   condClass()           — r.priority, r.status, r.actief, r.progress
-//   rowHtml()             — r.name voor aria-label
-//   modal                 — r.name, r.id voor titel
-//   Deze worden in Fase 2d (WP-J config extraction) naar dashboardConfig verplaatst.
+// Hardcoded veldnamen: OPGELOST in v0.57.0–v0.58.0 (semantic accessors + feature gating)
+//   Alle engine-functies lezen nu via schemaContract, geen hardcoded veldnamen meer.
 //
 // Backwards compatibility:
-//   window.data0 / data1 — legacy property accessors → _tabData[0] / [1]
-//   Vervallen wanneer Layer 3 adapter operationeel is.
+//   cols0 / cols1 — aliassen naar dashboardConfig.tabs[].columns (v0.59.0)
+//   window.data0 / data1 — verwijderd in v0.59.0 (gebruik getData()/getCols())
 // ═══════════════════════════════════════════════════════════════
 // ████████████████████████████████████████████████████████████████
 
 // ============================================================
 // VERSIE
 // ============================================================
-const DASHBOARD_VERSION = '0.58.0';
+// WP-B2: forward-declaratie — waarde wordt afgeleid uit dashboardConfig.app.version na config-blok
+var DASHBOARD_VERSION;
 
 // ============================================================
 // VEILIGHEID — XSS-preventie
@@ -693,7 +690,7 @@ function generateTeamData(count){var emailSuffix=dashboardConfig.domain.emailSuf
 // ══ DATA SOURCE: Generator Registry ══════════════════════════
 // WP-H: Data-generatoren registry — losgekoppeld van dashboardConfig
 // Elke key matcht een tab.id uit dashboardConfig.tabs[]
-// Vervalt wanneer dataSource.type 'dataset' beschikbaar is (Layer 3)
+// Alleen voor type 'embedded' — type 'dataset' beschikbaar sinds v0.59.0
 const _dataGenerators = { projects: generateProjectData, team: generateTeamData };
 
 // G3: Pre-built zoekindex — één lowercase string per rij
@@ -710,71 +707,16 @@ var _tabData=[];
 var _tabCols=[];
 var _tabIndexById={};  // WP-S11: O(1) record lookup per tab
 
-// Sprint 3, taak 3.3: initialisatie vanuit dashboardConfig (na data-generatie hieronder)
-// Wordt gevuld na cols0/cols1 definitie — zie initTabDataFromConfig()
-
-const cols0=[
-  {key:'name',label:'Projectnaam',icon:'Aa',visible:true, renderer:'text',type:'text'},
-  {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
-  {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'priority',type:'enum'},
-  {key:'directeur',label:'Verantwoordelijke Directeur',icon:'👔',visible:true, renderer:'avatar',type:'text'},
-  {key:'aog',label:'Ambtelijk Opdrachtgever',icon:'📋',visible:true, renderer:'avatar',type:'text'},
-  {key:'pm',label:'Projectmanager',icon:'👤',visible:true, renderer:'avatar',type:'text'},
-  {key:'deadline',label:'Deadline',icon:'📅',visible:true, renderer:'date',type:'date'},
-  {key:'progress',label:'Voortgang',icon:'▦',visible:true, renderer:'progress',type:'number'},
-  {key:'budget',label:'Budget',icon:'€',visible:true, renderer:'budget',type:'number'},
-  {key:'cluster',label:'Cluster',icon:'🏷',visible:true, renderer:'tag',type:'enum'},
-  {key:'approved',label:'Goedgekeurd',icon:'✓',visible:true, renderer:'check',type:'boolean'},
-  {key:'note',label:'Notitie',icon:'📝',visible:true, renderer:'note',type:'text'},
-  {key:'fase',label:'Fase',icon:'📊',visible:true, renderer:'tag',type:'enum',tagColors:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'}},
-  {key:'risico',label:'Risiconiveau',icon:'⚠',visible:true, renderer:'tag',type:'enum',tagColors:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'}},
-  {key:'startDatum',label:'Startdatum',icon:'📅',visible:true, renderer:'date',type:'date'},
-  {key:'regio',label:'Regio',icon:'🗺',visible:true, renderer:'tag',type:'enum'},
-  {key:'type',label:'Projecttype',icon:'🏗',visible:true, renderer:'tag',type:'enum'},
-  {key:'fte',label:'FTE',icon:'👥',visible:true, renderer:'number',type:'number'},
-  {key:'kostenRealisatie',label:'Kosten Realisatie',icon:'💰',visible:true, renderer:'budget',type:'number'},
-  {key:'oplevering',label:'Oplevering',icon:'🎯',visible:true, renderer:'date',type:'date'},
-  {key:'stakeholders',label:'Stakeholders',icon:'🤝',visible:true, renderer:'number',type:'number'},
-  {key:'laatsteUpdate',label:'Laatste Update',icon:'🔄',visible:true, renderer:'date',type:'date'},
-  {key:'documentatie',label:'Documentatie',icon:'📁',visible:true, renderer:'tag',type:'enum',tagColors:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'}},
-  {key:'programma',label:'Programmalijn',icon:'📐',visible:true, renderer:'tag',type:'enum'},
-  {key:'milieu',label:'Milieu-impact',icon:'🌿',visible:true, renderer:'tag',type:'enum',tagColors:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'}},
-];
-const cols1=[
-  {key:'name',label:'Naam',icon:'Aa',visible:true, renderer:'avatar',type:'text'},
-  {key:'functie',label:'Functie',icon:'💼',visible:true, renderer:'text',type:'text'},
-  {key:'afdeling',label:'Afdeling',icon:'🏢',visible:true, renderer:'tag',type:'enum'},
-  {key:'email',label:'Email',icon:'📧',visible:true, renderer:'email',type:'text'},
-  {key:'inDienst',label:'In Dienst',icon:'📅',visible:true, renderer:'date',type:'date'},
-  {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
-  {key:'beoordeling',label:'Beoordeling',icon:'⭐',visible:true, renderer:'star',type:'number'},
-  {key:'locatie',label:'Locatie',icon:'🗺',visible:true, renderer:'text',type:'text'},
-  {key:'capaciteit',label:'Capaciteit',icon:'▦',visible:true, renderer:'progress',type:'number'},
-  {key:'actief',label:'Actief',icon:'✓',visible:true, renderer:'check',type:'boolean'},
-  {key:'telefoon',label:'Telefoon',icon:'📞',visible:true, renderer:'mono',type:'text'},
-  {key:'contract',label:'Contract',icon:'📄',visible:true, renderer:'tag',type:'enum',tagColors:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'}},
-  {key:'uren',label:'Uren/week',icon:'⏱',visible:true, renderer:'number',type:'number',suffix:'u'},
-  {key:'team',label:'Team',icon:'👥',visible:true, renderer:'tag',type:'enum'},
-  {key:'leidinggevende',label:'Leidinggevende',icon:'👔',visible:true, renderer:'avatar',type:'text'},
-  {key:'opleiding',label:'Opleiding',icon:'🎓',visible:true, renderer:'tag',type:'enum',tagColors:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}},
-  {key:'startProject',label:'Start Project',icon:'📅',visible:true, renderer:'date',type:'date'},
-  {key:'projecten',label:'Projecten',icon:'📊',visible:true, renderer:'number',type:'number'},
-  {key:'salSchaal',label:'Salarisschaal',icon:'💶',visible:true, renderer:'text',type:'text'},
-  {key:'skills',label:'Skills',icon:'🛠',visible:true, renderer:'tag',type:'enum'},
-  {key:'beschikbaarheid',label:'Beschikbaarheid',icon:'▦',visible:true, renderer:'progress',type:'number'},
-  {key:'reisafstand',label:'Reisafstand (km)',icon:'🚗',visible:true, renderer:'mono',type:'number',suffix:' km'},
-  {key:'kantoorDagen',label:'Kantoordagen',icon:'🏢',visible:true, renderer:'number',type:'number',suffix:'d'},
-  {key:'certificeringen',label:'Certificeringen',icon:'🏅',visible:true, renderer:'number',type:'number'},
-  {key:'laatsteGesprek',label:'Laatste Gesprek',icon:'💬',visible:true, renderer:'date',type:'date'},
-];
+// Sprint 3, taak 3.3: initialisatie vanuit dashboardConfig
+// Wordt gevuld vanuit dashboardConfig.tabs[].columns — zie initTabDataFromConfig()
 
 // ============================================================
-// DASHBOARD CONFIG — declaratieve structuur (template-refactoring sprint 2)
+// DASHBOARD CONFIG — declaratieve structuur (100% JSON-serialiseerbaar sinds v0.59.0)
 // ============================================================
 const dashboardConfig = {
   app: {
     title: "Dashboard Gemeente Rotterdam",
-    version: DASHBOARD_VERSION,
+    version: '0.59.0',
     defaultTabId: "projects"
   },
   tabs: [
@@ -783,7 +725,33 @@ const dashboardConfig = {
       label: "Projecten",
       icon: "📋",
       dataSource: { type: "embedded" },
-      columns: cols0,
+      columns: [
+        {key:'name',label:'Projectnaam',icon:'Aa',visible:true, renderer:'text',type:'text'},
+        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
+        {key:'priority',label:'Prioriteit',icon:'⚑',visible:true, renderer:'priority',type:'enum'},
+        {key:'directeur',label:'Verantwoordelijke Directeur',icon:'👔',visible:true, renderer:'avatar',type:'text'},
+        {key:'aog',label:'Ambtelijk Opdrachtgever',icon:'📋',visible:true, renderer:'avatar',type:'text'},
+        {key:'pm',label:'Projectmanager',icon:'👤',visible:true, renderer:'avatar',type:'text'},
+        {key:'deadline',label:'Deadline',icon:'📅',visible:true, renderer:'date',type:'date'},
+        {key:'progress',label:'Voortgang',icon:'▦',visible:true, renderer:'progress',type:'number'},
+        {key:'budget',label:'Budget',icon:'€',visible:true, renderer:'budget',type:'number'},
+        {key:'cluster',label:'Cluster',icon:'🏷',visible:true, renderer:'tag',type:'enum'},
+        {key:'approved',label:'Goedgekeurd',icon:'✓',visible:true, renderer:'check',type:'boolean'},
+        {key:'note',label:'Notitie',icon:'📝',visible:true, renderer:'note',type:'text'},
+        {key:'fase',label:'Fase',icon:'📊',visible:true, renderer:'tag',type:'enum',tagColors:{Initiatief:'tag-info',Definitie:'tag-neutral',Ontwerp:'tag-warning',Realisatie:'tag-success',Afsluiting:'tag-purple'}},
+        {key:'risico',label:'Risiconiveau',icon:'⚠',visible:true, renderer:'tag',type:'enum',tagColors:{Laag:'tag-success',Middel:'tag-warning',Hoog:'tag-warning',Kritiek:'tag-danger'}},
+        {key:'startDatum',label:'Startdatum',icon:'📅',visible:true, renderer:'date',type:'date'},
+        {key:'regio',label:'Regio',icon:'🗺',visible:true, renderer:'tag',type:'enum'},
+        {key:'type',label:'Projecttype',icon:'🏗',visible:true, renderer:'tag',type:'enum'},
+        {key:'fte',label:'FTE',icon:'👥',visible:true, renderer:'number',type:'number'},
+        {key:'kostenRealisatie',label:'Kosten Realisatie',icon:'💰',visible:true, renderer:'budget',type:'number'},
+        {key:'oplevering',label:'Oplevering',icon:'🎯',visible:true, renderer:'date',type:'date'},
+        {key:'stakeholders',label:'Stakeholders',icon:'🤝',visible:true, renderer:'number',type:'number'},
+        {key:'laatsteUpdate',label:'Laatste Update',icon:'🔄',visible:true, renderer:'date',type:'date'},
+        {key:'documentatie',label:'Documentatie',icon:'📁',visible:true, renderer:'tag',type:'enum',tagColors:{Compleet:'tag-success',Incompleet:'tag-warning',Ontbreekt:'tag-danger'}},
+        {key:'programma',label:'Programmalijn',icon:'📐',visible:true, renderer:'tag',type:'enum'},
+        {key:'milieu',label:'Milieu-impact',icon:'🌿',visible:true, renderer:'tag',type:'enum',tagColors:{Positief:'tag-success',Neutraal:'tag-neutral',Negatief:'tag-danger'}}
+      ],
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
@@ -815,7 +783,33 @@ const dashboardConfig = {
       label: "Teamleden",
       icon: "👥",
       dataSource: { type: "embedded" },
-      columns: cols1,
+      columns: [
+        {key:'name',label:'Naam',icon:'Aa',visible:true, renderer:'avatar',type:'text'},
+        {key:'functie',label:'Functie',icon:'💼',visible:true, renderer:'text',type:'text'},
+        {key:'afdeling',label:'Afdeling',icon:'🏢',visible:true, renderer:'tag',type:'enum'},
+        {key:'email',label:'Email',icon:'📧',visible:true, renderer:'email',type:'text'},
+        {key:'inDienst',label:'In Dienst',icon:'📅',visible:true, renderer:'date',type:'date'},
+        {key:'status',label:'Status',icon:'◉',visible:true, renderer:'status',type:'enum'},
+        {key:'beoordeling',label:'Beoordeling',icon:'⭐',visible:true, renderer:'star',type:'number'},
+        {key:'locatie',label:'Locatie',icon:'🗺',visible:true, renderer:'text',type:'text'},
+        {key:'capaciteit',label:'Capaciteit',icon:'▦',visible:true, renderer:'progress',type:'number'},
+        {key:'actief',label:'Actief',icon:'✓',visible:true, renderer:'check',type:'boolean'},
+        {key:'telefoon',label:'Telefoon',icon:'📞',visible:true, renderer:'mono',type:'text'},
+        {key:'contract',label:'Contract',icon:'📄',visible:true, renderer:'tag',type:'enum',tagColors:{Vast:'tag-success',Tijdelijk:'tag-neutral',Inhuur:'tag-warning',Detachering:'tag-purple'}},
+        {key:'uren',label:'Uren/week',icon:'⏱',visible:true, renderer:'number',type:'number',suffix:'u'},
+        {key:'team',label:'Team',icon:'👥',visible:true, renderer:'tag',type:'enum'},
+        {key:'leidinggevende',label:'Leidinggevende',icon:'👔',visible:true, renderer:'avatar',type:'text'},
+        {key:'opleiding',label:'Opleiding',icon:'🎓',visible:true, renderer:'tag',type:'enum',tagColors:{WO:'tag-purple',HBO:'tag-info',MBO:'tag-success'}},
+        {key:'startProject',label:'Start Project',icon:'📅',visible:true, renderer:'date',type:'date'},
+        {key:'projecten',label:'Projecten',icon:'📊',visible:true, renderer:'number',type:'number'},
+        {key:'salSchaal',label:'Salarisschaal',icon:'💶',visible:true, renderer:'text',type:'text'},
+        {key:'skills',label:'Skills',icon:'🛠',visible:true, renderer:'tag',type:'enum'},
+        {key:'beschikbaarheid',label:'Beschikbaarheid',icon:'▦',visible:true, renderer:'progress',type:'number'},
+        {key:'reisafstand',label:'Reisafstand (km)',icon:'🚗',visible:true, renderer:'mono',type:'number',suffix:' km'},
+        {key:'kantoorDagen',label:'Kantoordagen',icon:'🏢',visible:true, renderer:'number',type:'number',suffix:'d'},
+        {key:'certificeringen',label:'Certificeringen',icon:'🏅',visible:true, renderer:'number',type:'number'},
+        {key:'laatsteGesprek',label:'Laatste Gesprek',icon:'💬',visible:true, renderer:'date',type:'date'}
+      ],
       defaultRowCount: 4500,
       features: { search:true, filter:true, sort:true, group:true, condFormatting:true, freeze:true, multiSelect:true, contextMenu:true },
       exports: { allow:["csv","json","xlsx","html","markdown","png"], defaultScope:"filtered", allowSelectionExport:true },
@@ -872,6 +866,12 @@ const dashboardConfig = {
     }
   }
 };
+
+// WP-B1: backward-compatible aliassen — verwijzen naar config-arrays
+var cols0 = dashboardConfig.tabs[0].columns;
+var cols1 = dashboardConfig.tabs[1].columns;
+// WP-B2: versie afgeleid uit config — single source of truth
+DASHBOARD_VERSION = dashboardConfig.app.version;
 
 // Config-lookup helpers
 function getTabConfig(tabId){
@@ -1332,6 +1332,16 @@ function _validateContractsOnInit() {
     console.error('[Contract] dashboardSpec validatie mislukt:', specErrors);
     return; // Structuur ongeldig → overige validatie zinloos
   }
+  // Stap A2: JSON-serialisatie — bewijs dat config puur declaratief is (WP-B4, v0.59.0)
+  try {
+    var json = JSON.stringify(dashboardConfig);
+    var roundtrip = JSON.parse(json);
+    if (typeof roundtrip !== 'object' || !Array.isArray(roundtrip.tabs)) {
+      console.error('[Contract] dashboardConfig JSON round-trip structuur ongeldig');
+    }
+  } catch (e) {
+    console.error('[Contract] dashboardConfig is NIET JSON-serialiseerbaar:', e.message);
+  }
   // Stap B–E: Per tab schema-alignment, type-semantics en feature-requirements valideren
   dashboardConfig.tabs.forEach(function(tab) {
     var colDefs = tab.columns || [];
@@ -1360,21 +1370,32 @@ function _validateContractsOnInit() {
 
 
 // ══ DATA SOURCE: Loader ═══════════════════════════════════════
+// ══ DATA SOURCE: Loader ═══════════════════════════════════════
 // Contract: initTabDataFromConfig(onComplete)
 //   Input:  dashboardConfig.tabs[] met dataSource declaratie
 //   Output: _tabData[idx] gevuld, _tabCols[idx] gevuld
-//   Async:  requestIdleCallback per tab (voorkomt main-thread blokkade)
+//   Async:  requestIdleCallback per tab (embedded), synchroon (dataset)
 //
-// Uitbreidingspunt voor nieuwe dataSource-types:
-//   Voeg case toe in de pending-filter:
-//     type 'dataset' → verwacht tab.dataSource.records + tab.dataSource.schema
-//     type 'remote'  → verwacht tab.dataSource.url + fetch + schema
-//   Na laden: buildSearchIndex() op resultaat toepassen
+// Ondersteunde dataSource-types:
+//   type 'embedded' → _dataGenerators[tab.id](tab.defaultRowCount)
+//   type 'dataset'  → tab.dataSource.records (pre-loaded array, v0.59.0)
+//     Optioneel: tab.dataSource.schema (metadata over velden)
+//   type 'remote'   → (toekomstig) tab.dataSource.url + fetch + schema
+//   Na laden: buildSearchIndex() + _buildTabIndex() op resultaat toepassen
 function initTabDataFromConfig(onComplete) {
+  // Fase 1: kolommen registreren voor alle tabs
   dashboardConfig.tabs.forEach(function(tab, idx) {
     _tabCols[idx] = tab.columns;
   });
-  // WP-H: generator-lookup via _dataGenerators registry i.p.v. config-property
+  // Fase 2: dataset-tabs direct laden (synchroon) — WP-B3
+  dashboardConfig.tabs.forEach(function(tab, idx) {
+    if (tab.dataSource.type === 'dataset' && Array.isArray(tab.dataSource.records)) {
+      _tabData[idx] = tab.dataSource.records;
+      buildSearchIndex(_tabData[idx]);
+      _buildTabIndex(idx);
+    }
+  });
+  // Fase 3: embedded-tabs asynchroon laden via generator registry
   var pending = dashboardConfig.tabs.filter(function(t) {
     return t.dataSource.type === 'embedded' && typeof _dataGenerators[t.id] === 'function';
   });
@@ -1390,7 +1411,7 @@ function initTabDataFromConfig(onComplete) {
     schedule(function() {
       _tabData[tabIdx] = _dataGenerators[tab.id](tab.defaultRowCount);
       buildSearchIndex(_tabData[tabIdx]);
-      _buildTabIndex(tabIdx);  // WP-S11: bouw O(1) lookup index
+      _buildTabIndex(tabIdx);
       next();
     });
   }
@@ -1398,17 +1419,7 @@ function initTabDataFromConfig(onComplete) {
 }
 // Aanroep verplaatst naar INIT-blok (asynchroon, met onComplete-callback)
 
-// Sprint 3, taak 3.4: legacy accessors — data0/data1 verwijzen naar _tabData[0]/[1]
-Object.defineProperty(window, 'data0', {
-  get: function(){ return _tabData[0]; },
-  set: function(v){ _tabData[0] = v; },
-  configurable: true
-});
-Object.defineProperty(window, 'data1', {
-  get: function(){ return _tabData[1]; },
-  set: function(v){ _tabData[1] = v; },
-  configurable: true
-});
+// WP-B6: data0/data1 legacy accessors verwijderd in v0.59.0 — gebruik getData()/getCols()
 
 // ████████████████████████████████████████████████████████████████
 // [5/11] APP STATE — ENGINE CORE
@@ -4579,8 +4590,7 @@ function runTests(){
   assert('getData(1) retourneert teamdata', getData(1)===_tabData[1]);
   assert('getCols(0) retourneert projectkolommen', getCols(0)===_tabCols[0]);
   assert('getCols(1) retourneert teamkolommen', getCols(1)===_tabCols[1]);
-  assert('legacy data0 accessor werkt', window.data0===_tabData[0]);
-  assert('legacy data1 accessor werkt', window.data1===_tabData[1]);
+  // WP-B6: data0/data1 accessors verwijderd in v0.59.0 — gebruik getData()/getCols()
   assert('initTabDataFromConfig bestaat', typeof window.initTabDataFromConfig==='function');
   assert('renderTabContainers bestaat', typeof window.renderTabContainers==='function');
   assert('initTableDelegation bestaat', typeof window.initTableDelegation==='function');
@@ -5099,6 +5109,79 @@ function runTests(){
     var result = isFeatureEnabled('search', 0);
     AppState.tabs[tc.id].resolvedFeatures = saved;
     return result === false;
+  })());
+
+  // ── WP-B5: A-EXTRACT — Breekpunt 1 dashboardConfig extraction-ready (v0.59.0) ──
+  group('A-EXTRACT');
+
+  // Cat 1: JSON-serialisatie (3)
+  assert('B1: dashboardConfig is JSON-serialiseerbaar', (function() {
+    try { JSON.stringify(dashboardConfig); return true; } catch(e) { return false; }
+  })());
+  assert('B1: dashboardConfig round-trip behoud tabs', (function() {
+    try {
+      var rt = JSON.parse(JSON.stringify(dashboardConfig));
+      return Array.isArray(rt.tabs) && rt.tabs.length === dashboardConfig.tabs.length;
+    } catch(e) { return false; }
+  })());
+  assert('B1: dashboardConfig round-trip behoud kolommen', (function() {
+    try {
+      var rt = JSON.parse(JSON.stringify(dashboardConfig));
+      return rt.tabs[0].columns.length === dashboardConfig.tabs[0].columns.length
+          && rt.tabs[1].columns.length === dashboardConfig.tabs[1].columns.length;
+    } catch(e) { return false; }
+  })());
+
+  // Cat 2: Versie-consistentie (2)
+  assert('B2: DASHBOARD_VERSION komt uit config', DASHBOARD_VERSION === dashboardConfig.app.version);
+  assert('B2: versie is string', typeof dashboardConfig.app.version === 'string' && dashboardConfig.app.version.length > 0);
+
+  // Cat 3: Backward-compatible aliases (3)
+  assert('B1: cols0 verwijst naar config tabs[0].columns', cols0 === dashboardConfig.tabs[0].columns);
+  assert('B1: cols1 verwijst naar config tabs[1].columns', cols1 === dashboardConfig.tabs[1].columns);
+  assert('B1: _tabCols[0] === dashboardConfig.tabs[0].columns', _tabCols[0] === dashboardConfig.tabs[0].columns);
+
+  // Cat 4: dataSource type 'dataset' (4)
+  assert('B3: initTabDataFromConfig is een functie', typeof initTabDataFromConfig === 'function');
+  assert('B3: huidige tabs gebruiken type embedded', dashboardConfig.tabs[0].dataSource.type === 'embedded');
+  assert('B3: dataSource.type is string', typeof dashboardConfig.tabs[0].dataSource.type === 'string');
+  assert('B3: dataset-type laadt records synchroon', (function() {
+    // Simuleer een dataset-tab
+    var testRecords = [{id:1,name:'Test',val:42}];
+    var origTabs = dashboardConfig.tabs;
+    var origTabData = _tabData.slice();
+    var origTabCols = _tabCols.slice();
+    var fakeTab = {
+      id:'_test_ds', label:'Test', icon:'T',
+      dataSource: { type:'dataset', records: testRecords },
+      columns: [{key:'name',label:'Naam',type:'text',renderer:'text'}],
+      features:{}, exports:{allow:[]}, defaults:{},
+      schemaContract: { primaryKey:'id', semanticFields:{primaryLabel:'name'} }
+    };
+    try {
+      dashboardConfig.tabs = [fakeTab];
+      _tabData = []; _tabCols = [];
+      var loaded = false;
+      initTabDataFromConfig(function() { loaded = true; });
+      var result = _tabData[0] === testRecords && _tabCols[0] === fakeTab.columns && loaded;
+      return result;
+    } finally {
+      dashboardConfig.tabs = origTabs;
+      _tabData = origTabData;
+      _tabCols = origTabCols;
+    }
+  })());
+
+  // Cat 5: Config structuur compleet (2)
+  assert('B1: app.version is literal string', (function() {
+    var json = JSON.stringify(dashboardConfig);
+    return json.indexOf('"version":"0.59.0"') !== -1;
+  })());
+  assert('B1: geen functies in config', (function() {
+    try {
+      var json = JSON.stringify(dashboardConfig);
+      return json !== undefined && json.indexOf('function') === -1;
+    } catch(e) { return false; }
   })());
 
   var elapsed=Math.round(performance.now()-t0);

@@ -6,6 +6,37 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.59.0 — 2026-03-09
+
+**Type:** Architectuur / Feature
+**Domein:** Breekpunt 1 — dashboardConfig Extract-Ready
+
+dashboardConfig is nu 100% JSON-serialiseerbaar: kolom-arrays inline, versiestring literal, geen runtime-referenties meer. Engine ondersteunt dataSource type 'dataset' voor pre-loaded data. Legacy data0/data1 window accessors verwijderd.
+
+**WP-B1 — Kolom-arrays inline in config:**
+- `cols0`/`cols1` array-inhoud verplaatst naar `dashboardConfig.tabs[].columns`
+- `cols0`/`cols1` behouden als backward-compatible aliassen naar config-arrays
+
+**WP-B2 — Versiestring inline:**
+- `version: DASHBOARD_VERSION` vervangen door `version: '0.59.0'` (literal)
+- `DASHBOARD_VERSION` afgeleid uit `dashboardConfig.app.version` (single source of truth)
+
+**WP-B3 — dataSource type 'dataset':**
+- `initTabDataFromConfig()` uitgebreid: type 'dataset' laadt `tab.dataSource.records` synchroon
+- Embedded-tabs blijven via async `_dataGenerators` registry werken
+
+**WP-B4 — JSON-serialisatie validatie:**
+- `_validateContractsOnInit()` bevat nu JSON round-trip check op dashboardConfig
+
+**WP-B5 — A-EXTRACT testsuite (14 assertions):**
+- JSON-serialisatie (3), versie-consistentie (2), backward aliases (3), dataset type (4), config structuur (2)
+
+**WP-B6 — Legacy cleanup:**
+- `window.data0`/`data1` property accessors verwijderd (2 tests verwijderd)
+- Comments bijgewerkt: hardcoded veldnamen opgelost, data source abstractie actueel
+
+---
+
 ## v0.58.0 — 2026-03-09
 
 **Type:** Feature / Refactor
