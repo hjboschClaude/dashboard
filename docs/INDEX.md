@@ -78,8 +78,8 @@ Dit project evolueert van één dashboard naar een **CSV Dashboard Template Plat
 
 Locatie: `archive/testrapporten/testrapport-v{X.Y.Z}-{YYYY-MM-DD}.md`
 
-Totaal: 37 rapporten (v0.14.0–v0.56.1)
-Meest recente: [testrapport-v0.56.1-2026-03-09.md](../archive/testrapporten/testrapport-v0.56.1-2026-03-09.md)
+Totaal: 38 rapporten (v0.14.0–v0.57.0)
+Meest recente: [testrapport-v0.57.0-2026-03-09.md](../archive/testrapporten/testrapport-v0.57.0-2026-03-09.md)
 
 ---
 
