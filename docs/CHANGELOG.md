@@ -6,6 +6,15 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.86.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Kolomkop-menu, filterlijst sortering
+
+**CHM filterlijst sorteert niet mee na sort-toggle.** `chmSortToggle()` riep na de sort enkel `_chmSyncSortBtn()` aan (sorteericoontje), maar niet `_renderChmFilterA/B()`. De filterlijst in de popover bleef bevroren op de volgorde bij het openen. Fix: na `_chmSyncSortBtn` ook de filterzone herrenderen — type-A (checkbox) via `_renderChmFilterA`, type-B (search-checkbox) via `_renderChmFilterB` met behoud van de lopende zoekterm (`si.value`).
+
+---
+
 ## v0.85.0 — 2026-03-11
 
 **Type:** Bugfix + UI
