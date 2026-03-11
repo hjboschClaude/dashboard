@@ -6,6 +6,215 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.85.0 — 2026-03-11
+
+**Type:** Bugfix + UI
+**Domein:** Kolommen-panel toggle, zoekfeedback, CHM CSS
+
+Drie verbeteringen. (1) **Col-toggle rood bij verborgen:** de schakelaar in het Kolommen-paneel gebruikte `var(--gray-400)` als uit-kleur, waardoor niet zichtbaar was welke kolommen verborgen waren; vervangen door `var(--color-danger)` (rood). (2) **Zoekfeedback — resultaatteller:** het `#row-count` span was altijd verborgen (`display:none`) waardoor er geen zichtbare feedback was dat zoeken/filteren effect had; nu toont het `<x>/<totaal> records` wanneer zoek of filter actief is. Zoekveld links behouden — semantisch correct naast de zoekbalk. (3) **CSS opschonen:** duplicate `.chm-filter-b` regel (was tweemaal aanwezig als losstaand blok) samengevoegd; `flex:1;min-height:0;` nu onderdeel van de primaire `.chm-filter-b` declaratie.
+
+---
+
+## v0.84.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Kolomkop-menu, "Wis filters", kolom verbergen, undo
+
+Vier kritieke bugs opgelost. (1) **`invalidateAll` niet gedefinieerd:** `_hideColWithUndo`, `engineUndo` en Shift+←/→ riepen `invalidateAll()` aan die nooit bestond (had `_invalidateAll()` moeten zijn); de kolom werd wél gemuteerd maar de UI updatde niet. (2) **"Wis filters" werkte niet:** `clearAllFilters()` wistte alleen `filterRules`, niet `AppState.colFilters`/`colFilterTokens`; ook `updateColFilterBadge()` ontbrak. (3) **"Wis filters" knop verscheen niet:** `hasActiveSettings()` controleerde kolomfilters niet, waardoor de knop verborgen bleef. (4) **CHM resize en lijsthoogte:** `resize:vertical` → `resize:both`; `.chm-filter-a-list` wrapper toegevoegd zodat de checkboxlijst `flex:1` kan groeien en scrollt bij resize; `.chm-filter-b-list` krijgt ook `flex:1;max-height:none`.
+
+---
+
+## v0.83.0 — 2026-03-11
+
+**Type:** Bugfix + UI
+**Domein:** Kolomkop-menu filter, paneel-uniformiteit
+
+Vier verbeteringen in één release. (1) **Filterbug opgelost:** `_chmApplySetFilter` en `_chmApplyTokenFilter` gebruikten de onbekende flag `'filter'` in `_invalidate()`, waardoor `computeFilteredData()` nooit opnieuw werd aangeroepen; vervangen door `['data','sort','group',...]`. (2) **Filterlijst gesorteerd:** `_renderChmFilterA/B` spiegelen nu de actieve sorteerrichting van de kolom (asc/desc) in de popover-volgorde. (3) **CHM resizable:** kolom-header-menu omgezet naar `display:flex; flex-direction:column; resize:vertical`; `#chm-filter-area` vult de resterende hoogte en scrollt. (4) **Gelijke paneelbreedte:** `--panel-w` naar 360 px; `.view-panel` gebruikt nu `var(--panel-w)`; exportpaneel omgezet naar dezelfde slide-in drawer als kolommen-paneel (transform, z-index:200), `togglePanel` updatd zodat 'export' net als 'cols' behandeld wordt.
+
+---
+
+## v0.82.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Kolommen-panel, telbadges, export scope
+
+Kolommen-panel: `#panel-cols .panel-body` omgezet naar `flex:1;max-height:none;display:flex;flex-direction:column` zodat de kolomlijst de volledige hoogte van de drawer vult; alleen `#col-list` scrollt. Tab-badge `(N)` verwijderd uit `updateTabBadges`; `#row-count` in de filterbalk verborgen. Exportpanel uitgebreid met scope-toggle "Huidige weergave" / "Selectie (N)" en samenvattingsregel "N rijen · N kolommen"; `renderExportPanel()` en `setExportScope()` toegevoegd; `openSelectionExport` vereenvoudigd.
+
+---
+
+## v0.81.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Kolomkop-menu filterknoppen
+
+DOM-detach bug opgelost: klikken op "Alles"/"Geen" in het kolomkop-menu sloot het menu doordat `_renderChmFilterA` via `zone.innerHTML` het geklikte element uit de DOM verwijderde vóór de click-event uitbubble. `menu.contains(e.target)` gaf daarna `false` (detached node), waardoor de outside-click handler onterecht `closeColHeaderMenu()` aanriep. Fix: guard `if(!document.body.contains(e.target)) return` in de document click-listener voorkomt sluiting bij detached targets.
+
+---
+
+## v0.80.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Hintbar + Kolommen-panel gedrag
+
+Hintbar losgekoppeld van `<th>`-focus: toont nu alleen bij klik op de `?`-knop (toggle via `toggleHelpTooltip`). `focusout`-handler verwijderd; `focusin` bewaakt alleen nog `_lastFocusedColKey`. Kolommen-panel omgezet van dropdown-popup naar full-height right-side drawer: `togglePanel` sloeg voor `cols` de inline `style.top/left`-override over, waardoor de CSS-regels `top:0; right:0; height:100%` nu correct werken. Klik buiten het panel sluit het via de bestaande halfdonkere overlay.
+
+---
+
+## v0.79.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Opruiming kolomkop-interactie — drag verwijderd, hintbar contextgevoelig
+
+Alle drag-and-drop infrastructuur voor kolomherschikking verwijderd (CSS-klassen `.drag-handle`, `.th-dragging`, `.drop-overlay`, `.drop-corridor`, `.drag-preview`, JS-functies `thDragStart` t/m `thDragEnd` en `_dragState`-helpers, HTML-elementen `#drag-preview`, `drop-overlay`, `drop-corridor`). Sorteer-icoon-span en zes-puntjes drag-handle uit kolomkoppen verwijderd. Hintbar verborgen by default (`display:none`), toont via `.hintbar.visible` alleen wanneer een `<th>` focus heeft (`focusin`/`focusout` delegation). "Sleep kolomheaders"-hint verwijderd uit hintbar en help-tooltip. Togglegedrag kolomkop-menu: tweede klik op dezelfde kolomkop sluit het menu.
+
+---
+
+## v0.78.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Toetsenbordinteractie kolomkoppen — Shift+Pijl verplaatsen + Undo
+
+`_columnMoveWithUndo` gebruikte `AppState._tabCols` (bestaat niet) i.p.v. module-level `_tabCols`, waardoor de functie altijd voortijdig afbrak. Bovendien zocht `tabCols.indexOf(srcKey)` naar een string in een array van kolom-objecten (altijd -1). Opgelost door direct `getCols()` te muteren via `findIndex` + splice op objecten. `engineUndo` herstelt kolomvolgorde nu door objecten in-place te sorteren naar snapshot-volgorde. `_hideColWithUndo` slaat nu `{hiddenKey}` op; undo zet `col.visible=true` terug.
+
+---
+
+## v0.77.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Toetsenbordinteractie kolomkoppen
+
+Twee bugs opgelost waardoor kolomkop-sneltoetsen niet werkten: (1) dubbele sortering doordat zowel de inline `onkeydown` op `<th>` als de gedelegeerde `document.keydown` handler `clickSort()` aanriepen — de inline handler verwijderd; (2) cross-contaminatie waarbij Enter op de filter-knop (kind van `<th>`) ook `clickSort()` triggerde — de handler bewaakt nu dat `document.activeElement` direct een `<th>` is (niet een kind-element). Ongebruikte `_resolveColKey` functie verwijderd.
+
+---
+
+## v0.76.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Layout-pariteit met ux-reference-v1.72 — kolomkop-menu
+
+Kolomkop-menu omgezet van twee aparte sorteerknopjes (↑ ↓) naar één toggle-knop met SVG-icoon (none → asc → desc → none cyclus). `role="menu"` en `aria-label` toegevoegd. "Kolom verbergen" danger-item met oog-uit-icoon toegevoegd onderaan het menu.
+
+---
+
+## v0.75.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Layout-pariteit met ux-reference-v1.72 — card + font
+
+Dashboard-layout omgezet van full-viewport naar card-in-page patroon. Body krijgt `padding: 24px`; content gewrapped in `.page` (max-width 1320px) + `.app-card` (border-radius, shadow, border). DM Sans toegevoegd als primair lettertype.
+
+**Gewijzigd:**
+- HTML: DM Sans preconnect + stylesheet link in `<head>`
+- CSS: `body` → DM Sans font-family; `padding: 24px`
+- CSS: `.page` (max-width:1320px, margin:0 auto, flex-column)
+- CSS: `.app-card` (border-radius:var(--radius-lg), box-shadow:var(--shadow-sm), border:1px solid var(--border-light))
+- HTML: topbar t/m selection-bar in `<div class="page"><div class="app-card">`
+
+---
+
+## v0.74.0 — 2026-03-11
+
+**Type:** Refactor
+**Domein:** Aggregatierij verwijderd — conform UX-reference
+
+Agg-rij (Σ-rij met "N uniek" / "Gem: X") volledig verwijderd. De UX-reference heeft geen aggregatierij; de footer-bar dient als statusbalk. Verwijderd: CSS, `computeAggModel()`, `renderAggFromModel()`, `renderAgg()`, `syncAggWidths()`, `_categoricalKeySet/_averageKeySet/_booleanKeySet`, `_dirty.agg`/`widths` flags, agg-row DOM-element, scroll-sync handler. Tests D2, VC-3.3 en D-L5 (was D-L6) hergenummerd.
+
+**Verwijderd:**
+- CSS: `.agg-row`, `.agg-cell`, `.agg-cell span`
+- JS: `computeAggModel()`, `renderAggFromModel()`, `renderAgg()`, `syncAggWidths()`
+- JS: `_categoricalKeySet`, `_averageKeySet`, `_booleanKeySet`
+- JS: `_dirty.agg`, `_dirty.widths` flags
+- HTML: `<div class="agg-row">` in `renderTabContainers()`
+- Scroll-sync agg-row in `initTableDelegation()`
+- Tests: D2-assert, VC-3.3, D-L5 (computeAggModel timing)
+
+---
+
+## v0.73.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Footer-bar pariteit met ux-reference-v1.72
+
+Footer-balk toegevoegd onder de tabel ("N van M rijen"), conform het PORT THIS patroon uit de UX-reference. De footer-bar verbergt zichzelf wanneer de selectie-balk actief is. Rij-tellerdata wordt op beide plaatsen synchroon bijgehouden.
+
+**Gewijzigd:**
+- CSS: `.footer-bar`, `.footer-left`, `.footer-stat`, `.footer-sep-dot` toegevoegd
+- HTML: `<div class="footer-bar" id="footer-bar">` toegevoegd tussen `.main` en `.selection-bar`
+- JS: `updateSelectionBar()` verbergt footer-bar bij actieve selectie
+- JS: twee render-locaties updaten nu ook `#footer-row-count` en `#footer-total-count`
+
+---
+
+## v0.72.0 — 2026-03-11
+
+**Type:** UI
+**Domein:** Selectie-balk pariteit met ux-reference-v1.72
+
+Selectie-balk geherstructureerd naar het PORT THIS patroon uit de UX-reference. Oude `.active-filters#selection-bar` (boven de tabel, met inline stijlen) vervangen door `.selection-bar` (onder de tabel, met `.visible` state-class). Structuur: `selection-bar-left` (vinkje + "N rijen geselecteerd") en `selection-bar-right` (Exporteer selectie + Deselecteer alles).
+
+**Gewijzigd:**
+- CSS: `.selection-bar`, `.selection-bar-left`, `.selection-bar-right`, `.selection-count`, `button.sm`, `button.sm.ghost` toegevoegd
+- HTML: `<div class="active-filters" id="selection-bar">` → `<div class="selection-bar" id="selection-bar">` met UX-ref structuur
+- HTML: positie verplaatst van vóór `.main` naar ná `.main` (onder de tabel)
+- JS: `updateSelectionBar()` — `.is-visible` → `.visible`; tellerformaat "N van M geselecteerd" → "N rijen geselecteerd"
+
+---
+
+## v0.71.0 — 2026-03-11
+
+**Type:** UI / Bugfix
+**Domein:** Toolbar-pariteit met ux-reference-v1.72 + drag-fix
+
+Toolbar volledig geherstructureerd naar `toolbar-left` (zoekbox, wis-filters, resultaat-teller) + `toolbar-right` (Weergave, Kolommen, Exporteer, Undo, Help, Tests). Topbar-right (`Reset weergave`, `Exporteren`) verwijderd; export staat nu in toolbar-right. Column drag-systeem geconsolideerd: `thDragStart` init `_dragState` + onzichtbaar drag-image, dubbele en conflicterende document-level handlers verwijderd.
+
+**Gewijzigd:**
+- CSS: `.toolbar` van `height:40px;flex-wrap:nowrap` naar `padding:10px 16px;flex-wrap:wrap` (UX ref match)
+- CSS: `.toolbar-left`, `.toolbar-right`, `.toolbar-sep` toegevoegd
+- CSS: `.search-box` (met focus-state), `.search-clear` (button-variant), `.reset-filters-btn`, `.result-count`, `button.icon-only` toegevoegd
+- CSS: `.th-inner` cursor `pointer` → `grab` + `:active{cursor:grabbing}` (UX ref patroon)
+- HTML: `.topbar-right` (Reset weergave + Exporteren knoppen) verwijderd uit topbar
+- HTML: Toolbar volledig vervangen — `toolbar-left` (search-box#search-wrap, reset-filters-btn#btn-reset, result-count#row-count) + `toolbar-right` (btn-view, btn-cols+SVG, btn-export+SVG, btn-undo, btn-help, toolbar-sep, btn-test); 9 knoppen verwijderd (Filter, Sorteren, Groeperen, Opmaak, height-segmented, Bevriezen, hsep ×3, global-name-filter select)
+- HTML: `#global-name-filter` select bewaard als hidden element (JS-compatibiliteit)
+- JS: `FEATURE_UI_MAP['search']` — `'global-name-filter'` verwijderd
+- JS: `switchTab()` — null-safe reset van `global-name-filter`
+- JS: `updateResetBtn()` — `style.display` → `classList.toggle('visible', ...)`
+- JS: `updateFilterBadge()` — early-return guard voor ontbrekende `btn-filter`
+- JS: `applyGroupAction()`, `clearGroup()` — null-safe `btn-group` updates
+- JS: `toggleCond()`, `toggleFreeze()`, `resetView()` — null-safe guards voor verwijderde knoppen
+- JS: `thDragStart` — init `_dragState` + invisible drag image + `_applyDragClasses()/_syncDropOverlay()/_updateDragPreview()` (visual feedback vanaf dragstart)
+- JS: `thDragEnd` — roept `_endDrag()` aan voor visueel herstel
+- JS: document-level `dragstart`, `drop`, `dragend` handlers verwijderd (conflicten met inline `thDrag*`)
+- JS: duplicate document-level `dragover` handler verwijderd; één clean handler behoudt preview+corridor updates
+- Versie: `0.70.0` → `0.71.0`
+
+---
+
+## v0.70.0 — 2026-03-11
+
+**Type:** UI / Feature
+**Domein:** UX-pariteit met ux-reference-v1.72 (alle PORT THIS patronen geïmplementeerd)
+
+Alle normatieve PORT THIS-patronen uit `ux-reference-v1.72.html` zijn nu geïmplementeerd in `dashboard.html`. Het dashboard is visueel en functioneel volledig gesynchroniseerd met de UX Reference.
+
+**Gewijzigd:**
+- CSS: hintbar, help-tooltip, undo-toast, drag preview, drop corridor toegevoegd
+- CSS: drag-state classes uitgebreid (`.th-drag-source`, `td.col-drag-source`, `.shift-left`, `.shift-right`, `col-flash`, `col-just-moved`, `th:focus/focus-visible`)
+- CSS: panel overlay: `display`-toggle → `opacity`-fade (200ms, UX ref patroon)
+- CSS: panel close button: transparent, geen border, `border-radius: 8px`
+- CSS: panel header border: `--border` → `--border-light`
+- CSS: `.th-inner` gap `8px` → `6px`, padding `0 12px` → `0 10px`
+- CSS: `.table-container` krijgt `position: relative`
+- HTML: hintbar, help-tooltip, undo-knop, `?`-knop, undo-toast, drag-preview toegevoegd
+- HTML: drop-overlay + drop-corridor per tab-container (via `initTabHost()`)
+- JS: undo/history systeem (`enginePushHistory`, `engineUndo`, `showUndoToast`), Ctrl+Z shortcut
+- JS: help-tooltip toggle + Escape-sluiting
+- JS: column keyboard navigatie (pijltoetsen, Shift+←→, H, Enter)
+- JS: focus management (`_focusCol`, `_flashCol`, `_resolveColKey`)
+- JS: drag preview + drop corridor JS (`_dragState`, `_updateDragPreview`, `_syncDropOverlay`, `_applyDragClasses`)
+- JS: `_columnMoveWithUndo`, `_hideColWithUndo` — destructieve acties met undo + toast
+
+---
+
 ## v0.65.4 — 2026-03-09
 
 **Type:** Bugfix / Layer 5 Assembler
