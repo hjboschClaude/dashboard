@@ -6,6 +6,15 @@ Versienummering volgt [Semantic Versioning](https://semver.org/lang/nl/).
 
 ---
 
+## v0.87.0 — 2026-03-11
+
+**Type:** Bugfix
+**Domein:** Kolomkop-menu, filterlijst sortering
+
+**CHM filterlijst toont geen zichtbare verandering bij eerste sorteerklik.** `_renderChmFilterA` en `_renderChmFilterB` riepen altijd eerst `.sort()` aan (A→Z), waarna alleen bij `desc` werd omgekeerd. Hierdoor waren `none` en `asc` visueel identiek: de eerste klik op sorteren veranderde de filterlijst niet. Fix: ontkoppeld van de harde `.sort()` vooraf. Nu geldt `none` = voorkomende volgorde (Set insertion order = volgorde van eerste voorkomen in de data), `asc` = A→Z, `desc` = Z→A — zodat elke klik op de sorteerknop een zichtbare verandering geeft.
+
+---
+
 ## v0.86.0 — 2026-03-11
 
 **Type:** Bugfix

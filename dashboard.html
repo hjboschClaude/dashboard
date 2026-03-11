@@ -975,7 +975,7 @@ const dashboardConfig = (function(){
   return {
   app: {
     title: "Dashboard Gemeente Rotterdam",
-    version: '0.86.0',
+    version: '0.87.0',
     defaultTabId: "projects"
   },
   tabs: [
@@ -3411,10 +3411,12 @@ function _chmSyncSortBtn(key){
 
 function _renderChmFilterA(key,zone){
   var data=getData(AppState.currentTab);
-  var allVals=Array.from(new Set(data.map(function(r){return String(r[key]);}))).sort();
-  // #83: spiegelt actieve sorteerrichting van de kolom
+  var allVals=Array.from(new Set(data.map(function(r){return String(r[key]);})));
+  // #83/#87: none=voorkomende volgorde, asc=A→Z, desc=Z→A (elke klik zichtbaar verschil)
   var _sr=AppState.sortRules.find(function(r){return r.field===key;});
-  if(_sr&&_sr.dir==='desc') allVals.reverse();
+  var _sdir=_sr?_sr.dir:'none';
+  if(_sdir==='asc') allVals.sort();
+  else if(_sdir==='desc'){allVals.sort();allVals.reverse();}
   if(!AppState.colFilters[key]) AppState.colFilters[key]=new Set(allVals);
   var active=AppState.colFilters[key];
   var actionsHtml='<div class="chm-filter-a-actions"><button id="chmAAll">Alles</button><button id="chmANone">Geen</button></div>';
@@ -3437,10 +3439,12 @@ function _renderChmFilterA(key,zone){
 
 function _renderChmFilterB(key,zone,searchVal){
   var data=getData(AppState.currentTab);
-  var allVals=Array.from(new Set(data.map(function(r){return String(r[key]);}))).sort();
-  // #83: spiegelt actieve sorteerrichting van de kolom
+  var allVals=Array.from(new Set(data.map(function(r){return String(r[key]);})));
+  // #83/#87: none=voorkomende volgorde, asc=A→Z, desc=Z→A (elke klik zichtbaar verschil)
   var _sr=AppState.sortRules.find(function(r){return r.field===key;});
-  if(_sr&&_sr.dir==='desc') allVals.reverse();
+  var _sdir=_sr?_sr.dir:'none';
+  if(_sdir==='asc') allVals.sort();
+  else if(_sdir==='desc'){allVals.sort();allVals.reverse();}
   if(!AppState.colFilters[key]) AppState.colFilters[key]=new Set(allVals);
   var active=AppState.colFilters[key];
   var filtered=searchVal?allVals.filter(function(v){return v.toLowerCase().indexOf(searchVal.toLowerCase())>=0;}):allVals;
